@@ -160,4 +160,3 @@ export class Button {
   readonly ariaLabel = input<string | undefined>(undefined);
   readonly onClick = output<Event>();
 }
-
