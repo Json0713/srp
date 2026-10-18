@@ -18,7 +18,8 @@
 .pause-telemetry { display: flex; flex-direction: column; gap: .28rem; padding: .45rem .65rem; border-radius: var(--radius-sm); background: rgba(5,7,11,.6); border: 1px solid var(--color-border); font-size: .76rem; color: var(--color-text-secondary); }
 .telemetry-item strong { color: var(--color-text-primary); }
 .pause-mode-switch { text-align: left; }
-.switch-buttons, .pause-primary-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-xs); margin-top: .2rem; }
-.mode-switch-btn { padding: .4rem .55rem; font-family: var(--font-mono); font-size: .7rem; border-radius: var(--radius-xs); background: rgba(5,7,11,.6); border: 1px solid var(--color-border); color: var(--color-text-secondary); cursor: pointer; }
+.switch-buttons, .pause-primary-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--spacing-xs); margin-top: .2rem; min-width: 0; }
+.mode-switch-btn { padding: .38rem .5rem; font-family: var(--font-mono); font-size: .68rem; border-radius: var(--radius-xs); background: rgba(5,7,11,.6); border: 1px solid var(--color-border); color: var(--color-text-secondary); cursor: pointer; min-width: 0; }
 .mode-switch-btn.active { background: var(--color-primary-surface); border-color: var(--color-primary-light); color: var(--color-primary-light); font-weight: 700; }
 @media (max-width: 620px) { .hud-mode-pill, .hud-bottom-hint { display: none; } }
+@media (max-width: 480px) { .switch-buttons, .pause-primary-actions { grid-template-columns: 1fr; } }

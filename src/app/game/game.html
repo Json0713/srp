@@ -213,7 +213,7 @@
                 <app-button variant="primary" [fullWidth]="true" class="full-width" (onClick)="togglePause()">
                   ▶ Resume Mission
                 </app-button>
-                <app-button variant="danger" [fullWidth]="true" class="full-width" (onClick)="abortMission()">
+                <app-button variant="danger" [fullWidth]="true" class="full-width" (onClick)="requestAbortMission()">
                   ⏹ Abort Mission (Save Loot)
                 </app-button>
               </div>
@@ -458,6 +458,43 @@
                 </div>
               }
             </section>
+          </div>
+        }
+
+        @if (showAbortConfirm()) {
+          <div class="popover-backdrop" (click)="cancelAbortMission()">
+            <div
+              class="info-popover-card abort-confirm-popover"
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="abort-confirm-title"
+              (click)="$event.stopPropagation()">
+              <div class="info-popover-head">
+                <span class="info-popover-tag danger-tag">EXTRACTION CONFIRM</span>
+                <strong id="abort-confirm-title" class="info-popover-title">Abort Active Mission?</strong>
+                <button
+                  type="button"
+                  class="info-close-btn"
+                  aria-label="Cancel abort"
+                  (click)="cancelAbortMission()">
+                  ✕
+                </button>
+              </div>
+              <p class="info-popover-body">
+                Confirming extraction ends this deployment and banks all collected run loot into your permanent Command Vault.
+              </p>
+              <div class="info-popover-hint">
+                Loot to Bank: 🧪 +{{ runBiomass() }} Biomass • 🪙 +{{ runRpCoins() }} RP Coins (LVL {{ level() }})
+              </div>
+              <div class="info-popover-actions">
+                <app-button variant="secondary" [fullWidth]="true" class="full-width" (onClick)="cancelAbortMission()">
+                  Cancel
+                </app-button>
+                <app-button variant="danger" [fullWidth]="true" class="full-width" (onClick)="confirmAbortMission()">
+                  Confirm Abort
+                </app-button>
+              </div>
+            </div>
           </div>
         }
       </div>

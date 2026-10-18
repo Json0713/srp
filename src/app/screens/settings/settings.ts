@@ -83,24 +83,24 @@ import { SettingsService, InputMode } from '../../core/services/settings.service
     </div>
   `,
   styles: [`
-    .settings-tag { font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-info); background: var(--color-info-surface); border: 1px solid rgba(56, 189, 248, 0.35); padding: 0.25rem 0.6rem; border-radius: var(--radius-xs); }
-    .settings-layout { display: grid; grid-template-columns: 1fr; gap: var(--spacing-lg); align-items: start; }
-    .settings-panel { background: var(--color-bg-panel); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); padding: var(--spacing-lg); }
-    .panel-head-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: var(--spacing-xs); margin-bottom: var(--spacing-sm); }
-    .settings-panel h3 { margin: 0; font-family: var(--font-display); color: var(--color-accent-light); font-size: 1.15rem; letter-spacing: 0.08em; text-transform: uppercase; }
-    .input-mode-toggle, .controls-list { display: flex; flex-direction: column; gap: var(--spacing-sm); list-style: none; padding: 0; margin: 0; }
-    .radio-card { display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radius-sm); background: rgba(5, 7, 11, 0.55); border: 1px solid var(--color-border); cursor: pointer; }
+    .settings-tag { font-family: var(--font-mono); font-size: 0.66rem; color: var(--color-info); background: var(--color-info-surface); border: 1px solid rgba(56, 189, 248, 0.35); padding: 0.2rem 0.52rem; border-radius: var(--radius-xs); }
+    .settings-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(0.6rem, 1.6vw, 1rem); align-items: start; min-width: 0; }
+    .settings-panel { background: var(--color-bg-panel); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); padding: clamp(0.65rem, 1.6vw, 1.1rem); min-width: 0; }
+    .panel-head-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: 0.35rem; margin-bottom: 0.45rem; min-width: 0; }
+    .settings-panel h3 { margin: 0; font-family: var(--font-display); color: var(--color-accent-light); font-size: clamp(0.95rem, 1.8vw, 1.1rem); letter-spacing: 0.08em; text-transform: uppercase; }
+    .input-mode-toggle, .controls-list { display: flex; flex-direction: column; gap: clamp(0.38rem, 1vw, 0.55rem); list-style: none; padding: 0; margin: 0; min-width: 0; }
+    .radio-card { display: flex; align-items: center; gap: clamp(0.45rem, 1.2vw, 0.75rem); padding: clamp(0.42rem, 1vw, 0.6rem) clamp(0.5rem, 1.3vw, 0.75rem); border-radius: var(--radius-sm); background: rgba(5, 7, 11, 0.55); border: 1px solid var(--color-border); cursor: pointer; min-width: 0; }
     .radio-card.active { background: var(--color-primary-surface); border-color: var(--color-primary-light); }
-    .radio-card input[type='radio'] { accent-color: var(--color-primary-light); width: 18px; height: 18px; margin: 0; cursor: pointer; }
-    .mode-icon { font-size: 1.4rem; }
-    .mode-text { display: flex; flex-direction: column; gap: 0.1rem; }
-    .mode-text strong { font-size: 0.92rem; color: var(--color-text-primary); }
-    .mode-text span { font-size: 0.76rem; color: var(--color-text-secondary); }
-    .controls-list li { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radius-sm); background: rgba(5, 7, 11, 0.5); border: 1px solid var(--color-border); }
-    .key-badge { font-family: var(--font-mono); font-size: 0.74rem; font-weight: 700; color: var(--color-primary-light); background: var(--color-primary-surface); border: 1px solid rgba(74, 222, 128, 0.35); padding: 0.18rem 0.5rem; border-radius: var(--radius-xs); }
-    .controls-list strong { font-size: 0.84rem; color: var(--color-text-primary); }
-    @media (min-width: 768px), ((orientation: landscape) and (min-width: 640px)) {
-      .settings-layout { grid-template-columns: 1.15fr 1fr; }
+    .radio-card input[type='radio'] { accent-color: var(--color-primary-light); width: 16px; height: 16px; margin: 0; cursor: pointer; flex-shrink: 0; }
+    .mode-icon { font-size: 1.25rem; flex-shrink: 0; }
+    .mode-text { display: flex; flex-direction: column; gap: 0.08rem; min-width: 0; }
+    .mode-text strong { font-size: clamp(0.8rem, 1.4vw, 0.9rem); color: var(--color-text-primary); }
+    .mode-text span { font-size: clamp(0.66rem, 1.2vw, 0.74rem); color: var(--color-text-secondary); }
+    .controls-list li { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.35rem; padding: 0.42rem 0.6rem; border-radius: var(--radius-sm); background: rgba(5, 7, 11, 0.5); border: 1px solid var(--color-border); min-width: 0; }
+    .key-badge { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 700; color: var(--color-primary-light); background: var(--color-primary-surface); border: 1px solid rgba(74, 222, 128, 0.35); padding: 0.14rem 0.45rem; border-radius: var(--radius-xs); }
+    .controls-list strong { font-size: clamp(0.74rem, 1.3vw, 0.82rem); color: var(--color-text-primary); }
+    @media (min-width: 768px), ((orientation: landscape) and (min-width: 560px)) {
+      .settings-layout { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.95fr); }
     }
   `]
 })

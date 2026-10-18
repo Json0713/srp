@@ -82,26 +82,26 @@ import { MenuStateService } from '../../core/services/menu-state.service';
   `,
   styles: [`
     .sector-tag {
-      font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-danger-light);
+      font-family: var(--font-mono); font-size: 0.68rem; color: var(--color-danger-light);
       background: var(--color-danger-surface); border: 1px solid rgba(239, 68, 68, 0.35);
-      padding: 0.25rem 0.6rem; border-radius: var(--radius-xs);
+      padding: 0.2rem 0.55rem; border-radius: var(--radius-xs);
     }
-    .zones-layout { display: grid; grid-template-columns: 1fr; gap: var(--spacing-lg); align-items: start; }
-    .selection-list, .brief-rows, .action-footer { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+    .zones-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(0.6rem, 1.6vw, 1rem); align-items: start; min-width: 0; }
+    .selection-list, .brief-rows, .action-footer { display: flex; flex-direction: column; gap: clamp(0.38rem, 1vw, 0.55rem); min-width: 0; }
     .mission-brief-card {
       background: var(--color-bg-panel); border: 1px solid var(--color-border-strong);
-      border-radius: var(--radius-md); padding: var(--spacing-lg);
-      display: flex; flex-direction: column; gap: var(--spacing-md);
+      border-radius: var(--radius-md); padding: clamp(0.65rem, 1.6vw, 1.1rem);
+      display: flex; flex-direction: column; gap: clamp(0.5rem, 1.2vw, 0.8rem); min-width: 0;
     }
-    .brief-header { padding-bottom: var(--spacing-sm); border-bottom: 1px solid var(--color-border); }
-    .brief-title-row, .brief-row { display: flex; justify-content: space-between; align-items: center; gap: var(--spacing-sm); }
-    .brief-kicker { display: block; font-family: var(--font-mono); font-size: 0.68rem; color: var(--color-text-secondary); }
-    .brief-title { margin: 0.1rem 0; font-family: var(--font-display); font-size: 1.4rem; }
-    .brief-threat { font-family: var(--font-mono); font-size: 0.74rem; color: var(--color-accent-light); }
-    .brief-row { font-size: 0.84rem; color: var(--color-text-secondary); }
+    .brief-header { padding-bottom: 0.45rem; border-bottom: 1px solid var(--color-border); min-width: 0; }
+    .brief-title-row, .brief-row { display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; min-width: 0; }
+    .brief-kicker { display: block; font-family: var(--font-mono); font-size: 0.62rem; color: var(--color-text-secondary); }
+    .brief-title { margin: 0.05rem 0; font-family: var(--font-display); font-size: clamp(1.05rem, 2vw, 1.3rem); }
+    .brief-threat { font-family: var(--font-mono); font-size: 0.68rem; color: var(--color-accent-light); }
+    .brief-row { font-size: clamp(0.74rem, 1.3vw, 0.82rem); color: var(--color-text-secondary); }
     .brief-row strong { color: var(--color-text-primary); text-align: right; }
-    @media (min-width: 768px), ((orientation: landscape) and (min-width: 640px)) {
-      .zones-layout { grid-template-columns: 1.25fr 1fr; }
+    @media (min-width: 768px), ((orientation: landscape) and (min-width: 560px)) {
+      .zones-layout { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr); }
     }
   `]
 })

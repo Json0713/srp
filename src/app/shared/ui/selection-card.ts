@@ -57,10 +57,11 @@ import { InfoPopover } from './info-popover';
     </div>
   `,
   styles: [`
-    :host { display: block; }
+    :host { display: block; min-width: 0; max-width: 100%; }
     .selection-card {
-      position: relative; display: flex; width: 100%; text-align: left;
-      align-items: center; gap: var(--spacing-md); padding: var(--spacing-sm) var(--spacing-md);
+      position: relative; display: flex; width: 100%; min-width: 0; text-align: left;
+      align-items: center; gap: clamp(0.45rem, 1.2vw, 0.75rem);
+      padding: clamp(0.45rem, 1.1vw, 0.68rem) clamp(0.55rem, 1.4vw, 0.85rem);
       background: var(--color-bg-panel); border: 1px solid var(--color-border);
       border-radius: var(--radius-md); cursor: pointer;
       transition: background-color var(--transition-fast), border-color var(--transition-fast);
@@ -72,44 +73,45 @@ import { InfoPopover } from './info-popover';
       border-color: var(--color-primary-light);
       background: linear-gradient(90deg, rgba(34, 197, 94, 0.14) 0%, rgba(14, 20, 31, 0.92) 100%);
     }
-    .selection-card.locked { opacity: 0.62; cursor: not-allowed; background: rgba(10, 14, 22, 0.65); }
+    .selection-card.locked { opacity: 0.64; cursor: not-allowed; background: rgba(10, 14, 22, 0.65); }
     .card-icon-wrap {
       display: flex; align-items: center; justify-content: center;
-      width: 46px; height: 46px; flex-shrink: 0; border-radius: var(--radius-sm);
+      width: clamp(36px, 4.2vw, 42px); height: clamp(36px, 4.2vw, 42px);
+      flex-shrink: 0; border-radius: var(--radius-sm);
       background: rgba(5, 7, 11, 0.65); border: 1px solid var(--color-border);
     }
     .selection-card.selected .card-icon-wrap { border-color: rgba(74, 222, 128, 0.45); background: rgba(34, 197, 94, 0.12); }
-    .card-icon { font-size: 1.45rem; line-height: 1; }
-    .card-details { flex: 1; min-width: 0; }
-    .card-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.15rem; }
+    .card-icon { font-size: clamp(1.1rem, 2vw, 1.35rem); line-height: 1; }
+    .card-details { flex: 1; min-width: 0; overflow: hidden; }
+    .card-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.32rem; margin-bottom: 0.1rem; min-width: 0; }
     .card-code {
-      font-family: var(--font-mono); font-size: 0.65rem; color: var(--color-text-secondary);
-      padding: 0.08rem 0.35rem; border-radius: var(--radius-xs);
+      font-family: var(--font-mono); font-size: 0.6rem; color: var(--color-text-secondary);
+      padding: 0.05rem 0.3rem; border-radius: var(--radius-xs);
       background: rgba(255, 255, 255, 0.05); border: 1px solid var(--color-border);
     }
-    .card-details h3 { margin: 0; font-family: var(--font-display); font-size: 1.05rem; letter-spacing: 0.04em; }
+    .card-details h3 { margin: 0; font-family: var(--font-display); font-size: clamp(0.88rem, 1.6vw, 1.02rem); letter-spacing: 0.03em; }
     .card-badge {
-      font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase;
-      padding: 0.1rem 0.4rem; border-radius: var(--radius-xs);
+      font-family: var(--font-mono); font-size: 0.58rem; text-transform: uppercase;
+      padding: 0.06rem 0.34rem; border-radius: var(--radius-xs);
       color: var(--color-accent-light); background: var(--color-accent-surface);
       border: 1px solid rgba(245, 158, 11, 0.3);
     }
     .card-badge.badge-locked { color: var(--color-text-secondary); background: rgba(255, 255, 255, 0.04); border-color: var(--color-border); }
-    .card-sub {
-      margin: 0; font-size: 0.78rem; color: var(--color-text-secondary);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    .card-sub, .card-meta {
+      margin: 0; font-size: clamp(0.66rem, 1.2vw, 0.74rem); color: var(--color-text-secondary);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
     }
-    .locked-sub { color: var(--color-danger-light); font-family: var(--font-mono); font-size: 0.72rem; }
-    .card-meta { font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-primary-light); }
+    .locked-sub { color: var(--color-danger-light); font-family: var(--font-mono); font-size: clamp(0.62rem, 1.1vw, 0.68rem); }
+    .card-meta { font-family: var(--font-mono); color: var(--color-primary-light); }
     .card-status { flex-shrink: 0; }
     .status-pill {
-      display: inline-block; font-family: var(--font-mono); font-size: 0.65rem;
-      font-weight: 700; letter-spacing: 0.1em; padding: 0.2rem 0.55rem; border-radius: var(--radius-xs);
+      display: inline-block; font-family: var(--font-mono); font-size: 0.58rem;
+      font-weight: 700; letter-spacing: 0.08em; padding: 0.15rem 0.42rem; border-radius: var(--radius-xs);
     }
     .status-selected { background: var(--color-primary-surface); color: var(--color-primary-light); border: 1px solid rgba(74, 222, 128, 0.45); }
     .status-ready { background: rgba(255, 255, 255, 0.04); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
     .status-locked { background: rgba(239, 68, 68, 0.1); color: var(--color-danger-light); border: 1px solid rgba(239, 68, 68, 0.28); }
-    @media (max-width: 520px) { .card-status { display: none; } }
+    @media (max-width: 680px) { .card-status { display: none; } }
   `]
 })
 export class SelectionCard {

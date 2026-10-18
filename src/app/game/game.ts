@@ -58,6 +58,7 @@ export class Game implements OnInit, OnDestroy {
   readonly autoPausedNotice = signal(false);
   readonly pauseView = signal<PauseModalView>('main');
   readonly isLevelUpModalOpen = signal(false);
+  readonly showAbortConfirm = signal(false);
 
   readonly inputMode = this.settingsService.inputMode;
   readonly detectedDeviceMode = this.settingsService.detectedDeviceMode;
@@ -146,6 +147,10 @@ export class Game implements OnInit, OnDestroy {
     if (this.isLevelUpModalOpen()) {
       return;
     }
+    if (this.showAbortConfirm()) {
+      this.showAbortConfirm.set(false);
+      return;
+    }
     if (this.isPaused() && this.pauseView() !== 'main') {
       this.pauseView.set('main');
       return;
@@ -195,6 +200,7 @@ export class Game implements OnInit, OnDestroy {
     }
     const nextPaused = !this.isPaused();
     this.isPaused.set(nextPaused);
+    this.showAbortConfirm.set(false);
     if (!nextPaused) {
       this.autoPausedNotice.set(false);
       this.pauseView.set('main');
@@ -205,6 +211,7 @@ export class Game implements OnInit, OnDestroy {
   }
 
   openPauseSubview(view: PauseModalView): void {
+    this.showAbortConfirm.set(false);
     this.pauseView.set(view);
   }
 
@@ -366,6 +373,22 @@ export class Game implements OnInit, OnDestroy {
         this.unlockedCodexTitle.set(null);
       }, 4000);
     }
+  }
+
+  /**
+   * Opens the Abort Mission confirmation popover card so accidental touches never lose a run.
+   */
+  requestAbortMission(): void {
+    this.showAbortConfirm.set(true);
+  }
+
+  cancelAbortMission(): void {
+    this.showAbortConfirm.set(false);
+  }
+
+  confirmAbortMission(): void {
+    this.showAbortConfirm.set(false);
+    this.abortMission();
   }
 
   /**
