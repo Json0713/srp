@@ -71,8 +71,20 @@ export interface ResearchNode {
   phaseTag: string;
 }
 
+export interface GamePhaseInfo {
+  id: string;
+  phaseNumber: number;
+  code: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  status: 'active' | 'upcoming';
+  summary: string;
+}
+
 export interface GameHudSnapshot {
   resourcesCollected: number;
   totalResources: number;
   nearbyInteractable: boolean;
 }
+

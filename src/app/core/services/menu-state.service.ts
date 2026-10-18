@@ -1,10 +1,62 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { OperatorItem, ResearchNode, ResearchTrack, SelectionItem, ZoneItem } from '../models/game-data.model';
+import {
+  GamePhaseInfo,
+  OperatorItem,
+  ResearchNode,
+  ResearchTrack,
+  SelectionItem,
+  ZoneItem
+} from '../models/game-data.model';
 
-export type { SelectionItem, OperatorItem, ZoneItem, ResearchNode, ResearchTrack } from '../models/game-data.model';
+export type {
+  SelectionItem,
+  OperatorItem,
+  ZoneItem,
+  ResearchNode,
+  ResearchTrack,
+  GamePhaseInfo
+} from '../models/game-data.model';
 
 @Injectable({ providedIn: 'root' })
 export class MenuStateService {
+  readonly gamePhases: GamePhaseInfo[] = [
+    {
+      id: 'phase-1-fallout',
+      phaseNumber: 1,
+      code: 'PHS-01',
+      title: 'Phase 1: The Fallout',
+      subtitle: 'Initial Containment Collapse & Biomass Extraction',
+      badge: 'PHASE 1 // THE FALLOUT',
+      status: 'active',
+      summary:
+        'Deploy into the overrun Sector 7 perimeter, harvest dormant Biomass Spire nodes, decrypt the Field Codex, and prepare for the awakening swarm.'
+    },
+    {
+      id: 'phase-2-assimilation',
+      phaseNumber: 2,
+      code: 'PHS-02',
+      title: 'Phase 2: The Assimilation',
+      subtitle: 'Parasite Swarm Escalation & Survival Powers',
+      badge: 'PHASE 2 // THE ASSIMILATION',
+      status: 'upcoming',
+      summary:
+        'Survive relentless Rupter and Assimilated Human waves, collect XP orbs, evolve Magic Survival-style powers, and eliminate Apex Bosses.'
+    },
+    {
+      id: 'phase-3-synthesis',
+      phaseNumber: 3,
+      code: 'PHS-03',
+      title: 'Phase 3: The Synthesis',
+      subtitle: 'Research Lab Evolution & The Hive Core',
+      badge: 'PHASE 3 // THE SYNTHESIS',
+      status: 'upcoming',
+      summary:
+        'Synthesize permanent Bio-Research upgrades and Rig Cosmetics using SRP Bio-Credits, requisition new operators, and breach The Hive.'
+    }
+  ];
+
+  readonly currentPhase: GamePhaseInfo = this.gamePhases[0];
+
   readonly operators: OperatorItem[] = [
     {
       id: 'survivor',
@@ -13,7 +65,7 @@ export class MenuStateService {
       description: 'Standard Issue containment operative trained for frontline biomass extraction and sustained survival.',
       icon: '🛡️',
       locked: false,
-      badge: 'ACTIVE DUTY',
+      badge: 'PHASE 1 ACTIVE',
       role: 'Vanguard Containment',
       weapon: 'Pulse Carbine // Auto-Burst',
       passiveTrait: 'Bio-Filter Rig (+15% Spore Resistance)',
@@ -31,7 +83,7 @@ export class MenuStateService {
       icon: '🎯',
       locked: true,
       badge: 'CLASSIFIED',
-      unlockRequirement: 'Requires 250 SRP Coins (Phase 4)',
+      unlockRequirement: 'Requires 250 SRP Coins (Phase 3: The Synthesis)',
       role: 'Marksman Recon',
       weapon: 'Rail Rifle // Piercing Beam',
       passiveTrait: 'Target Lock (+25% Critical Range)',
@@ -51,8 +103,8 @@ export class MenuStateService {
       description: 'Initial infection site. Overrun research perimeter with dormant biomass nodes and low-tier assimilated hosts.',
       icon: '☣️',
       locked: false,
-      badge: 'THREAT LVL I',
-      threatLevel: 'Level I — Low Containment Breach',
+      badge: 'PHASE 1 // THREAT I',
+      threatLevel: 'Level I — Initial Fallout Perimeter',
       infestationDensity: 'Moderate Spore Density',
       environmentType: 'Quarantine Perimeter'
     },
@@ -63,8 +115,8 @@ export class MenuStateService {
       description: 'High density outbreak epicenter. Deep subterranean flesh-network teeming with evolved parasitic forms.',
       icon: '🩸',
       locked: true,
-      badge: 'THREAT LVL IV',
-      unlockRequirement: 'Clear Sector 7 Outbreak Protocol',
+      badge: 'PHASE 3 // THREAT IV',
+      unlockRequirement: 'Clear Sector 7 Outbreak Protocol (Phase 3: The Synthesis)',
       threatLevel: 'Level IV — Total Assimilation',
       infestationDensity: 'Extreme Parasitic Swarm',
       environmentType: 'Subterranean Flesh Core'
@@ -86,7 +138,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 5,
       cost: 100,
-      phaseTag: 'DEV PHASE 4B'
+      phaseTag: 'PHASE 3B // THE SYNTHESIS'
     },
     {
       id: 'spore-extractor',
@@ -101,7 +153,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 5,
       cost: 120,
-      phaseTag: 'DEV PHASE 4B'
+      phaseTag: 'PHASE 3B // THE SYNTHESIS'
     },
     {
       id: 'combat-stims',
@@ -116,7 +168,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 5,
       cost: 150,
-      phaseTag: 'DEV PHASE 4B'
+      phaseTag: 'PHASE 3B // THE SYNTHESIS'
     },
     {
       id: 'neural-overclock',
@@ -131,7 +183,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 5,
       cost: 180,
-      phaseTag: 'DEV PHASE 4B'
+      phaseTag: 'PHASE 3B // THE SYNTHESIS'
     },
 
     // Track 2: Rig Cosmetics (Containment Suits & Visual Shaders)
@@ -148,7 +200,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 1,
       cost: 300,
-      phaseTag: 'DEV PHASE 4C'
+      phaseTag: 'PHASE 3C // THE SYNTHESIS'
     },
     {
       id: 'suit-crimson-carapace',
@@ -163,7 +215,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 1,
       cost: 450,
-      phaseTag: 'DEV PHASE 4C'
+      phaseTag: 'PHASE 3C // THE SYNTHESIS'
     },
     {
       id: 'trail-spore-wake',
@@ -178,7 +230,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 1,
       cost: 250,
-      phaseTag: 'DEV PHASE 4C'
+      phaseTag: 'PHASE 3C // THE SYNTHESIS'
     }
   ];
 

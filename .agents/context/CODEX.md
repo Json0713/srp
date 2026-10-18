@@ -1,88 +1,100 @@
-# Project Parasite — Game Encyclopedia & Codex Registry (`CODEX.md`)
+# Project Parasite — Field Codex & Game Encyclopedia (`CODEX.md`)
 
-## 1. Overview & Purpose
+## 1. Purpose & Governance
 
-This document is the canonical **Game Handbook & Encyclopedia Registry** for **Project Parasite (`srp`)**. It serves two synchronized purposes:
+This file is the canonical **Game Encyclopedia & Field Codex Registry** for **Project Parasite (`srp`)**.
+It serves two synchronized roles:
 
-1. **Developer & AI Agent Reference:** Tracks every item, resource, parasite threat, power/skill, operator, and zone in the game, along with its implementation status and unlock condition.
-2. **Player In-Game Codex (`/codex`):** Powers the in-game Encyclopedia ("Codex") UI where players inspect records they have been granted/unlocked during gameplay.
+1. **Developer & Agent Reference:** Every game phase, item, resource, parasite, survival power, operator, sector, and Research Lab node in the game is cataloged here with its ID, classification, grant condition, and Game Phase tag.
+2. **In-Game Player Encyclopedia (`/codex`):** The Angular `CodexService` (`src/app/core/services/codex.service.ts`) and `Codex` screen (`src/app/screens/codex/codex.ts`) mirror this registry.
 
----
-
-## 2. Discovery & Visibility Rules
-
-Every Codex record has one of three visibility states (`CodexStatus`):
-
-| Status | Meaning | Player UI Behavior |
-| :--- | :--- | :--- |
-| **`discovered`** | Granted to the player at start or unlocked via an in-game action. | Full dossier, lore, telemetry stats, and icon are visible. |
-| **`undiscovered`** | Implemented in the current build, but not yet obtained/encountered by the player. | Title and lore are redacted (`[UNDISCOVERED RECORD]`). Only the code and **Unlock Hint** are shown until granted in-game. |
-| **`development`** | Planned for an upcoming milestone (e.g., Phase 3A Parasites, Phase 3B Skills). | Marked with `[UNDER DEVELOPMENT — PHASE X]`. Shows blueprint classification and planned role without misrepresenting it as active gameplay. |
-
-> **Mandatory Synchronization Rule:** Whenever a new item, resource, parasite, power, operator, or zone is added or updated in gameplay code, both this `.agents/context/CODEX.md` handbook and `src/app/core/services/codex.service.ts` **must** be updated together.
+### Mandatory Synchronization Rule
+Whenever a new item, parasite, power, operator, sector, or research node is added or updated in the codebase:
+- Update `.agents/context/CODEX.md`.
+- Update `CodexService` (`src/app/core/services/codex.service.ts`) and/or `MenuStateService` (`src/app/core/services/menu-state.service.ts`).
+- Ensure any newly implemented gameplay item has a deterministic in-game grant trigger (`codexService.grantEntry('<id>')`).
 
 ---
 
-## 3. Category I — Items & Biomass (`items`)
+## 2. Official Outbreak Phase Registry (Game Seasons)
 
-| ID | Code | Title | Default Status | Grant / Unlock Condition | Phase | Summary & Telemetry |
+| Phase ID | Code | Official Title | Subtitle | Status | Season Overview |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `phase-1-fallout` | `PHS-01` | **Phase 1: The Fallout** | *Initial Containment Collapse & Biomass Extraction* | **ACTIVE** | Frontline deployment into the overrun Sector 7 perimeter to harvest dormant Biomass Spire nodes, decrypt the Field Codex, and establish the Research Lab baseline. |
+| `phase-2-assimilation` | `PHS-02` | **Phase 2: The Assimilation** | *Parasite Swarm Escalation & Survival Powers* | **UPCOMING** | Dormant spores mutate into pursuing Rupters, Assimilated Humans, Volatile Spore Carriers, and Adapted Longarms bosses. Introduces auto-attack weapons, XP orbs, and randomized level-up skills. |
+| `phase-3-synthesis` | `PHS-03` | **Phase 3: The Synthesis** | *Research Lab Evolution & The Hive Core* | **UPCOMING** | Unlocks persistent SRP Bio-Credits, permanent Bio-Research rig upgrades, custom Rig Cosmetics, Operator Ranger requisition, and deep-core deployment into The Hive. |
+
+---
+
+## 3. Visibility & Grant States (`CodexStatus`)
+
+- **`discovered` (Granted):** The player has obtained, encountered, or unlocked this entry during gameplay. Full lore, telemetry stats, and behavioral notes are visible in the player's Field Codex (`📘`).
+- **`undiscovered` (Locked / Encrypted):** The feature exists in the active build, but the player has not yet triggered its grant condition in-game. The UI masks the full description and displays the **Unlock Hint**.
+- **`development` (Upcoming Phase Blueprint):** Planned content for **Phase 2: The Assimilation** or **Phase 3: The Synthesis**. Displayed in the Codex with a phase badge so players and developers can preview upcoming *Scape and Run: Parasites* and *Magic Survival* systems.
+
+---
+
+## 4. Category I — Items & Biomass (`items`)
+
+| ID | Code | Title | Default Status | Grant / Unlock Condition | Game Phase | Summary & Telemetry |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `raw-biomass` | `ITM-01` | **Raw Biomass Spore** | `undiscovered` | Granted automatically when the player harvests a Biomass Spire node (`E`) in `MainScene`. | Phase 1 / 2B (Active) | Luminescent parasitic spore cluster harvested from dormant spires. Primary survival catalyst. |
-| `srp-coin` | `ITM-02` | **SRP Bio-Credit** | `development` | Dropped by elite assimilated hosts and loot chests. | Phase 3C / 4A (Planned) | Standardized containment currency used in the Research Lab to synthesize Bio-Research upgrades and Rig Cosmetics. |
-| `chitin-shard` | `ITM-03` | **Hardened Chitin Shard** | `development` | Harvested from eliminated Rupter and Assimilated husks. | Phase 3A (Planned) | Dense exoskeletal plating used for field armor reinforcement and crafting. |
-| `containment-chest` | `ITM-04` | **Bio-Containment Cache** | `development` | Dropped by boss parasites upon elimination. | Phase 3C (Planned) | High-security supply cache containing randomized session buffs and SRP Bio-Credits. |
+| `raw-biomass` | `ITM-01` | **Raw Biomass Spore** | `undiscovered` | Granted automatically when the player harvests a Biomass Spire node (`E`) in `MainScene`. | `PHASE 1 // THE FALLOUT` (Active) | Luminescent parasitic spore cluster harvested from dormant spires. Primary survival catalyst. |
+| `srp-coin` | `ITM-02` | **SRP Bio-Credit** | `development` | Dropped by elite assimilated hosts and loot chests. | `PHASE 2C / 3A` (Upcoming) | Standardized containment currency used in the Research Lab to synthesize Bio-Research upgrades and Rig Cosmetics. |
+| `chitin-shard` | `ITM-03` | **Hardened Chitin Shard** | `development` | Harvested from eliminated Rupter and Assimilated husks. | `PHASE 2A // THE ASSIMILATION` | Dense exoskeletal plating used for field armor reinforcement and crafting. |
+| `containment-chest` | `ITM-04` | **Bio-Containment Cache** | `development` | Dropped by boss parasites upon elimination. | `PHASE 2C // THE ASSIMILATION` | High-security supply cache containing randomized session buffs and SRP Bio-Credits. |
 
 ---
 
-## 4. Category II — Parasite Bestiary (`parasites`)
+## 5. Category II — Parasite Bestiary (`parasites`)
 
-*Inspired by Minecraft's **Scape and Run: Parasites** mod. Currently registered as `development` placeholders until Milestone 3A (Basic Combat & Enemy Behavior).*
+*Inspired by Minecraft's **Scape and Run: Parasites** mod. Registered as `development` blueprints for **Phase 2: The Assimilation**.*
 
-| ID | Code | Title | Default Status | Threat Tier | Phase | Behavioral Blueprint |
+| ID | Code | Title | Default Status | Threat Tier | Game Phase | Behavioral Blueprint |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `parasite-rupter` | `PRS-01` | **Rupter (Crawler)** | `development` | Tier I — Scout | Phase 3A (Planned) | Fast, six-legged arthropod parasite that relentlessly pursues the operator in packs and leaps into melee range. |
-| `parasite-assimilated` | `PRS-02` | **Assimilated Human** | `development` | Tier I — Host | Phase 3A (Planned) | Former containment personnel overtaken by parasitic neural tendrils. Advances steadily in large waves. |
-| `parasite-bogle` | `PRS-03` | **Volatile Spore Carrier** | `development` | Tier II — Mutated | Phase 3B (Planned) | Bloated biomass host that ruptures on proximity, releasing toxic spore clouds across the arena. |
-| `parasite-longarms` | `PRS-04` | **Adapted Longarms** | `development` | Tier III — Apex Boss | Phase 3C (Planned) | Towering, heavily armored evolved parasite with extended scythe limbs. Drops Bio-Containment Caches. |
+| `parasite-rupter` | `PRS-01` | **Rupter (Crawler)** | `development` | Tier I — Scout | `PHASE 2A // THE ASSIMILATION` | Fast, six-legged arthropod parasite that relentlessly pursues the operator in packs and leaps into melee range. |
+| `parasite-assimilated` | `PRS-02` | **Assimilated Human** | `development` | Tier I — Host | `PHASE 2A // THE ASSIMILATION` | Former containment personnel overtaken by parasitic neural tendrils. Advances steadily in large waves. |
+| `parasite-bogle` | `PRS-03` | **Volatile Spore Carrier** | `development` | Tier II — Mutated | `PHASE 2B // THE ASSIMILATION` | Bloated biomass host that ruptures on proximity, releasing toxic spore clouds across the arena. |
+| `parasite-longarms` | `PRS-04` | **Adapted Longarms** | `development` | Tier III — Apex Boss | `PHASE 2C // THE ASSIMILATION` | Towering, heavily armored evolved parasite with extended scythe limbs. Drops Bio-Containment Caches. |
 
 ---
 
-## 5. Category III — Powers & Survival Skills (`powers`)
+## 6. Category III — Powers & Survival Skills (`powers`)
 
-*Inspired by **Magic Survival**. Currently registered as `development` placeholders until Milestone 3B (XP, Orbs, and Level-Up Skills).*
+*Inspired by **Magic Survival**. Registered as `development` blueprints for **Phase 2: The Assimilation**.*
 
-| ID | Code | Title | Default Status | Archetype | Phase | Skill Blueprint |
+| ID | Code | Title | Default Status | Archetype | Game Phase | Skill Blueprint |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `power-pulse-overclock` | `PWR-01` | **Pulse Carbine Overclock** | `development` | Primary Weapon | Phase 3A / 3B (Planned) | Rapid-fire kinetic bursts that automatically target the nearest parasitic signature. |
-| `power-spore-barrier` | `PWR-02` | **Bio-Repulsor Field** | `development` | Defensive Aura | Phase 3B (Planned) | Generates a pulsing electromagnetic ring around the operator that damages and slows nearby parasites. |
-| `power-orbital-drone` | `PWR-03` | **Sentinel Micro-Drones** | `development` | Autonomous Orbit | Phase 3B (Planned) | Deploys rotating containment drones that slice through incoming Rupter swarms. |
-| `power-thermal-purge` | `PWR-04` | **Thermal Incineration Wave** | `development` | Area Eradication | Phase 3B (Planned) | Periodically unleashes a high-temperature shockwave that purges surrounding biomass and hosts. |
+| `power-pulse-overclock` | `PWR-01` | **Pulse Carbine Overclock** | `development` | Primary Weapon | `PHASE 2A / 2B` | Rapid-fire kinetic bursts that automatically target the nearest parasitic signature. |
+| `power-spore-barrier` | `PWR-02` | **Bio-Repulsor Field** | `development` | Defensive Aura | `PHASE 2B // THE ASSIMILATION` | Generates a pulsing electromagnetic ring around the operator that damages and slows nearby parasites. |
+| `power-orbital-drone` | `PWR-03` | **Sentinel Micro-Drones** | `development` | Autonomous Orbit | `PHASE 2B // THE ASSIMILATION` | Deploys rotating containment drones that slice through incoming Rupter swarms. |
+| `power-thermal-purge` | `PWR-04` | **Thermal Incineration Wave** | `development` | Area Eradication | `PHASE 2B // THE ASSIMILATION` | Periodically unleashes a high-temperature shockwave that purges surrounding biomass and hosts. |
 
 ---
 
-## 6. Category IV — Field Archive: Operators & Sectors (`archive`)
+## 7. Category IV — Field Archive: Outbreak Phases, Operators & Sectors (`archive`)
 
-| ID | Code | Title | Default Status | Grant / Unlock Condition | Phase | Summary |
+| ID | Code | Title | Default Status | Grant / Unlock Condition | Game Phase | Summary |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `op-survivor` | `ARC-01` | **Operator: Survivor** | `discovered` | Granted by default on initial boot. | Phase 2A (Active) | Vanguard containment operative equipped with a Pulse Carbine and Bio-Filter Rig. |
-| `zone-sector7` | `ARC-02` | **Sector 7 Perimeter** | `discovered` | Granted by default on initial boot. | Phase 2A (Active) | Initial quarantine breach site containing active Biomass Spire nodes. |
-| `op-ranger` | `ARC-03` | **Operator: Ranger** | `development` | Unlockable via SRP Bio-Credits in Phase 4A. | Phase 4A (Planned) | High-mobility marksman specialist equipped with a piercing Rail Rifle. |
-| `zone-hive` | `ARC-04` | **The Hive Core** | `development` | Unlockable after clearing Sector 7. | Phase 3 / 4 (Planned) | Subterranean flesh-network and high-density outbreak epicenter. |
+| `phase-1-fallout` | `PHS-01` | **Phase 1: The Fallout** | `discovered` | Granted by default on initial boot. | `PHASE 1 // THE FALLOUT` (Active) | Inaugural outbreak season: Sector 7 containment collapse and Biomass Spire extraction. |
+| `phase-2-assimilation` | `PHS-02` | **Phase 2: The Assimilation** | `development` | Planned for Phase 2 season activation. | `PHASE 2 // THE ASSIMILATION` | Parasitic swarm awakening, wave combat, and survival power evolution. |
+| `phase-3-synthesis` | `PHS-03` | **Phase 3: The Synthesis** | `development` | Planned for Phase 3 season activation. | `PHASE 3 // THE SYNTHESIS` | Research Lab synthesis activation, Rig Cosmetics, and The Hive Core. |
+| `op-survivor` | `ARC-01` | **Operator: Survivor** | `discovered` | Granted by default on initial boot. | `PHASE 1 // THE FALLOUT` (Active) | Vanguard containment operative equipped with a Pulse Carbine and Bio-Filter Rig. |
+| `zone-sector7` | `ARC-02` | **Sector 7 Perimeter** | `discovered` | Granted by default on initial boot. | `PHASE 1 // THE FALLOUT` (Active) | Initial quarantine breach site containing active Biomass Spire nodes. |
+| `op-ranger` | `ARC-03` | **Operator: Ranger** | `development` | Unlockable via SRP Bio-Credits in Phase 3A. | `PHASE 3A // THE SYNTHESIS` | High-mobility marksman specialist equipped with a piercing Rail Rifle. |
+| `zone-hive` | `ARC-04` | **The Hive Core** | `development` | Unlockable after clearing Sector 7 in Phase 3. | `PHASE 3 // THE SYNTHESIS` | Subterranean flesh-network and high-density outbreak epicenter. |
 
 ---
 
-## 7. Research Lab Registry (`/research` — Bio-Research & Rig Cosmetics)
+## 8. Research Lab Registry (`/research` — Bio-Research & Rig Cosmetics)
 
 Managed by `MenuStateService.researchNodes` (`src/app/core/services/menu-state.service.ts`) and rendered in `src/app/screens/research/research.ts`.
 
-| ID | Code | Track | Title | Max Rank | Cost (SRP) | Phase | Effect Summary |
+| ID | Code | Track | Title | Max Rank | Cost (SRP) | Game Phase | Effect Summary |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `chitin-plating` | `RES-01` | `upgrades` | **Chitin Exo-Plating** | 5 | 100 | `DEV PHASE 4B` | `+6% Damage Reduction per Rank` |
-| `spore-extractor` | `RES-02` | `upgrades` | **Magnetic Spore Extractor** | 5 | 120 | `DEV PHASE 4B` | `+15% Harvest & Orb Radius per Rank` |
-| `combat-stims` | `RES-03` | `upgrades` | **Adrenaline Stims Mk.II** | 5 | 150 | `DEV PHASE 4B` | `+4% Base Move Speed per Rank` |
-| `neural-overclock` | `RES-04` | `upgrades` | **Neural Targeting Link** | 5 | 180 | `DEV PHASE 4B` | `-5% Skill Cooldown per Rank` |
-| `suit-hazmat-gold` | `COS-01` | `cosmetics` | **Aegis Hazmat Mk.IV** | 1 | 300 | `DEV PHASE 4C` | `Visual Override: Golden Visor & Trim` |
-| `suit-crimson-carapace` | `COS-02` | `cosmetics` | **Assimilated Carapace Rig** | 1 | 450 | `DEV PHASE 4C` | `Visual Override: Parasitic Crimson Aura` |
-| `trail-spore-wake` | `COS-03` | `cosmetics` | **Bioluminescent Spore Wake** | 1 | 250 | `DEV PHASE 4C` | `Visual Override: Emerald Footstep Particles` |
-
-
+| `chitin-plating` | `RES-01` | `upgrades` | **Chitin Exo-Plating** | 5 | 100 | `PHASE 3B // THE SYNTHESIS` | `+6% Damage Reduction per Rank` |
+| `spore-extractor` | `RES-02` | `upgrades` | **Magnetic Spore Extractor** | 5 | 120 | `PHASE 3B // THE SYNTHESIS` | `+15% Harvest & Orb Radius per Rank` |
+| `combat-stims` | `RES-03` | `upgrades` | **Adrenaline Stims Mk.II** | 5 | 150 | `PHASE 3B // THE SYNTHESIS` | `+4% Base Move Speed per Rank` |
+| `neural-overclock` | `RES-04` | `upgrades` | **Neural Targeting Link** | 5 | 180 | `PHASE 3B // THE SYNTHESIS` | `-5% Skill Cooldown per Rank` |
+| `suit-hazmat-gold` | `COS-01` | `cosmetics` | **Aegis Hazmat Mk.IV** | 1 | 300 | `PHASE 3C // THE SYNTHESIS` | `Visual Override: Golden Visor & Trim` |
+| `suit-crimson-carapace` | `COS-02` | `cosmetics` | **Assimilated Carapace Rig** | 1 | 450 | `PHASE 3C // THE SYNTHESIS` | `Visual Override: Parasitic Crimson Aura` |
+| `trail-spore-wake` | `COS-03` | `cosmetics` | **Bioluminescent Spore Wake** | 1 | 250 | `PHASE 3C // THE SYNTHESIS` | `Visual Override: Emerald Footstep Particles` |

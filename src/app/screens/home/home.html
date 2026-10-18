@@ -35,13 +35,11 @@
     <section class="title-section">
       <div class="outbreak-badge">
         <span class="badge-pulse" aria-hidden="true"></span>
-        <span>BIO-THREAT PROTOCOL // PHASE 02</span>
+        <span>{{ currentPhase.badge }}</span>
       </div>
       <h1 class="game-title">PROJECT PARASITE</h1>
-      <p class="subtitle">Outbreak Protocol — Survival Simulation</p>
-      <p class="lore-tagline">
-        Contain the spreading parasitic biomass. Harvest spire nodes, decrypt the Field Codex, and survive the infection wave.
-      </p>
+      <p class="subtitle">{{ currentPhase.title }} — {{ currentPhase.subtitle }}</p>
+      <p class="lore-tagline">{{ currentPhase.summary }}</p>
     </section>
 
     <!-- Tactical Loadout & Deployment Pod -->

@@ -4,6 +4,7 @@
 
 - Project directory: `C:\Lenovo-LOQ\System\Projects\gamedev\SRP`
 - Angular project identifier: `srp`
+- Active Game Phase / Season: **Phase 1: The Fallout** (`PHASE 1 // THE FALLOUT`)
 - Root project instructions: `AGENTS.md`
 - Project-specific instructions and knowledge: `.agents/`
 - Game Encyclopedia & Codex Registry: `.agents/context/CODEX.md`
@@ -17,7 +18,13 @@
 - Phaser: `4.2.1`
 - Vitest: `4.1.11`
 
-## Completed & Refactored Foundations (Phase 1 – Phase 2B + Field Codex)
+## Official Game Phase Registry
+
+1. **Phase 1: The Fallout (`PHS-01` — Active Now):** Initial containment collapse at Sector 7, frontline Biomass Spire extraction, Tactical Command Deck, Field Codex (`/codex`), Research Lab preview (`/research`), cross-device PC/Mobile 360° controls, camera chunk streaming, and operator sprite pipeline.
+2. **Phase 2: The Assimilation (`PHS-02` — Upcoming):** Parasitic swarm escalation (`Rupter`, `Assimilated Human`, `Volatile Spore Carrier`, `Adapted Longarms` boss), auto-targeting combat, XP orbs, and *Magic Survival*-style level-up skills.
+3. **Phase 3: The Synthesis (`PHS-03` — Upcoming):** Persistent `SRP Bio-Credits`, live Research Lab synthesis (`Bio-Research` meta-upgrades & `Rig Cosmetics`), `Operator: Ranger` unlock, and **The Hive** sector expansion.
+
+## Completed in Phase 1: The Fallout (Milestones 1A & 1B)
 
 ### 1. Clean Domain-Driven Project Structure
 - Reorganized `src/app/` into explicit domain boundaries:
@@ -29,19 +36,16 @@
 
 ### 2. Field Codex / Game Encyclopedia System (`CODEX.md` & `/codex`)
 - Created the canonical developer and agent encyclopedia handbook at `.agents/context/CODEX.md`.
-- Implemented `CodexService` (`src/app/core/services/codex.service.ts`) and the interactive `/codex` screen (`src/app/screens/codex/codex.ts`) with three visibility states:
-  - `discovered`: Full lore, classification, and telemetry stats visible once granted in-game (persisted to `localStorage`).
-  - `undiscovered`: Redacted record (`Encrypted Field Record`) showing the unlock hint until the player obtains/encounters it in gameplay.
-  - `development`: Clearly badged (`DEV PHASE 3A`, `DEV PHASE 3B`, etc.) placeholders for upcoming *Scape and Run* parasites (`Rupter`, `Assimilated Human`, `Volatile Spore Carrier`, `Adapted Longarms`), *Magic Survival* powers (`Pulse Carbine Overclock`, `Bio-Repulsor Field`, `Sentinel Micro-Drones`, `Thermal Incineration Wave`), and meta-items.
+- Implemented `CodexService` (`src/app/core/services/codex.service.ts`) and the interactive `/codex` screen (`src/app/screens/codex/codex.ts`) with three visibility states (`discovered`, `undiscovered`, and `development`) and full Outbreak Phase dossiers (`Phase 1: The Fallout`, `Phase 2: The Assimilation`, `Phase 3: The Synthesis`).
 - Connected `MainScene` -> `Game` -> `CodexService` so harvesting a Biomass Spire node (`E`) in-game automatically grants and unlocks `raw-biomass` (*Raw Biomass Spore*) in the Codex and displays a live `📘 CODEX GRANTED: Raw Biomass Spore` HUD notification.
 
-### 3. Research Lab (`/research`) & Tactical Biopunk UI/UX
-- Replaced the legacy "Black Market" placeholder with the **Research Lab** (`src/app/screens/research/research.ts`), featuring two dedicated synthesis tracks (**Bio-Research** meta-upgrades and **Rig Cosmetics** suit/trail overrides) and an interactive Blueprint Inspector.
-- Upgraded all screens to the **Project Parasite — Outbreak Protocol** dark-biopunk theme (`src/styles.css`), responsive across **Desktop Landscape**, **Mobile Landscape**, and **Mobile Portrait**.
+### 3. Research Lab (`/research`) & Phase 1: The Fallout Command Deck
+- Replaced the legacy "Black Market" placeholder with the **Research Lab** (`src/app/screens/research/research.ts`), featuring two synthesis tracks (**Bio-Research** meta-upgrades and **Rig Cosmetics** suit/trail overrides) and an interactive Blueprint Inspector.
+- Aligned the Home Command Deck (`src/app/screens/home/home.html`) and all game services around **Phase 1: The Fallout**.
 - Production build (`npm run build`) succeeds with 0 errors and 0 warnings.
 
 ## Next Target
-- **Phase 2C — Camera-Follow & Chunked World Generation**, enabling large-scale exploration with deterministic chunk streaming.
+- **Milestone 1C (Phase 1: The Fallout) — Camera-Follow & Chunked World Generation**, enabling large-scale Sector 7 exploration with deterministic chunk streaming.
 
 ## Update Policy
 When updating this document:

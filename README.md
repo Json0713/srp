@@ -6,6 +6,16 @@ Built with **Angular 22**, **TypeScript 6**, and **Phaser 4**, the architecture 
 
 ---
 
+## Outbreak Phase Registry (Game Seasons)
+
+| Phase | Code | Title | Subtitle | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Phase 1** | `PHS-01` | **Phase 1: The Fallout** | *Initial Containment Collapse & Biomass Extraction* | **ACTIVE** |
+| **Phase 2** | `PHS-02` | **Phase 2: The Assimilation** | *Parasite Swarm Escalation & Survival Powers* | **UPCOMING** |
+| **Phase 3** | `PHS-03` | **Phase 3: The Synthesis** | *Research Lab Evolution & The Hive Core* | **UPCOMING** |
+
+---
+
 ## Architecture & Directory Structure
 
 ```text

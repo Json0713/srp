@@ -14,9 +14,11 @@ export class Home {
   readonly menuState = inject(MenuStateService);
   readonly settingsService = inject(SettingsService);
 
+  readonly currentPhase = this.menuState.currentPhase;
   readonly operator = this.menuState.selectedOperator;
   readonly zone = this.menuState.selectedZone;
   readonly srpCoins = this.menuState.srpCoins;
   readonly inputMode = this.settingsService.inputMode;
 }
+
 

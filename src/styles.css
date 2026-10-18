@@ -187,7 +187,7 @@ body {
   margin-bottom: var(--spacing-xs);
   border-radius: var(--radius-pill);
   background: var(--color-danger-surface);
-  border: 1px solid rgba(239, 68, 68, 0.35);
+  border: 1px solid rgba(239, 171, 68, 0.35);
   color: var(--color-danger-light);
   font-family: var(--font-mono);
   font-size: 0.65rem;

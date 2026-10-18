@@ -22,6 +22,15 @@ The game should gradually evolve from a small, playable prototype into a coheren
 
 The intended atmosphere uses layered pixel-art scenery, environmental depth, lighting, shadows, and other effects that reinforce exploration and danger.
 
+### 2.1 Outbreak Phases (Game Seasons)
+
+Project Parasite is structured into canonical **Outbreak Phases** that serve as both player-facing game seasons and development chapters:
+
+1. **Phase 1: The Fallout** *(Active Season)* — Initial containment collapse at **Sector 7**, frontline Biomass Spire extraction, Tactical Command Deck, Field Codex, Research Lab blueprint terminal, cross-device PC/Mobile 360° controls, camera chunk streaming, and operator sprite pipeline.
+2. **Phase 2: The Assimilation** *(Upcoming Season)* — Parasitic swarm escalation (`Rupter`, `Assimilated Human`, `Volatile Spore Carrier`, `Adapted Longarms` boss), auto-targeting combat, XP orbs, and *Magic Survival*-style level-up skills.
+3. **Phase 3: The Synthesis** *(Upcoming Season)* — Persistent `SRP Bio-Credits`, live Research Lab synthesis (`Bio-Research` meta-upgrades & `Rig Cosmetics`), `Operator: Ranger` requisition, and **The Hive** sector expansion.
+
+
 ## 3. Core Gameplay Pillars
 
 ### Exploration
