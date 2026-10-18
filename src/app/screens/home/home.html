@@ -1,0 +1,112 @@
+<div class="home-wrapper">
+  <!-- Ambient Parasitic Spore & Grid Overlay -->
+  <div class="ambient-backdrop" aria-hidden="true">
+    <div class="spore-glow spore-glow-primary"></div>
+    <div class="spore-glow spore-glow-crimson"></div>
+  </div>
+
+  <!-- Top Telemetry & Command Bar -->
+  <header class="top-bar">
+    <div class="top-status">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span class="status-label">CONTAINMENT NET // ONLINE</span>
+    </div>
+
+    <div class="top-actions">
+      <div class="mode-badge" [attr.aria-label]="'Active control mode: ' + inputMode()">
+        <span class="mode-prefix">CTRL:</span>
+        <strong>{{ inputMode() === 'pc' ? 'PC KEYBOARD' : 'MOBILE TOUCH' }}</strong>
+      </div>
+
+      <div class="currency-display" aria-label="SRP Coins">
+        <span class="currency-icon" aria-hidden="true">🪙</span>
+        <span class="currency-label">SRP</span>
+        <span class="currency-value">{{ srpCoins() }}</span>
+      </div>
+
+      <app-button variant="icon" routerLink="/settings" ariaLabel="Settings">⚙️</app-button>
+    </div>
+  </header>
+
+  <!-- Central Command Deck (Responsive Portrait + Dual Landscape Layout) -->
+  <main class="main-content">
+    <!-- Hero Identity Block -->
+    <section class="title-section">
+      <div class="outbreak-badge">
+        <span class="badge-pulse" aria-hidden="true"></span>
+        <span>BIO-THREAT PROTOCOL // PHASE 02</span>
+      </div>
+      <h1 class="game-title">PROJECT PARASITE</h1>
+      <p class="subtitle">Outbreak Protocol — Survival Simulation</p>
+      <p class="lore-tagline">
+        Contain the spreading parasitic biomass. Harvest spire nodes, adapt your operator rig, and survive the infection wave.
+      </p>
+    </section>
+
+    <!-- Tactical Loadout & Deployment Pod -->
+    <section class="action-container" aria-label="Deployment Loadout">
+      <div class="current-loadout">
+        <div class="loadout-header">
+          <span class="loadout-kicker">ACTIVE DEPLOYMENT MANIFEST</span>
+          <span class="loadout-ready">READY</span>
+        </div>
+
+        <div class="loadout-grid">
+          <a routerLink="/operators" class="loadout-slot" aria-label="Change Operator">
+            <div class="slot-icon" aria-hidden="true">{{ operator().icon }}</div>
+            <div class="slot-info">
+              <span class="slot-label">Operator:</span>
+              <p class="slot-title"><strong>{{ operator().title }}</strong></p>
+              <span class="slot-sub">{{ operator().role }}</span>
+            </div>
+            <span class="slot-arrow" aria-hidden="true">›</span>
+          </a>
+
+          <a routerLink="/zones" class="loadout-slot" aria-label="Change Deployment Zone">
+            <div class="slot-icon" aria-hidden="true">{{ zone().icon }}</div>
+            <div class="slot-info">
+              <span class="slot-label">Zone:</span>
+              <p class="slot-title"><strong>{{ zone().title }}</strong></p>
+              <span class="slot-sub">{{ zone().badge }}</span>
+            </div>
+            <span class="slot-arrow" aria-hidden="true">›</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="deploy-cta-wrap">
+        <app-button routerLink="/zones" variant="primary" [fullWidth]="true" class="full-width">
+          <span>START RUN</span>
+          <span aria-hidden="true">→</span>
+        </app-button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Adaptive Tactical Navigation Dock (Left Rail on Desktop/Landscape, Bottom Bar on Portrait Mobile) -->
+  <nav class="floating-nav" aria-label="Primary Navigation">
+    <a
+      routerLink="/"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="nav-tab center-tab">
+      <span class="tab-icon" aria-hidden="true">🚀</span>
+      <span class="tab-label">Deploy</span>
+    </a>
+    <a
+      routerLink="/operators"
+      routerLinkActive="active"
+      class="nav-tab left-tab">
+      <span class="tab-icon" aria-hidden="true">👤</span>
+      <span class="tab-label">Operators</span>
+    </a>
+    <a
+      routerLink="/shop"
+      routerLinkActive="active"
+      class="nav-tab right-tab">
+      <span class="tab-icon" aria-hidden="true">🛒</span>
+      <span class="tab-label">Black Market</span>
+    </a>
+  </nav>
+</div>
+

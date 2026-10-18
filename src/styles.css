@@ -1,1 +1,244 @@
-/* You can add global styles to this file, and also import other style files */
+/* Project Parasite — Global Tactical Dark-Biopunk & Survival Design System */
+:root {
+  /* Core Surfaces — Abyssal Obsidian & Containment Slate */
+  --color-bg-void: #05070b;
+  --color-bg-base: #080c12;
+  --color-bg-surface: #0d131d;
+  --color-bg-panel: rgba(14, 20, 31, 0.88);
+  --color-bg-panel-solid: #0e141f;
+  --color-bg-panel-hover: #172133;
+  --color-bg-highlight: #1d293e;
+  --color-bg-glass: rgba(9, 13, 20, 0.78);
+
+  /* Typography Colors */
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #8b9bb4;
+  --color-text-muted: #56657e;
+
+  /* Borders & Dividers */
+  --color-border: rgba(99, 125, 162, 0.22);
+  --color-border-strong: rgba(139, 155, 180, 0.38);
+  --color-border-hover: rgba(74, 222, 128, 0.55);
+
+  /* Primary Bio-Spore Green (Survival / Deploy) */
+  --color-primary: #16a34a;
+  --color-primary-hover: #22c55e;
+  --color-primary-light: #4ade80;
+  --color-primary-glow: rgba(34, 197, 94, 0.35);
+  --color-primary-surface: rgba(34, 197, 94, 0.12);
+
+  /* Parasitic Crimson (Outbreak / Threat / Danger) */
+  --color-danger: #dc2626;
+  --color-danger-hover: #ef4444;
+  --color-danger-light: #f87171;
+  --color-danger-glow: rgba(239, 68, 68, 0.35);
+  --color-danger-surface: rgba(239, 68, 68, 0.12);
+
+  /* Biomass Amber (SRP Coins / Objectives / Accent) */
+  --color-accent: #f59e0b;
+  --color-accent-light: #fbbf24;
+  --color-accent-glow: rgba(245, 158, 11, 0.3);
+  --color-accent-surface: rgba(245, 158, 11, 0.12);
+
+  /* Tactical Cyan (Telemetry / Tech) */
+  --color-info: #38bdf8;
+  --color-info-surface: rgba(56, 189, 248, 0.12);
+
+  /* Spacing Scale */
+  --spacing-2xs: 0.125rem;
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.875rem;
+  --spacing-lg: 1.25rem;
+  --spacing-xl: 1.75rem;
+  --spacing-2xl: 2.5rem;
+
+  /* Safe Area Insets for Mobile Notches & Landscape Bars */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 9999px;
+
+  /* Transitions */
+  --transition-fast: 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-normal: 240ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Font Stacks */
+  --font-primary: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Rajdhani', 'Bahnschrift', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', ui-monospace, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--color-bg-void);
+  color: var(--color-text-primary);
+  font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Custom Subtle Tactical Scrollbar for Menu Screens */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(5, 7, 11, 0.6);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 155, 180, 0.28);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 222, 128, 0.5);
+}
+
+/* Shared Ambient Backdrop & Spore Glows */
+.ambient-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+.spore-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+}
+
+.spore-glow-primary {
+  width: 480px;
+  height: 480px;
+  bottom: -15%;
+  left: 18%;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.24) 0%, transparent 70%);
+}
+
+.spore-glow-crimson {
+  width: 420px;
+  height: 420px;
+  top: -12%;
+  right: 10%;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.18) 0%, transparent 70%);
+}
+
+/* Shared Telemetry Pills & Badges */
+.mode-badge,
+.currency-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm);
+  background: rgba(14, 20, 31, 0.88);
+  border: 1px solid var(--color-border);
+}
+
+.mode-badge strong {
+  color: var(--color-info);
+}
+
+.currency-display {
+  border-color: rgba(245, 158, 11, 0.35);
+  font-weight: 700;
+  color: var(--color-accent-light);
+}
+
+.outbreak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 0.2rem 0.65rem;
+  margin-bottom: var(--spacing-xs);
+  border-radius: var(--radius-pill);
+  background: var(--color-danger-surface);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: var(--color-danger-light);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+/* Shared Tactical Screen Shell for Secondary Screens (Operators, Zones, Shop, Settings) */
+.screen-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
+  background:
+    radial-gradient(circle at 85% 10%, rgba(220, 38, 38, 0.08), transparent 45%),
+    radial-gradient(circle at 15% 90%, rgba(34, 197, 94, 0.1), transparent 50%),
+    linear-gradient(180deg, var(--color-bg-void) 0%, var(--color-bg-base) 100%);
+  overflow: hidden;
+}
+
+.screen-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.screen-scroll-body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--spacing-lg) max(var(--spacing-lg), var(--safe-right)) calc(var(--spacing-xl) + var(--safe-bottom)) max(var(--spacing-lg), var(--safe-left));
+}
+
+.screen-container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+@media (max-height: 540px) and (orientation: landscape) {
+  .screen-scroll-body {
+    padding: var(--spacing-sm) max(var(--spacing-md), var(--safe-right)) calc(var(--spacing-md) + var(--safe-bottom)) max(var(--spacing-md), var(--safe-left));
+  }
+}

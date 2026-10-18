@@ -1,0 +1,103 @@
+<div class="game-wrapper">
+  <!-- Tactical Top HUD Layer -->
+  <header class="hud-layer" aria-label="Gameplay Telemetry HUD">
+    <div class="hud-left">
+      <div class="hud-card operator-hud">
+        <span class="hud-icon" aria-hidden="true">{{ operator().icon }}</span>
+        <div class="hud-details">
+          <span class="hud-kicker">{{ zone().title }}</span>
+          <strong class="hud-title">{{ operator().title }}</strong>
+        </div>
+      </div>
+
+      <div class="hud-card resource-hud" [class.interact-ready]="nearbyInteractable()">
+        <span class="resource-dot" aria-hidden="true"></span>
+        <span class="resource-label">BIOMASS:</span>
+        <strong class="resource-count">{{ resourcesCollected() }} / {{ totalResources() }}</strong>
+      </div>
+    </div>
+
+    <div class="hud-right">
+      <span class="hud-mode-pill">{{ inputMode() === 'pc' ? '⌨️ PC' : '📱 TOUCH' }}</span>
+      <button
+        type="button"
+        class="pause-toggle-btn"
+        (click)="togglePause()"
+        aria-label="Pause Game">
+        ⏸️
+      </button>
+    </div>
+  </header>
+
+  <!-- Phaser 4 Canvas Host -->
+  <div class="canvas-container" #gameContainer></div>
+
+  <!-- Desktop Controls Footer Hint -->
+  @if (inputMode() === 'pc' && !isPaused()) {
+    <div class="hud-bottom-hint" aria-hidden="true">
+      <span><strong>WASD / ARROWS</strong> Move</span>
+      <span class="divider">•</span>
+      <span><strong>E</strong> Harvest Biomass</span>
+      <span class="divider">•</span>
+      <span><strong>ESC</strong> Pause</span>
+    </div>
+  }
+
+  <!-- Tactical Pause & In-Run Settings Overlay -->
+  @if (isPaused()) {
+    <div class="pause-overlay" role="dialog" aria-modal="true" aria-labelledby="pause-heading">
+      <div class="pause-menu">
+        <span class="pause-kicker">SIMULATION SUSPENDED</span>
+        <h2 id="pause-heading">PAUSED</h2>
+
+        <div class="pause-telemetry">
+          <div class="telemetry-item">
+            <span>Operator</span>
+            <strong>{{ operator().title }}</strong>
+          </div>
+          <div class="telemetry-item">
+            <span>Sector</span>
+            <strong>{{ zone().title }}</strong>
+          </div>
+          <div class="telemetry-item">
+            <span>Biomass Harvested</span>
+            <strong>{{ resourcesCollected() }} / {{ totalResources() }}</strong>
+          </div>
+        </div>
+
+        <div class="pause-mode-switch" role="group" aria-label="Quick Switch Input Mode">
+          <span class="switch-label">Input Mode:</span>
+          <div class="switch-buttons">
+            <button
+              type="button"
+              class="mode-switch-btn"
+              [class.active]="inputMode() === 'pc'"
+              (click)="setInputMode('pc')">
+              Keyboard (PC)
+            </button>
+            <button
+              type="button"
+              class="mode-switch-btn"
+              [class.active]="inputMode() === 'mobile'"
+              (click)="setInputMode('mobile')">
+              Joystick (Mobile)
+            </button>
+          </div>
+        </div>
+
+        <div class="pause-actions">
+          <app-button variant="primary" [fullWidth]="true" class="full-width" (onClick)="togglePause()">
+            Resume
+          </app-button>
+          <app-button variant="secondary" [fullWidth]="true" class="full-width" routerLink="/settings">
+            Settings
+          </app-button>
+          <app-button variant="danger" [fullWidth]="true" class="full-width" (onClick)="returnHome()">
+            Return Home
+          </app-button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

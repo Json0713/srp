@@ -1,59 +1,74 @@
-# SRP
+# Project Parasite (`srp`)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.4.
+**Project Parasite** is a browser-based, offline, single-player, top-down 2.5D survival roguelite game inspired by *Scape and Run: Parasites* and *Magic Survival*.
 
-## Development server
+Built with **Angular 22**, **TypeScript 6**, and **Phaser 4**, the architecture strictly separates the reactive tactical UI shell (Angular) from the real-time game simulation and rendering loop (Phaser).
 
-To start a local development server, run:
+---
 
-```bash
-ng serve
+## Architecture & Directory Structure
+
+```text
+src/
+├── index.html                  # Native web-app viewport & dark theme shell
+├── styles.css                  # Global dark-biopunk design tokens & responsive layout system
+└── app/
+    ├── app.ts                  # Root application shell
+    ├── app.routes.ts           # Standalone route configuration
+    ├── core/                   # Shared domain contracts & singleton state services
+    │   ├── models/
+    │   │   └── game-data.model.ts
+    │   └── services/
+    │       ├── menu-state.service.ts
+    │       └── settings.service.ts
+    ├── shared/                 # Reusable tactical UI components (Signal inputs/outputs)
+    │   └── ui/
+    │       ├── button.ts
+    │       ├── page-header.ts
+    │       └── selection-card.ts
+    ├── screens/                # Out-of-game command deck screens (Portrait & Landscape responsive)
+    │   ├── home/               # Outbreak Command Hub (Deploy)
+    │   ├── operators/          # Containment Roster & Operator Dossiers
+    │   ├── zones/              # Infestation Sector Selection & Drop Manifest
+    │   ├── shop/               # Encrypted Black Market Terminal
+    │   └── settings/           # Hardware Input & Control Configuration
+    └── game/                   # Real-time Phaser 4 simulation & Angular HUD overlay
+        ├── game.ts             # Phaser lifecycle host, HUD telemetry & Pause overlay
+        ├── scenes/
+        │   └── main.scene.ts   # Active 2.5D survival arena & multi-touch virtual joystick
+        └── systems/            # Deterministic, unit-tested gameplay rules
+            ├── input.system.ts
+            ├── interaction.system.ts
+            └── movement.system.ts
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## Development Workflow & Scripts
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+### Start Development Server
 ```bash
-ng generate component component-name
+npm start
+```
+Navigates to `http://localhost:4200/` with live reload enabled.
+
+### Run Unit & Integration Tests (Vitest)
+```bash
+npm test -- --watch=false
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
+### Production Build
 ```bash
-ng generate --help
+npm run build
 ```
+Compiles and optimizes bundles to `dist/SRP`.
 
-## Building
+---
 
-To build the project run:
+## Documentation & Governance
 
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- [`AGENTS.md`](./AGENTS.md) — Core engineering principles, Angular 22 / TypeScript / Phaser 4 standards, and mandatory workflows.
+- [`.agents/context/GAME_DESIGN.md`](./.agents/context/GAME_DESIGN.md) — Game design pillars, visual direction, and scope boundaries.
+- [`.agents/context/TECHNICAL_DESIGN.md`](./.agents/context/TECHNICAL_DESIGN.md) — Technical baseline and subsystem boundaries.
+- [`.agents/context/ROADMAP.md`](./.agents/context/ROADMAP.md) — Phased milestone plan.
+- [`.agents/context/CURRENT_STATUS.md`](./.agents/context/CURRENT_STATUS.md) — Verified implementation status and next milestone target.
