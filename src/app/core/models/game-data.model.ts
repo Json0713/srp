@@ -107,6 +107,11 @@ export interface SurvivalSkillOption {
 }
 
 export interface GameHudSnapshot {
+  playerHp?: number;
+  playerMaxHp?: number;
+  enemiesEliminated?: number;
+  isCorroded?: boolean;
+  corrosionSeconds?: number;
   resourcesCollected: number;
   totalResources: number;
   nearbyInteractable: boolean;
@@ -173,6 +178,9 @@ export interface PersistedSessionV1 {
   runSeed: number;
   playerX?: number;
   playerY?: number;
+  playerHp?: number;
+  playerMaxHp?: number;
+  enemiesEliminated?: number;
   elapsedSeconds?: number;
   level: number;
   currentExp: number;

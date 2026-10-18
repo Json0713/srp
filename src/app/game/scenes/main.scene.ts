@@ -18,7 +18,21 @@ import {
   calculateOrbExpValue,
   updateMagnetPickups
 } from '../systems/progression.system';
-import { GameHudSnapshot, InputMode, PersistedSessionV1 } from '../../core/models/game-data.model';
+import {
+  ParasiteEnemy,
+  Projectile,
+  calculateParasiteSpawnBatch,
+  calculateWeaponStats,
+  checkPlayerContactDamage,
+  createProjectile,
+  findNearestEnemy,
+  rollParasiteDrops,
+  spawnParasite,
+  updateParasites,
+  updatePlayerCorrosion,
+  updateProjectiles
+} from '../systems/combat.system';
+import { FieldPickupItem, GameHudSnapshot, InputMode, PersistedSessionV1 } from '../../core/models/game-data.model';
 
 interface WasdKeys {
   W: Input.Keyboard.Key;
@@ -46,13 +60,29 @@ export class MainScene extends Scene {
   private readonly collectRadius = 22;
   private readonly magnetSpeed = 460;
 
+  // Combat & Health State (Magic Survival & Scape and Run: Parasites inspired)
+  private playerHp = 100;
+  private playerMaxHp = 100;
+  private invulnerabilityTimer = 0;
+  private playerCorrosionTimer = 0;
+  private playerCorrosionTickTimer = 0;
+  private enemiesEliminated = 0;
+  private pulseWeaponRank = 0;
+  private weaponTimer = 0;
+  private spawnTimer = 0;
+  private activeEnemies: ParasiteEnemy[] = [];
+  private activeProjectiles: Projectile[] = [];
+
   private environmentGraphics!: GameObjects.Graphics;
   private pickupGraphics!: GameObjects.Graphics;
   private resourceGraphics!: GameObjects.Graphics;
   private proximityGraphics!: GameObjects.Graphics;
   private compassGraphics!: GameObjects.Graphics;
+  private enemyGraphics!: GameObjects.Graphics;
+  private projectileGraphics!: GameObjects.Graphics;
   private interactFeedbackText!: GameObjects.Text;
   private promptText!: GameObjects.Text;
+  private damageTextPool: GameObjects.Text[] = [];
 
   private chunkManager!: ChunkManager;
   private currentSectorLabel = 'SEC +0:+0';
@@ -101,6 +131,8 @@ export class MainScene extends Scene {
       this.magnetRadius += 18;
     } else if (skillId === 'passive-servo-boost') {
       this.playerSpeed = Math.round(this.playerSpeed * 1.08);
+    } else if (skillId === 'power-pulse-overclock') {
+      this.pulseWeaponRank += 1;
     }
     this.emitHudSnapshot();
   };
@@ -143,10 +175,14 @@ export class MainScene extends Scene {
       this.runBiomass = Math.max(0, Number(resumeSession.runBiomass) || 0);
       this.runRpCoins = Math.max(0, Number(resumeSession.runRpCoins) || 0);
       this.pendingLevelUps = Math.max(0, Number(resumeSession.pendingLevelUps) || 0);
+      this.playerHp = typeof resumeSession.playerHp === 'number' ? resumeSession.playerHp : 100;
+      this.playerMaxHp = typeof resumeSession.playerMaxHp === 'number' ? resumeSession.playerMaxHp : 100;
+      this.enemiesEliminated = typeof resumeSession.enemiesEliminated === 'number' ? resumeSession.enemiesEliminated : 0;
 
       const skills = resumeSession.chosenSkills ?? {};
       const magnetRanks = Math.max(0, Number(skills['passive-magnet-coil']) || 0);
       const speedRanks = Math.max(0, Number(skills['passive-servo-boost']) || 0);
+      this.pulseWeaponRank = Math.max(0, Number(skills['power-pulse-overclock']) || 0);
       this.magnetRadius = 78 + magnetRanks * 18;
       this.playerSpeed = Math.round(300 * Math.pow(1.08, speedRanks));
 
@@ -160,7 +196,7 @@ export class MainScene extends Scene {
         resumeSession.collectedPickupIds ?? []
       );
     } else {
-      // Fresh deployment: Biomass and RP Coins always start at 0
+      // Fresh deployment: Biomass, RP Coins, and Combat counters start at fresh baseline
       this.elapsedSeconds = 0;
       this.playerLevel = 1;
       this.currentExp = 0;
@@ -168,6 +204,15 @@ export class MainScene extends Scene {
       this.runBiomass = 0;
       this.runRpCoins = 0;
       this.pendingLevelUps = 0;
+      this.playerHp = 100;
+      this.playerMaxHp = 100;
+      this.invulnerabilityTimer = 0;
+      this.enemiesEliminated = 0;
+      this.pulseWeaponRank = 0;
+      this.weaponTimer = 0;
+      this.spawnTimer = 0;
+      this.activeEnemies = [];
+      this.activeProjectiles = [];
       this.playerSpeed = 300;
       this.magnetRadius = 78;
       this.chunkManager = new ChunkManager(generateRunSeed(), CHUNK_SIZE, 2);
@@ -181,6 +226,25 @@ export class MainScene extends Scene {
     this.resourceGraphics = this.add.graphics().setDepth(3);
     this.proximityGraphics = this.add.graphics().setDepth(4);
     this.compassGraphics = this.add.graphics().setDepth(5);
+    this.enemyGraphics = this.add.graphics().setDepth(6.5);
+    this.projectileGraphics = this.add.graphics().setDepth(9);
+
+    this.damageTextPool = [];
+    for (let i = 0; i < 20; i++) {
+      const txt = this.add
+        .text(0, 0, '', {
+          fontFamily: 'monospace',
+          fontSize: '13px',
+          color: '#fef08a',
+          fontStyle: 'bold',
+          stroke: '#080c12',
+          strokeThickness: 3
+        })
+        .setOrigin(0.5, 0.5)
+        .setDepth(12)
+        .setVisible(false);
+      this.damageTextPool.push(txt);
+    }
 
     // 3. Player Entity Spawned at Origin or Restored Position with Smooth Camera Follow
     const startX =
@@ -628,7 +692,15 @@ export class MainScene extends Scene {
   private emitHudSnapshot(
     lastBiomassReward: GameHudSnapshot['lastBiomassReward'] = null
   ): void {
+    const isCorroded = this.playerCorrosionTimer > 0;
+    const corrosionSeconds = Math.ceil(this.playerCorrosionTimer / 1000);
+
     const snapshot: GameHudSnapshot = {
+      playerHp: this.playerHp,
+      playerMaxHp: this.playerMaxHp,
+      enemiesEliminated: this.enemiesEliminated,
+      isCorroded,
+      corrosionSeconds,
       resourcesCollected: this.runBiomass,
       totalResources: this.chunkManager.getDiscoveredResourcesCount(),
       nearbyInteractable: this.nearestResourceId !== null,
@@ -650,6 +722,284 @@ export class MainScene extends Scene {
       lastBiomassReward
     };
     this.game.events.emit('hud-update', snapshot);
+  }
+
+  private showDamageNumber(
+    x: number,
+    y: number,
+    damage: number,
+    isPlayer = false,
+    colorOverride?: string
+  ): void {
+    const txt = this.damageTextPool.find((t) => !t.visible);
+    if (!txt) return;
+
+    txt.setText(isPlayer ? `-${damage} HP` : `-${damage}`);
+    txt.setColor(colorOverride ?? (isPlayer ? '#ef4444' : '#fde047'));
+    txt.setPosition(x, y - 10);
+    txt.setAlpha(1);
+    txt.setVisible(true);
+
+    this.tweens.add({
+      targets: txt,
+      y: y - 36,
+      alpha: 0,
+      duration: 650,
+      ease: 'Quad.easeOut',
+      onComplete: () => {
+        txt.setVisible(false);
+      }
+    });
+  }
+
+  private showDeathBurst(x: number, y: number, color = 0x7f1d1d): void {
+    const burst = this.add.graphics().setDepth(6.2);
+    burst.fillStyle(color, 0.85);
+    for (let i = 0; i < 6; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 6 + Math.random() * 14;
+      burst.fillCircle(
+        x + Math.cos(angle) * dist,
+        y + Math.sin(angle) * dist,
+        3 + Math.random() * 2
+      );
+    }
+    this.tweens.add({
+      targets: burst,
+      alpha: 0,
+      duration: 450,
+      onComplete: () => burst.destroy()
+    });
+  }
+
+  /**
+   * Renders Scape and Run: Parasites entities (Buglins & Crawlers/Rupters).
+   * - Buglin: Silverfish-like wriggling larva (Standard Obsidian / Rare Violet).
+   * - Rupter: 6-legged arachnid predator (Standard Obsidian, Toxic Green, Crimson Blooded).
+   */
+  private drawEnemies(time: number): void {
+    this.enemyGraphics.clear();
+
+    for (const enemy of this.activeEnemies) {
+      if (enemy.hp <= 0) continue;
+
+      const { x, y, facingAngle, hitFlashTimer, kind, variant } = enemy;
+      const isFlashing = hitFlashTimer > 0;
+
+      if (kind === 'buglin') {
+        const isViolet = variant === 'aberrant-violet';
+
+        // 1. Soft Ground Shadow
+        this.enemyGraphics.fillStyle(0x000000, 0.4);
+        this.enemyGraphics.fillEllipse(x, y + 6, 18, 7);
+
+        // 2. Segmented undulating silverfish body
+        const segColors = isFlashing
+          ? [0xffffff, 0xffffff, 0xffffff, 0xffffff]
+          : isViolet
+            ? [0xa855f7, 0x9333ea, 0x7e22ce, 0x6b21a8]
+            : [0x1e1e24, 0x16161c, 0x111116, 0x0a0a0e];
+
+        const rimColor = isFlashing ? 0xffffff : isViolet ? 0xc084fc : 0x2e2e38;
+        this.enemyGraphics.lineStyle(1, rimColor, 0.85);
+
+        for (let s = 3; s >= 0; s--) {
+          const wriggle = Math.sin(time * 0.024 + s * 0.9) * 2;
+          const segDist = s * 3.5;
+          const segRadius = (4 - s) * 1.5 + 2.5;
+
+          const segX = x - Math.cos(facingAngle) * segDist + Math.sin(facingAngle) * wriggle;
+          const segY = y - Math.sin(facingAngle) * segDist - Math.cos(facingAngle) * wriggle;
+
+          this.enemyGraphics.fillStyle(segColors[s], 1);
+          this.enemyGraphics.fillCircle(segX, segY, segRadius);
+          this.enemyGraphics.strokeCircle(segX, segY, segRadius);
+        }
+
+        // Head & Whiskers
+        const headX = x + Math.cos(facingAngle) * 4;
+        const headY = y + Math.sin(facingAngle) * 4;
+
+        this.enemyGraphics.lineStyle(1, isFlashing ? 0xffffff : isViolet ? 0xe9d5ff : 0x64748b, 0.8);
+        const ant1 = facingAngle - 0.4;
+        const ant2 = facingAngle + 0.4;
+        this.enemyGraphics.lineBetween(headX, headY, headX + Math.cos(ant1) * 6, headY + Math.sin(ant1) * 6);
+        this.enemyGraphics.lineBetween(headX, headY, headX + Math.cos(ant2) * 6, headY + Math.sin(ant2) * 6);
+
+        // Eyes
+        const eyeColor = isFlashing ? 0xffffff : isViolet ? 0xf3e8ff : 0xef4444;
+        this.enemyGraphics.fillStyle(eyeColor, 1);
+        this.enemyGraphics.fillCircle(headX, headY, 1.4);
+
+        // Mini HP bar
+        if (enemy.hp < enemy.maxHp) {
+          const barW = 14;
+          const barH = 2.5;
+          const barX = x - barW / 2;
+          const barY = y - 12;
+          const healthPct = Math.max(0, enemy.hp / enemy.maxHp);
+          this.enemyGraphics.fillStyle(0x450a0a, 0.85);
+          this.enemyGraphics.fillRect(barX, barY, barW, barH);
+          this.enemyGraphics.fillStyle(isViolet ? 0xa855f7 : 0x22c55e, 1);
+          this.enemyGraphics.fillRect(barX, barY, barW * healthPct, barH);
+        }
+        continue;
+      }
+
+      // Rupter / Crawler
+      // 1. 2.5D Soft Ground Shadow
+      this.enemyGraphics.fillStyle(0x000000, 0.45);
+      this.enemyGraphics.fillEllipse(x, y + 10, 24, 9);
+
+      // 2. Variant Color Setup
+      let bodyColor = 0x111116; // Default obsidian black
+      let rimColor = 0x2e2e38;
+      let legColor = 0x22222a;
+      let eyeColor = 0xef4444;
+      let mandibleColor = 0x7f1d1d;
+
+      if (variant === 'toxic-green') {
+        bodyColor = 0x0d1711; // Black with sickly green undertone
+        rimColor = 0x22c55e;  // Neon acid green veins
+        legColor = 0x14532d;
+        eyeColor = 0x4ade80;  // Glowing lime eyes
+        mandibleColor = 0x22c55e;
+      } else if (variant === 'crimson-red') {
+        bodyColor = 0x170709; // Black with dried blood undertone
+        rimColor = 0xdc2626;  // Blood red veins
+        legColor = 0x450a0a;
+        eyeColor = 0xff1111;  // Fiery crimson eyes
+        mandibleColor = 0xef4444;
+      }
+
+      if (isFlashing) {
+        bodyColor = 0xffffff;
+        rimColor = 0xffffff;
+        legColor = 0xffffff;
+        eyeColor = 0xffffff;
+        mandibleColor = 0xffffff;
+      }
+
+      // 3. Spindly jointed legs (6 legs, animated crawling)
+      this.enemyGraphics.lineStyle(2, legColor, 1);
+      for (let legIdx = 0; legIdx < 6; legIdx++) {
+        const side = legIdx < 3 ? -1 : 1;
+        const legStep = (legIdx % 3) - 1; // -1, 0, 1
+        const legAnim = Math.sin(time * 0.018 + legIdx * 1.2) * 4;
+
+        const legBaseAngle = facingAngle + side * (Math.PI * 0.42);
+        const kneeX = x + Math.cos(legBaseAngle) * 11 + Math.cos(facingAngle) * legStep * 5;
+        const kneeY = y + Math.sin(legBaseAngle) * 11 + Math.sin(facingAngle) * legStep * 5;
+
+        const tipX = kneeX + Math.cos(legBaseAngle) * 7 + legAnim;
+        const tipY = kneeY + Math.sin(legBaseAngle) * 7;
+
+        this.enemyGraphics.lineBetween(x, y, kneeX, kneeY);
+        this.enemyGraphics.lineBetween(kneeX, kneeY, tipX, tipY);
+      }
+
+      // 4. Segmented Chitinous Carapace
+      const abdX = x - Math.cos(facingAngle) * 5;
+      const abdY = y - Math.sin(facingAngle) * 5;
+      this.enemyGraphics.fillStyle(bodyColor, 1);
+      this.enemyGraphics.lineStyle(1.5, rimColor, 1);
+      this.enemyGraphics.fillEllipse(abdX, abdY, 15, 12);
+      this.enemyGraphics.strokeEllipse(abdX, abdY, 15, 12);
+
+      // Head / Thorax
+      const headX = x + Math.cos(facingAngle) * 5;
+      const headY = y + Math.sin(facingAngle) * 5;
+      this.enemyGraphics.fillStyle(bodyColor, 1);
+      this.enemyGraphics.fillCircle(headX, headY, 6.5);
+      this.enemyGraphics.strokeCircle(headX, headY, 6.5);
+
+      // Mandibles / Chelicerae
+      this.enemyGraphics.lineStyle(2, mandibleColor, 1);
+      const mAngle1 = facingAngle - 0.35;
+      const mAngle2 = facingAngle + 0.35;
+      this.enemyGraphics.lineBetween(
+        headX,
+        headY,
+        headX + Math.cos(mAngle1) * 9,
+        headY + Math.sin(mAngle1) * 9
+      );
+      this.enemyGraphics.lineBetween(
+        headX,
+        headY,
+        headX + Math.cos(mAngle2) * 9,
+        headY + Math.sin(mAngle2) * 9
+      );
+
+      // Glowing Eyes
+      this.enemyGraphics.fillStyle(eyeColor, 1);
+      const eyeOffsetX = Math.cos(facingAngle + Math.PI * 0.5) * 3;
+      const eyeOffsetY = Math.sin(facingAngle + Math.PI * 0.5) * 3;
+      this.enemyGraphics.fillCircle(
+        headX + Math.cos(facingAngle) * 3 + eyeOffsetX,
+        headY + Math.sin(facingAngle) * 3 + eyeOffsetY,
+        1.8
+      );
+      this.enemyGraphics.fillCircle(
+        headX + Math.cos(facingAngle) * 3 - eyeOffsetX,
+        headY + Math.sin(facingAngle) * 3 - eyeOffsetY,
+        1.8
+      );
+
+      // 5. Floating Mini Health Bar (only shown when damaged)
+      if (enemy.hp < enemy.maxHp) {
+        const barW = 20;
+        const barH = 3;
+        const barX = x - barW / 2;
+        const barY = y - 18;
+        const healthPct = Math.max(0, enemy.hp / enemy.maxHp);
+
+        this.enemyGraphics.fillStyle(0x450a0a, 0.85);
+        this.enemyGraphics.fillRect(barX, barY, barW, barH);
+        this.enemyGraphics.fillStyle(
+          variant === 'toxic-green' ? 0x22c55e : variant === 'crimson-red' ? 0xef4444 : 0x38bdf8,
+          1
+        );
+        this.enemyGraphics.fillRect(barX, barY, barW * healthPct, barH);
+        this.enemyGraphics.lineStyle(1, 0x000000, 0.6);
+        this.enemyGraphics.strokeRect(barX, barY, barW, barH);
+      }
+    }
+  }
+
+  /**
+   * Renders high-velocity plasma pulse projectiles with energetic cyan glow and trail.
+   */
+  private drawProjectiles(): void {
+    this.projectileGraphics.clear();
+
+    for (const proj of this.activeProjectiles) {
+      if (!proj.active) continue;
+
+      // Outer plasma aura
+      this.projectileGraphics.fillStyle(0x0284c7, 0.45);
+      this.projectileGraphics.fillCircle(proj.x, proj.y, 7);
+
+      // Inner bright bolt
+      this.projectileGraphics.fillStyle(0x38bdf8, 1);
+      this.projectileGraphics.fillCircle(proj.x, proj.y, 4);
+
+      // Trailing energy streak
+      const speed = proj.speed || 560;
+      const trailLen = 10;
+      const normVx = proj.vx / speed;
+      const normVy = proj.vy / speed;
+      this.projectileGraphics.lineStyle(2.5, 0x38bdf8, 0.75);
+      this.projectileGraphics.lineBetween(
+        proj.x,
+        proj.y,
+        proj.x - normVx * trailLen,
+        proj.y - normVy * trailLen
+      );
+
+      // Hot core
+      this.projectileGraphics.fillStyle(0xffffff, 0.95);
+      this.projectileGraphics.fillCircle(proj.x, proj.y, 2);
+    }
   }
 
   override update(_time: number, delta: number): void {
@@ -842,5 +1192,172 @@ export class MainScene extends Scene {
       }
       this.emitHudSnapshot();
     }
+
+    // 6. Magic Survival Auto-Targeting & Auto-Attack Combat Loop
+    // Player bio-corrosion (toxic green poison DOT) processing
+    if (this.playerCorrosionTimer > 0) {
+      const corrosionResult = updatePlayerCorrosion(
+        this.playerCorrosionTimer,
+        this.playerCorrosionTickTimer,
+        delta,
+        3
+      );
+      this.playerCorrosionTimer = corrosionResult.remainingTimer;
+      this.playerCorrosionTickTimer = corrosionResult.tickTimer;
+
+      if (corrosionResult.damageToApply > 0) {
+        this.playerHp = Math.max(0, this.playerHp - corrosionResult.damageToApply);
+        this.showDamageNumber(newPos.x, newPos.y, corrosionResult.damageToApply, true, '#4ade80');
+        this.cameras.main.shake(80, 0.003);
+        this.emitHudSnapshot();
+
+        if (this.playerHp <= 0) {
+          this.game.events.emit('player-defeated');
+          return;
+        }
+      }
+    }
+
+    // Visual player status and invulnerability flicker
+    if (this.invulnerabilityTimer > 0) {
+      this.player.setAlpha(Math.sin(_time * 0.035) > 0 ? 0.35 : 0.95);
+    } else {
+      this.player.setAlpha(1);
+    }
+
+    if (this.playerCorrosionTimer > 0) {
+      this.playerVisor.setFillStyle(0x16a34a); // sickly green visor while poisoned
+    } else {
+      this.playerVisor.setFillStyle(0x052e16); // normal dark emerald visor
+    }
+
+    // A. Parasite Wave Spawning Loop (Spawn safely outside camera view near max render perimeter: 720-960px)
+    this.spawnTimer += delta;
+    if (this.spawnTimer >= 1800) {
+      this.spawnTimer = 0;
+      const closeCount = this.activeEnemies.filter(
+        (e) => e.hp > 0 && PhaserMath.Distance.Between(newPos.x, newPos.y, e.x, e.y) < 320
+      ).length;
+      const hpPct = Math.round((this.playerHp / Math.max(1, this.playerMaxHp)) * 100);
+
+      const batchCount = calculateParasiteSpawnBatch(
+        this.elapsedSeconds,
+        this.activeEnemies.length,
+        hpPct,
+        closeCount
+      );
+
+      for (let i = 0; i < batchCount; i++) {
+        const enemy = spawnParasite(
+          newPos.x,
+          newPos.y,
+          720,
+          960,
+          Math.random,
+          this.elapsedSeconds
+        );
+        this.activeEnemies.push(enemy);
+      }
+    }
+
+    // B. Pulse Carbine Auto-Aim Loop (Targets nearest parasite within range)
+    const weaponStats = calculateWeaponStats(this.pulseWeaponRank);
+    this.weaponTimer += delta;
+    if (this.weaponTimer >= weaponStats.cooldownMs) {
+      const targetEnemy = findNearestEnemy(newPos, this.activeEnemies, weaponStats.range);
+      if (targetEnemy) {
+        this.weaponTimer = 0;
+        const proj = createProjectile(
+          newPos.x,
+          newPos.y,
+          targetEnemy.x,
+          targetEnemy.y,
+          weaponStats
+        );
+        this.activeProjectiles.push(proj);
+        this.game.events.emit('codex-grant', 'power-pulse-overclock');
+      }
+    }
+
+    // C. Update Active Projectiles & Evaluate Enemy Impacts
+    const { remainingProjectiles, hits } = updateProjectiles(
+      this.activeProjectiles,
+      this.activeEnemies,
+      delta
+    );
+    this.activeProjectiles = remainingProjectiles;
+
+    if (hits.length > 0) {
+      for (const hit of hits) {
+        this.showDamageNumber(hit.x, hit.y, hit.damage, false);
+
+        if (hit.killed) {
+          this.enemiesEliminated += 1;
+          if (hit.enemy.kind === 'buglin') {
+            this.game.events.emit('codex-grant', 'parasite-buglin');
+          } else {
+            this.game.events.emit('codex-grant', 'parasite-rupter');
+          }
+
+          let burstColor = 0x334155;
+          if (hit.enemy.kind === 'buglin' && hit.enemy.variant === 'aberrant-violet') {
+            burstColor = 0x9333ea;
+          } else if (hit.enemy.variant === 'toxic-green') {
+            burstColor = 0x16a34a;
+          } else if (hit.enemy.variant === 'crimson-red') {
+            burstColor = 0xdc2626;
+          }
+
+          this.showDeathBurst(hit.enemy.x, hit.enemy.y, burstColor);
+
+          const drops = rollParasiteDrops(hit.enemy);
+          for (const drop of drops) {
+            const dropItem: FieldPickupItem = {
+              id: 'drop-' + Math.random().toString(36).slice(2, 9),
+              kind: drop.kind,
+              x: hit.enemy.x + (Math.random() - 0.5) * 16,
+              y: hit.enemy.y + (Math.random() - 0.5) * 16,
+              baseValue: drop.baseValue,
+              collected: false
+            };
+            this.chunkManager.addDropPickup(dropItem);
+          }
+          this.drawPickups();
+        }
+      }
+    }
+
+    // D. Update Alive Parasites Movement & Contact Damage to Player
+    this.activeEnemies = updateParasites(this.activeEnemies, newPos, delta);
+
+    const contactResult = checkPlayerContactDamage(
+      newPos,
+      this.playerSize * 0.45,
+      this.activeEnemies,
+      this.invulnerabilityTimer,
+      delta
+    );
+    this.invulnerabilityTimer = contactResult.nextInvulnerabilityTimer;
+
+    if (contactResult.inflictCorrosion) {
+      this.playerCorrosionTimer = Math.max(this.playerCorrosionTimer, 3000);
+      this.playerCorrosionTickTimer = 0;
+    }
+
+    if (contactResult.damageTaken > 0) {
+      this.playerHp = Math.max(0, this.playerHp - contactResult.damageTaken);
+      this.showDamageNumber(newPos.x, newPos.y, contactResult.damageTaken, true);
+      this.cameras.main.shake(130, 0.007);
+      this.emitHudSnapshot();
+
+      if (this.playerHp <= 0) {
+        this.game.events.emit('player-defeated');
+        return;
+      }
+    }
+
+    // E. World-Space Combat Graphics
+    this.drawEnemies(_time);
+    this.drawProjectiles();
   }
 }

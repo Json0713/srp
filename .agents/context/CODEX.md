@@ -49,11 +49,12 @@ Whenever a new item, parasite, power, operator, sector, or research node is adde
 
 ## 5. Category II — Parasite Bestiary (`parasites`)
 
-*Inspired by Minecraft's **Scape and Run: Parasites** mod. Registered as `development` blueprints for **Phase 2: The Assimilation**.*
+*Inspired by Minecraft's **Scape and Run: Parasites** mod.*
 
 | ID | Code | Title | Default Status | Threat Tier | Game Phase | Behavioral Blueprint |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `parasite-rupter` | `PRS-01` | **Rupter (Crawler)** | `development` | Tier I — Scout | `PHASE 2A // THE ASSIMILATION` | Fast, six-legged arthropod parasite that relentlessly pursues the operator in packs and leaps into melee range. |
+| `parasite-buglin` | `PRS-00` | **Buglin (Larva)** | `undiscovered` | Tier 0 — Primitive | `PHASE 1 // COMBAT` (Active) | Fast, silverfish-like wriggling larva. Common Obsidian Black swarms ahead of packs; rare Aberrant Violet carries high-value Orange EXP Cores. |
+| `parasite-rupter` | `PRS-01` | **Rupter (Crawler)** | `undiscovered` | Tier I — Scout | `PHASE 1 // COMBAT` (Active) | Six-legged arthropod pack hunter. Features Obsidian Black (standard), Toxic Green (corrosive poison DOT), and Crimson Red (frenzied high-damage gore striker). |
 | `parasite-assimilated` | `PRS-02` | **Assimilated Human** | `development` | Tier I — Host | `PHASE 2A // THE ASSIMILATION` | Former containment personnel overtaken by parasitic neural tendrils. Advances steadily in large waves. |
 | `parasite-bogle` | `PRS-03` | **Volatile Spore Carrier** | `development` | Tier II — Mutated | `PHASE 2B // THE ASSIMILATION` | Bloated biomass host that ruptures on proximity, releasing toxic spore clouds across the arena. |
 | `parasite-longarms` | `PRS-04` | **Adapted Longarms** | `development` | Tier III — Apex Boss | `PHASE 2C // THE ASSIMILATION` | Towering, heavily armored evolved parasite with extended scythe limbs. Drops Bio-Containment Caches. |
@@ -62,11 +63,11 @@ Whenever a new item, parasite, power, operator, sector, or research node is adde
 
 ## 6. Category III — Powers & Survival Skills (`powers`)
 
-*Inspired by **Magic Survival**. Registered as `development` blueprints for **Phase 2: The Assimilation**.*
+*Inspired by **Magic Survival**.*
 
 | ID | Code | Title | Default Status | Archetype | Game Phase | Skill Blueprint |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `power-pulse-overclock` | `PWR-01` | **Pulse Carbine Overclock** | `development` | Primary Weapon | `PHASE 2A / 2B` | Rapid-fire kinetic bursts that automatically target the nearest parasitic signature. |
+| `power-pulse-overclock` | `PWR-01` | **Pulse Carbine Overclock** | `undiscovered` | Primary Weapon | `PHASE 1 // COMBAT` (Active) | Rapid-fire kinetic plasma bursts that automatically lock onto the nearest parasitic signature. |
 | `power-spore-barrier` | `PWR-02` | **Bio-Repulsor Field** | `development` | Defensive Aura | `PHASE 2B // THE ASSIMILATION` | Generates a pulsing electromagnetic ring around the operator that damages and slows nearby parasites. |
 | `power-orbital-drone` | `PWR-03` | **Sentinel Micro-Drones** | `development` | Autonomous Orbit | `PHASE 2B // THE ASSIMILATION` | Deploys rotating containment drones that slice through incoming Rupter swarms. |
 | `power-thermal-purge` | `PWR-04` | **Thermal Incineration Wave** | `development` | Area Eradication | `PHASE 2B // THE ASSIMILATION` | Periodically unleashes a high-temperature shockwave that purges surrounding biomass and hosts. |

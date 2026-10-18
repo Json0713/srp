@@ -13,6 +13,20 @@
   <!-- Tactical Top HUD Layer (In-Run Biomass & RP Coins start at 0 every deploy) -->
   <header class="hud-layer" aria-label="Gameplay Telemetry HUD">
     <div class="hud-left">
+      <div class="hud-card hp-hud" aria-label="Operator Vitality">
+        <span aria-hidden="true">❤️</span>
+        <span class="resource-label">HP</span>
+        <strong class="hp-count">{{ playerHp() }}/{{ playerMaxHp() }}</strong>
+      </div>
+
+      @if (isCorroded()) {
+        <div class="hud-card toxin-hud" role="status" aria-label="Bio-Corrosion Status">
+          <span aria-hidden="true">☣️</span>
+          <span class="resource-label">TOXIN</span>
+          <strong class="toxin-count">{{ corrosionSeconds() }}s</strong>
+        </div>
+      }
+
       <div class="hud-card biomass-hud" [class.interact-ready]="nearbyInteractable()" aria-label="Run Rare Biomass">
         <span aria-hidden="true">🧪</span>
         <span class="resource-label">RUN BIO</span>
@@ -318,6 +332,8 @@
                 <span class="sector-chip">{{ operator().role }}</span>
               </div>
               <div class="pause-telemetry">
+                <div class="telemetry-item"><span>Operator Vitality</span><strong>{{ playerHp() }} / {{ playerMaxHp() }} HP ({{ hpPercent() }}%)</strong></div>
+                <div class="telemetry-item"><span>Parasites Purged</span><strong>{{ enemiesEliminated() }} Rupters</strong></div>
                 <div class="telemetry-item"><span>Level / EXP</span><strong>LVL {{ level() }} ({{ currentExp() }}/{{ expToNextLevel() }})</strong></div>
                 <div class="telemetry-item"><span>Move Speed</span><strong>{{ playerSpeed() }} px/s</strong></div>
                 <div class="telemetry-item"><span>Magnet Pickup Radius</span><strong>{{ magnetRadius() }} px</strong></div>
@@ -497,6 +513,52 @@
             </div>
           </div>
         }
+      </div>
+    </div>
+  }
+
+  <!-- Critical Breach / Defeat Extraction Modal (Guaranteed Bank into Vault) -->
+  @if (isDefeated()) {
+    <div class="pause-overlay" role="dialog" aria-modal="true" aria-labelledby="defeat-heading">
+      <div class="tactical-modal defeat-modal">
+        <div class="modal-top-bar">
+          <div>
+            <span class="pause-kicker critical-kicker">CONTAINMENT BREACH // VITAL SIGNS ZERO</span>
+            <h2 id="defeat-heading">OPERATOR DOWN // EXTRACTION SECURED</h2>
+          </div>
+          <app-info-popover
+            title="Defeat Extraction Protocol"
+            tag="EXTRACTION"
+            text="When your operator falls in combat, emergency extraction secures all gathered Biomass and RP Coins into your permanent Command Vault."
+            hint="All progress is saved. Upgrades await in the Research Lab." />
+        </div>
+
+        <div class="pause-telemetry">
+          <div class="telemetry-item">
+            <span>Mission Duration</span>
+            <strong>⏱️ {{ formattedRunTime() }}</strong>
+          </div>
+          <div class="telemetry-item">
+            <span>Parasites Purged</span>
+            <strong>🕷️ {{ enemiesEliminated() }} Rupters</strong>
+          </div>
+          <div class="telemetry-item">
+            <span>Banked to Command Vault</span>
+            <strong class="loot-highlight">🧪 +{{ runBiomass() }} Biomass  |  🪙 +{{ runRpCoins() }} RP Coins</strong>
+          </div>
+          <div class="telemetry-item">
+            <span>Final Containment Level</span>
+            <strong>LVL {{ level() }} ({{ expPercent() }}%)</strong>
+          </div>
+        </div>
+
+        <app-button
+          variant="primary"
+          [fullWidth]="true"
+          class="full-width"
+          (onClick)="returnToCommandAfterDefeat()">
+          RETURN TO COMMAND BASE
+        </app-button>
       </div>
     </div>
   }

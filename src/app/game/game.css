@@ -11,6 +11,7 @@
 .biomass-hud.interact-ready { border-color: var(--color-primary-light); box-shadow: 0 0 12px rgba(34,197,94,.35); }
 .biomass-count, .hud-bottom-hint strong { color: var(--color-primary-light); }
 .coin-count { color: var(--color-accent-light); }
+.hp-count { color: #f87171; font-weight: 700; }
 .reward-toast { border-color: var(--color-accent-light); color: var(--color-text-primary); }
 .pause-toggle-btn { pointer-events: auto; width: 36px; height: 36px; background: rgba(8,12,18,.85); border: 1px solid var(--color-border-strong); color: var(--color-text-primary); border-radius: var(--radius-sm); cursor: pointer; }
 .sector-watermark { position: absolute; bottom: calc(.45rem + var(--safe-bottom)); left: max(var(--spacing-md),var(--safe-left)); display: inline-flex; gap: .35rem; font-family: var(--font-mono); font-size: .64rem; color: var(--color-text-secondary); opacity: .42; pointer-events: none; z-index: 8; }

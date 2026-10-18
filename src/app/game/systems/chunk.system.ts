@@ -427,4 +427,15 @@ export class ChunkManager {
     }
     return null;
   }
+
+  addDropPickup(pickup: FieldPickupItem): void {
+    const coords = worldToChunkCoords(pickup.x, pickup.y, this.chunkSize);
+    const key = getChunkKey(coords.chunkX, coords.chunkY);
+    const chunk = this.discoveredChunks.get(key);
+    if (chunk) {
+      chunk.pickups.push(pickup);
+    } else if (this.activeChunks.length > 0) {
+      this.activeChunks[0].pickups.push(pickup);
+    }
+  }
 }

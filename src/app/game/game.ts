@@ -71,6 +71,16 @@ export class Game implements OnInit, OnDestroy {
   readonly runBiomass = signal(0);
   readonly runRpCoins = signal(0);
 
+  // Combat, Vitality & Enemies Eliminated telemetry
+  readonly playerHp = signal(100);
+  readonly playerMaxHp = signal(100);
+  readonly enemiesEliminated = signal(0);
+  readonly isDefeated = signal(false);
+  readonly hpPercent = computed(() => {
+    const max = Math.max(1, this.playerMaxHp());
+    return Math.max(0, Math.min(100, Math.round((this.playerHp() / max) * 100)));
+  });
+
   // Real-time run telemetry for autosave & Operator Stats modal
   readonly runSeed = signal(1);
   readonly playerX = signal(256);
@@ -99,6 +109,8 @@ export class Game implements OnInit, OnDestroy {
 
   readonly nearbyInteractable = signal(false);
   readonly sectorLabel = signal('SEC +0:+0');
+  readonly isCorroded = signal(false);
+  readonly corrosionSeconds = signal(0);
   readonly unlockedCodexTitle = signal<string | null>(null);
   readonly recentBiomassReward = signal<{ biomass: number; exp: number; rpCoins: number } | null>(
     null
@@ -263,6 +275,22 @@ export class Game implements OnInit, OnDestroy {
     this.runBiomass.set(snapshot.runBiomass ?? snapshot.resourcesCollected);
     this.runRpCoins.set(snapshot.runRpCoins ?? 0);
     this.nearbyInteractable.set(snapshot.nearbyInteractable);
+    if (snapshot.isCorroded !== undefined) {
+      this.isCorroded.set(snapshot.isCorroded);
+    }
+    if (snapshot.corrosionSeconds !== undefined) {
+      this.corrosionSeconds.set(snapshot.corrosionSeconds);
+    }
+
+    if (snapshot.playerHp !== undefined) {
+      this.playerHp.set(snapshot.playerHp);
+    }
+    if (snapshot.playerMaxHp !== undefined) {
+      this.playerMaxHp.set(snapshot.playerMaxHp);
+    }
+    if (snapshot.enemiesEliminated !== undefined) {
+      this.enemiesEliminated.set(snapshot.enemiesEliminated);
+    }
 
     if (snapshot.sectorLabel) {
       this.sectorLabel.set(snapshot.sectorLabel);
@@ -333,6 +361,9 @@ export class Game implements OnInit, OnDestroy {
       runSeed: this.runSeed(),
       playerX: this.playerX(),
       playerY: this.playerY(),
+      playerHp: this.playerHp(),
+      playerMaxHp: this.playerMaxHp(),
+      enemiesEliminated: this.enemiesEliminated(),
       elapsedSeconds: this.elapsedSeconds(),
       level: this.level(),
       currentExp: this.currentExp(),
@@ -420,6 +451,9 @@ export class Game implements OnInit, OnDestroy {
       this.runSeed.set(savedSession.runSeed);
       this.playerX.set(savedSession.playerX ?? 256);
       this.playerY.set(savedSession.playerY ?? 256);
+      this.playerHp.set(savedSession.playerHp ?? 100);
+      this.playerMaxHp.set(savedSession.playerMaxHp ?? 100);
+      this.enemiesEliminated.set(savedSession.enemiesEliminated ?? 0);
       this.elapsedSeconds.set(savedSession.elapsedSeconds ?? 0);
       this.level.set(savedSession.level);
       this.currentExp.set(savedSession.currentExp);
@@ -435,6 +469,12 @@ export class Game implements OnInit, OnDestroy {
       this.level.set(1);
       this.currentExp.set(0);
       this.expToNextLevel.set(100);
+      this.playerHp.set(100);
+      this.playerMaxHp.set(100);
+      this.enemiesEliminated.set(0);
+      this.isDefeated.set(false);
+      this.isCorroded.set(false);
+      this.corrosionSeconds.set(0);
       this.chosenSkillRanks.set({});
       this.collectedResourceIds = [];
       this.collectedPickupIds = [];
@@ -476,9 +516,29 @@ export class Game implements OnInit, OnDestroy {
           this.handleCodexGrant(entryId);
         });
       });
+
+      this.game.events.on('player-defeated', () => {
+        this.ngZone.run(() => {
+          this.handlePlayerDefeated();
+        });
+      });
     });
 
     this.isInitializing = false;
+  }
+
+  handlePlayerDefeated(): void {
+    if (this.isDefeated()) return;
+    this.isDefeated.set(true);
+    this.isAborted = true;
+    this.menuState.completeOrAbortRun(this.runBiomass(), this.runRpCoins(), this.level());
+    if (this.game) {
+      this.game.scene.pause('MainScene');
+    }
+  }
+
+  returnToCommandAfterDefeat(): void {
+    void this.router.navigate(['/']);
   }
 
   ngOnDestroy(): void {
@@ -497,6 +557,7 @@ export class Game implements OnInit, OnDestroy {
     if (this.game) {
       this.game.events.off('hud-update');
       this.game.events.off('codex-grant');
+      this.game.events.off('player-defeated');
       this.game.destroy(true);
       this.game = null;
     }

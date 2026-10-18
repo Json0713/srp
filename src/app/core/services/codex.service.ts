@@ -123,22 +123,41 @@ export class CodexService {
 
     // Category II: Parasite Bestiary (Scape and Run: Parasites inspired)
     {
+      id: 'parasite-buglin',
+      code: 'PRS-00',
+      title: 'Buglin (Larva)',
+      category: 'parasites',
+      status: 'undiscovered',
+      icon: '🪱',
+      classification: 'Tier 0 Parasite // Primitive Larva',
+      summary: 'Swift, silverfish-like primitive arthropod that swarms ahead of larger hosts.',
+      description:
+        'The primary larval vector of an outbreak. Standard specimens feature deep pitch-black segmented bodies, while rare Aberrant Violet variants carry concentrated neural cores with guaranteed Orange EXP Core drops.',
+      unlockHint: 'Eliminate a Buglin larva in Sector 7 to unlock this field record.',
+      phaseTag: 'PHASE 1 // COMBAT',
+      stats: [
+        { label: 'Threat Level', value: 'Tier 0 — Swift Pest' },
+        { label: 'Sub-Species', value: 'Obsidian Black (Common) / Violet (Rare)' },
+        { label: 'Movement', value: 'Fast Wriggle & High Velocity' }
+      ]
+    },
+    {
       id: 'parasite-rupter',
       code: 'PRS-01',
       title: 'Rupter (Crawler)',
       category: 'parasites',
-      status: 'development',
+      status: 'undiscovered',
       icon: '🕷️',
-      classification: 'Tier I Parasite // Scout',
-      summary: 'Fast, six-legged arthropod parasite that hunts operators in packs.',
+      classification: 'Tier I Parasite // Scout Crawler',
+      summary: 'Arachnid-like parasite featuring Obsidian, Toxic Green, and Crimson variants.',
       description:
-        'The earliest mobile stage of a Scape and Run outbreak. Rupters rely on swarm velocity to overwhelm isolated targets and infect organic matter on contact.',
-      unlockHint: 'Planned for Phase 2A: The Assimilation (Basic Combat & Enemy Behavior).',
-      phaseTag: 'PHASE 2A // THE ASSIMILATION',
+        'The primary mobile scout of the infestation. Standard Obsidian Crawlers hunt in packs. Toxic Green variants secrete corrosive acid that inflicts poison over time. Crimson Red variants sprint in a blood-frenzy and deal devastating direct contact damage.',
+      unlockHint: 'Eliminate a Rupter parasite in Sector 7 to unlock this field record.',
+      phaseTag: 'PHASE 1 // COMBAT',
       stats: [
-        { label: 'Threat Level', value: 'Tier I — Low/Swarm' },
-        { label: 'Behavior', value: 'Direct Pursuit & Leap' },
-        { label: 'Weakness', value: 'Kinetic Burst Fire' }
+        { label: 'Threat Level', value: 'Tier I — Pack Hunter' },
+        { label: 'Color Classes', value: 'Black (Standard), Green (Poison), Red (Blooded)' },
+        { label: 'Special Hazards', value: 'Bio-Corrosion DOT / Heavy Melee Damage' }
       ]
     },
     {
@@ -203,17 +222,18 @@ export class CodexService {
       code: 'PWR-01',
       title: 'Pulse Carbine Overclock',
       category: 'powers',
-      status: 'development',
+      status: 'undiscovered',
       icon: '⚡',
       classification: 'Active Weapon // Auto-Target',
       summary: 'High-frequency kinetic bursts that automatically lock onto the nearest threat.',
       description:
-        'Standard containment firearm module. Upgrades increase projectile velocity, burst count, and piercing capability against dense parasite waves.',
-      unlockHint: 'Planned for Phase 2A & 2B: The Assimilation (Auto-Attack & Level-Up Skills).',
-      phaseTag: 'PHASE 2A / 2B',
+        'Standard containment firearm module. Automatically locks onto the nearest parasite and unleashes plasma rounds.',
+      unlockHint: 'Engage parasites using the auto-targeting Pulse Carbine during deployment.',
+      phaseTag: 'PHASE 1 // COMBAT',
       stats: [
         { label: 'Targeting', value: 'Nearest Host Signature' },
-        { label: 'Max Evolution', value: 'Hyper-Velocity Rail Barrage' }
+        { label: 'Fire Mode', value: 'Automatic Pulse Bursts' },
+        { label: 'Upgrade Effect', value: '+Fire Rate & Damage per Rank' }
       ]
     },
     {

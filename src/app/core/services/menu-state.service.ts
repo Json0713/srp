@@ -258,10 +258,10 @@ export class MenuStateService {
       code: 'PWR-01',
       title: 'Pulse Carbine Overclock',
       icon: '⚡',
-      category: 'ACTIVE WEAPON // PLACEHOLDER',
-      description: 'High-frequency kinetic bursts that lock onto the nearest parasitic signature.',
-      effectPerLevel: '+15% Burst Fire Rate (Active in Phase 2)',
-      phaseTag: 'PHASE 2 PREVIEW'
+      category: 'ACTIVE WEAPON // AUTO-AIM',
+      description: 'Rapid-fire kinetic bursts that automatically target and pierce the nearest parasite.',
+      effectPerLevel: '+12% Fire Rate & +5 Damage per Rank (Active Now)',
+      phaseTag: 'PHASE 1 ACTIVE'
     },
     {
       id: 'power-spore-barrier',
