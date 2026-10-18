@@ -50,7 +50,7 @@ export interface HitEvent {
 }
 
 export interface DropItem {
-  kind: 'exp-blue' | 'exp-orange' | 'rp-coin' | 'biomass';
+  kind: 'exp-blue' | 'exp-violet' | 'exp-orange' | 'rp-coin' | 'biomass';
   baseValue: number;
 }
 
@@ -477,17 +477,17 @@ export function rollParasiteDrops(
     enemy.variant === 'crimson-red';
 
   if (isRareColored) {
-    // Rare colored parasite: 50% chance for Orange EXP Core, 50% chance for RP Coins, 15% chance for Biomass
+    // Rare colored parasite: 50% chance for Violet EXP Core, 50% chance for RP Coins, 15% chance for Biomass
     if (rng() < 0.5) {
       drops.push({
-        kind: 'exp-orange',
-        baseValue: enemy.variant === 'crimson-red' ? 24 : 20
+        kind: 'exp-violet',
+        baseValue: enemy.variant === 'crimson-red' ? 12 : 10
       });
     }
     if (rng() < 0.5) {
       drops.push({
         kind: 'rp-coin',
-        baseValue: enemy.variant === 'crimson-red' ? 2 : 1
+        baseValue: 3 + Math.floor(rng() * 3) // 3..5 RP Coins
       });
     }
     if (rng() < 0.15) {
@@ -498,18 +498,18 @@ export function rollParasiteDrops(
     }
   } else {
     // Standard baseline parasite (Buglin larva / Obsidian Crawler):
-    // 60% chance to drop EXP, 60% chance to drop RP Coins
+    // 60% chance to drop EXP (3..5 base EXP), 60% chance to drop RP Coins (3..5 RP Coins)
     if (rng() < 0.6) {
-      const isOrange = rng() < 0.15;
+      const isViolet = rng() < 0.15;
       drops.push({
-        kind: isOrange ? 'exp-orange' : 'exp-blue',
-        baseValue: isOrange ? 16 : enemy.kind === 'buglin' ? 5 : 6
+        kind: isViolet ? 'exp-violet' : 'exp-blue',
+        baseValue: isViolet ? 10 : 3 + Math.floor(rng() * 3) // 3..5 base EXP
       });
     }
     if (rng() < 0.6) {
       drops.push({
         kind: 'rp-coin',
-        baseValue: 1
+        baseValue: 3 + Math.floor(rng() * 3) // 3..5 RP Coins
       });
     }
   }

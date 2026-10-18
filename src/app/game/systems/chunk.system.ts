@@ -5,8 +5,8 @@ export const CHUNK_SIZE = 512;
 export const TILE_SIZE = 32;
 export const DEFAULT_RENDER_RADIUS = 1;
 export const RARE_BIOMASS_SPAWN_CHANCE = 0.25; // 25% rare chance per outer chunk
-export const RP_COIN_CHUNK_PRESENCE_CHANCE = 0.8; // 80% of chunks spawn RP Coins
-export const COMMON_BLUE_EXP_RATIO = 0.7; // 70% Common Blue EXP Orbs, 30% Rare Orange EXP Cores
+export const RP_COIN_CHUNK_PRESENCE_CHANCE = 0.6; // 60% of chunks spawn RP Coins
+export const COMMON_BLUE_EXP_RATIO = 0.85; // 85% Common Blue EXP Orbs, 15% Rare Violet EXP Cores
 
 export type TileFeatureType = 'corrupted-patch' | 'moss-slate' | 'spore-fleck' | 'crimson-vein';
 
@@ -206,10 +206,10 @@ export function generateChunkData(
       const oy = Math.round(worldY + orbMargin + rng() * (chunkSize - orbMargin * 2));
 
       const isCommonBlue = rng() < COMMON_BLUE_EXP_RATIO;
-      const kind: FieldPickupKind = isCommonBlue ? 'exp-blue' : 'exp-orange';
+      const kind: FieldPickupKind = isCommonBlue ? 'exp-blue' : 'exp-violet';
       const baseValue = isCommonBlue
-        ? 1 + Math.floor(rng() * 15) // 1..15 base EXP
-        : 15 + Math.floor(rng() * 11); // 15..25 base EXP
+        ? 3 + Math.floor(rng() * 3) // 3..5 base EXP
+        : 8 + Math.floor(rng() * 5); // 8..12 base EXP
 
       pickups.push({
         id: `orb_${chunkX}_${chunkY}_${i}`,
@@ -221,7 +221,7 @@ export function generateChunkData(
       });
     }
 
-    // 5. Spawn Field RP Coins (80% chunk presence across the map)
+    // 5. Spawn Field RP Coins (60% chunk presence across the map)
     const shouldSpawnCoins = rng() < RP_COIN_CHUNK_PRESENCE_CHANCE;
     if (shouldSpawnCoins) {
       const coinCount = 2 + Math.floor(rng() * 3); // 2 to 4 coins
@@ -234,7 +234,7 @@ export function generateChunkData(
           kind: 'rp-coin',
           x: cx,
           y: cy,
-          baseValue: 1 + Math.floor(rng() * 3), // 1..3 RP Coins
+          baseValue: 3 + Math.floor(rng() * 3), // 3..5 RP Coins
           collected: false
         });
       }
@@ -473,10 +473,10 @@ export class ChunkManager {
             const ox = Math.round(worldX + orbMargin + rng() * (chunkSize - orbMargin * 2));
             const oy = Math.round(worldY + orbMargin + rng() * (chunkSize - orbMargin * 2));
             const isCommonBlue = rng() < COMMON_BLUE_EXP_RATIO;
-            const kind: FieldPickupKind = isCommonBlue ? 'exp-blue' : 'exp-orange';
+            const kind: FieldPickupKind = isCommonBlue ? 'exp-blue' : 'exp-violet';
             const baseValue = isCommonBlue
-              ? 1 + Math.floor(rng() * 15)
-              : 15 + Math.floor(rng() * 11);
+              ? 3 + Math.floor(rng() * 3)
+              : 8 + Math.floor(rng() * 5);
 
             chunk.pickups.push({
               id: `orb_${chunk.chunkX}_${chunk.chunkY}_re_${Math.floor(elapsedSeconds)}_${i}`,
@@ -501,7 +501,7 @@ export class ChunkManager {
               kind: 'rp-coin',
               x: cx,
               y: cy,
-              baseValue: 1 + Math.floor(rng() * 3),
+              baseValue: 3 + Math.floor(rng() * 3),
               collected: false
             });
           }

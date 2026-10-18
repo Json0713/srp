@@ -144,7 +144,27 @@ export class MainScene extends Scene {
     }
   };
 
+  private calculateOptimalZoom(width: number, height: number): number {
+    const isLandscape = width >= height;
+    if (isLandscape) {
+      if (height >= 680 && width >= 1100) {
+        return 1.0; // Desktop baseline FOV
+      }
+      // Mobile Landscape: Target visible world height of ~580px
+      const targetHeight = 580;
+      const zoom = height / targetHeight;
+      return Math.min(1.0, Math.max(0.62, Number(zoom.toFixed(2))));
+    } else {
+      // Mobile Portrait: Target visible world width of ~600px
+      const targetWidth = 600;
+      const zoom = width / targetWidth;
+      return Math.min(1.0, Math.max(0.62, Number(zoom.toFixed(2))));
+    }
+  }
+
   private readonly onResize = (_gameSize: Structs.Size): void => {
+    const optimalZoom = this.calculateOptimalZoom(this.scale.width, this.scale.height);
+    this.cameras.main.setZoom(optimalZoom);
     this.drawActiveChunks(this.chunkManager.getActiveChunks());
     this.drawPickups();
     this.drawResources();
@@ -160,6 +180,8 @@ export class MainScene extends Scene {
 
   create(): void {
     this.cameras.main.setBackgroundColor('#090d14');
+    const optimalZoom = this.calculateOptimalZoom(this.scale.width, this.scale.height);
+    this.cameras.main.setZoom(optimalZoom);
 
     const resumeSession = this.registry.get('resumeSession') as PersistedSessionV1 | null;
     const defaultSpawnX = Math.round(CHUNK_SIZE * 0.5);
@@ -195,6 +217,18 @@ export class MainScene extends Scene {
         resumeSession.collectedResourceIds ?? [],
         resumeSession.collectedPickupIds ?? []
       );
+
+      if (Array.isArray(resumeSession.activeEnemies) && resumeSession.activeEnemies.length > 0) {
+        this.activeEnemies = resumeSession.activeEnemies
+          .filter((e) => e && typeof e.hp === 'number' && e.hp > 0)
+          .map((e) => ({ ...e }));
+      } else {
+        this.activeEnemies = [];
+      }
+      this.activeProjectiles = [];
+      this.weaponTimer = 0;
+      this.spawnTimer = 0;
+      this.invulnerabilityTimer = 0;
     } else {
       // Fresh deployment: Biomass, RP Coins, and Combat counters start at fresh baseline
       this.elapsedSeconds = 0;
@@ -434,25 +468,39 @@ export class MainScene extends Scene {
 
     const { baseX, baseY, maxRadius, btnX, btnY, btnRadius } = this.getJoystickLayout();
     const canHarvest = this.nearestResourceId !== null;
+    const zoom = this.cameras.main.zoom || 1;
+    const halfW = this.scale.width * 0.5;
+    const halfH = this.scale.height * 0.5;
+    const toCamX = (sx: number) => (sx - halfW) / zoom + halfW;
+    const toCamY = (sy: number) => (sy - halfH) / zoom + halfH;
+    const toCamR = (r: number) => r / zoom;
+
+    const cBaseX = toCamX(baseX);
+    const cBaseY = toCamY(baseY);
+    const cThumbX = toCamX(thumbX ?? baseX);
+    const cThumbY = toCamY(thumbY ?? baseY);
+    const cBtnX = toCamX(btnX);
+    const cBtnY = toCamY(btnY);
 
     this.joystickBase.clear();
     this.joystickBase.fillStyle(0x080c12, 0.55);
-    this.joystickBase.fillCircle(baseX, baseY, maxRadius);
-    this.joystickBase.lineStyle(2, 0x4ade80, 0.45);
-    this.joystickBase.strokeCircle(baseX, baseY, maxRadius);
+    this.joystickBase.fillCircle(cBaseX, cBaseY, toCamR(maxRadius));
+    this.joystickBase.lineStyle(2 / zoom, 0x4ade80, 0.45);
+    this.joystickBase.strokeCircle(cBaseX, cBaseY, toCamR(maxRadius));
 
     this.joystickThumb.clear();
     this.joystickThumb.fillStyle(0x22c55e, 0.8);
-    this.joystickThumb.fillCircle(thumbX ?? baseX, thumbY ?? baseY, 24);
-    this.joystickThumb.lineStyle(2, 0x86efac, 0.9);
-    this.joystickThumb.strokeCircle(thumbX ?? baseX, thumbY ?? baseY, 24);
+    this.joystickThumb.fillCircle(cThumbX, cThumbY, toCamR(24));
+    this.joystickThumb.lineStyle(2 / zoom, 0x86efac, 0.9);
+    this.joystickThumb.strokeCircle(cThumbX, cThumbY, toCamR(24));
 
     this.interactButton.clear();
     this.interactButton.fillStyle(canHarvest ? 0x16a34a : 0x0e141f, canHarvest ? 0.85 : 0.65);
-    this.interactButton.fillCircle(btnX, btnY, btnRadius);
-    this.interactButton.lineStyle(2, canHarvest ? 0x4ade80 : 0x56657e, 0.85);
-    this.interactButton.strokeCircle(btnX, btnY, btnRadius);
-    this.interactButtonText.setPosition(btnX, btnY);
+    this.interactButton.fillCircle(cBtnX, cBtnY, toCamR(btnRadius));
+    this.interactButton.lineStyle(2 / zoom, canHarvest ? 0x4ade80 : 0x56657e, 0.85);
+    this.interactButton.strokeCircle(cBtnX, cBtnY, toCamR(btnRadius));
+    this.interactButtonText.setPosition(cBtnX, cBtnY);
+    this.interactButtonText.setScale(1 / zoom);
   }
 
   private updateInputUI(): void {
@@ -550,13 +598,15 @@ export class MainScene extends Scene {
         this.pickupGraphics.fillCircle(item.x, item.y, 8);
         this.pickupGraphics.fillStyle(0x38bdf8, 0.95);
         this.pickupGraphics.fillCircle(item.x, item.y, 4.5);
-      } else if (item.kind === 'exp-orange') {
-        // Rare Orange EXP Core (30%)
-        this.pickupGraphics.fillStyle(0xea580c, 0.4);
+      } else if (item.kind === 'exp-violet' || item.kind === 'exp-orange') {
+        // Rare Glowing Violet EXP Core (15% Rare) - Clearly distinct from golden RP coins
+        this.pickupGraphics.fillStyle(0x7c3aed, 0.45);
         this.pickupGraphics.fillCircle(item.x, item.y, 10);
-        this.pickupGraphics.fillStyle(0xfb923c, 1);
+        this.pickupGraphics.fillStyle(0xa855f7, 1);
         this.pickupGraphics.fillCircle(item.x, item.y, 6);
-        this.pickupGraphics.lineStyle(1.5, 0xfde047, 0.85);
+        this.pickupGraphics.fillStyle(0xf5d0fe, 1);
+        this.pickupGraphics.fillCircle(item.x - 1.5, item.y - 1.5, 2.5);
+        this.pickupGraphics.lineStyle(1.5, 0xe879f9, 0.95);
         this.pickupGraphics.strokeCircle(item.x, item.y, 6);
       } else if (item.kind === 'rp-coin') {
         // Golden RP Coin (Research Parasitic Coin)
@@ -738,6 +788,7 @@ export class MainScene extends Scene {
       pendingLevelUps: this.pendingLevelUps,
       collectedResourceIds: this.chunkManager.getCollectedResourceIds(),
       collectedPickupIds: this.chunkManager.getCollectedPickupIds(),
+      activeEnemies: this.activeEnemies.filter((e) => e.hp > 0).map((e) => ({ ...e })),
       lastBiomassReward
     };
     this.game.events.emit('hud-update', snapshot);
@@ -1175,16 +1226,16 @@ export class MainScene extends Scene {
 
       for (const item of magnetResult.collectedPickups) {
         this.chunkManager.recordPickupCollected(item.id, this.elapsedSeconds);
-        if (item.kind === 'exp-blue' || item.kind === 'exp-orange') {
-          const normalizedRoll =
-            item.kind === 'exp-blue'
-              ? (item.baseValue - 1) / 15
-              : (item.baseValue - 15) / 11;
+        if (item.kind === 'exp-blue' || item.kind === 'exp-violet' || item.kind === 'exp-orange') {
+          const isBlue = item.kind === 'exp-blue';
+          const normalizedRoll = isBlue
+            ? (item.baseValue - 3) / 2
+            : (item.baseValue - 8) / 4;
           const scaledExp = calculateOrbExpValue(item.kind, this.playerLevel, normalizedRoll);
           totalExpFromPickups += scaledExp;
           this.game.events.emit(
             'codex-grant',
-            item.kind === 'exp-blue' ? 'exp-orb-blue' : 'exp-orb-orange'
+            isBlue ? 'exp-orb-blue' : 'exp-orb-violet'
           );
         } else if (item.kind === 'rp-coin') {
           totalCoinsFromPickups += item.baseValue;

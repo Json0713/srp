@@ -33,34 +33,34 @@ export function calculateExpRequired(level: number): number {
 }
 
 /**
- * Calculates the EXP granted by a Common Blue (70%) or Rare Orange (30%) orb,
+ * Calculates the EXP granted by a Common Blue (85%) or Rare Glowing Violet (15%) orb,
  * scaling upward as the player levels up so orb values stay balanced with the EXP curve.
- * - Common Blue (Lv.1): 1 - 15 EXP (+2 per level above 1)
- * - Rare Orange (Lv.1): 15 - 25 EXP (+4 per level above 1)
+ * - Common Blue (Lv.1): 3 - 5 EXP (+1 per level above 1)
+ * - Rare Glowing Violet (Lv.1): 8 - 12 EXP (+2 per level above 1)
  */
 export function calculateOrbExpValue(
-  kind: 'exp-blue' | 'exp-orange',
+  kind: 'exp-blue' | 'exp-violet' | 'exp-orange',
   playerLevel: number,
   rngRoll: number = Math.random()
 ): number {
   const safeLevel = Math.max(1, Math.floor(playerLevel));
   const clampedRoll = Math.max(0, Math.min(0.9999, rngRoll));
 
-  if (kind === 'exp-orange') {
-    const baseOrange = 15 + Math.floor(clampedRoll * 11); // 15..25
-    const levelScaling = (safeLevel - 1) * 4;
-    return baseOrange + levelScaling;
+  if (kind === 'exp-violet' || kind === 'exp-orange') {
+    const baseViolet = 8 + Math.floor(clampedRoll * 5); // 8..12
+    const levelScaling = (safeLevel - 1) * 2;
+    return baseViolet + levelScaling;
   }
 
-  const baseBlue = 1 + Math.floor(clampedRoll * 15); // 1..15
-  const levelScaling = (safeLevel - 1) * 2;
+  const baseBlue = 3 + Math.floor(clampedRoll * 3); // 3..5
+  const levelScaling = (safeLevel - 1) * 1;
   return baseBlue + levelScaling;
 }
 
 /**
  * Calculates the triple reward for harvesting a rare Biomass Spire:
  * 1) +1 Rare Biomass (Diamond-tier meta resource)
- * 2) +100 Base EXP (scales upward with elapsed run time, player level, and Phase)
+ * 2) +35 Base EXP (balanced with 3-5 EXP orb baseline, scales upward with elapsed run time, player level, and Phase)
  * 3) +10 to +25 RP Coins (Research Parasitic Coins)
  */
 export function calculateBiomassSpireReward(
@@ -76,7 +76,7 @@ export function calculateBiomassSpireReward(
 
   const timeMultiplier = 1 + Math.floor(safeSeconds / 45) * 0.12;
   const levelMultiplier = 1 + (safeLevel - 1) * 0.12;
-  const exp = Math.round(100 * timeMultiplier * levelMultiplier * safePhase);
+  const exp = Math.round(35 * timeMultiplier * levelMultiplier * safePhase);
   const rpCoins = 10 + Math.floor(clampedRoll * 16) + (safeLevel - 1) * 2;
 
   return {

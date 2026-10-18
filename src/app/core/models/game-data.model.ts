@@ -92,7 +92,23 @@ export interface GamePhaseInfo {
   summary: string;
 }
 
-export type FieldPickupKind = 'exp-blue' | 'exp-orange' | 'rp-coin' | 'biomass';
+export type FieldPickupKind = 'exp-blue' | 'exp-violet' | 'exp-orange' | 'rp-coin' | 'biomass';
+
+export interface PersistedParasiteState {
+  id: string;
+  kind: 'rupter' | 'buglin';
+  variant: 'standard' | 'toxic-green' | 'crimson-red' | 'aberrant-violet';
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  speed: number;
+  damage: number;
+  radius: number;
+  hitFlashTimer: number;
+  facingAngle: number;
+  corrosive?: boolean;
+}
 
 export interface FieldPickupItem {
   id: string;
@@ -139,6 +155,7 @@ export interface GameHudSnapshot {
   pendingLevelUps?: number;
   collectedResourceIds?: string[];
   collectedPickupIds?: string[];
+  activeEnemies?: PersistedParasiteState[];
   lastBiomassReward?: {
     biomass: number;
     exp: number;
@@ -200,5 +217,6 @@ export interface PersistedSessionV1 {
   chosenSkills: Record<string, number>;
   collectedResourceIds?: string[];
   collectedPickupIds?: string[];
+  activeEnemies?: PersistedParasiteState[];
   updatedAt: number;
 }

@@ -22,6 +22,7 @@ import {
   CodexCategory,
   CodexEntry,
   GameHudSnapshot,
+  PersistedParasiteState,
   SurvivalSkillOption
 } from '../core/models/game-data.model';
 import { rollRandomSkillChoices } from './systems/progression.system';
@@ -90,6 +91,7 @@ export class Game implements OnInit, OnDestroy {
   readonly magnetRadius = signal(78);
   private collectedResourceIds: string[] = [];
   private collectedPickupIds: string[] = [];
+  private activeEnemies: PersistedParasiteState[] = [];
 
   readonly formattedRunTime = computed(() => {
     const total = Math.max(0, Math.floor(this.elapsedSeconds()));
@@ -340,6 +342,9 @@ export class Game implements OnInit, OnDestroy {
     if (snapshot.collectedPickupIds) {
       this.collectedPickupIds = snapshot.collectedPickupIds;
     }
+    if (snapshot.activeEnemies) {
+      this.activeEnemies = snapshot.activeEnemies;
+    }
 
     if (snapshot.lastBiomassReward) {
       this.recentBiomassReward.set({
@@ -385,7 +390,8 @@ export class Game implements OnInit, OnDestroy {
       pendingLevelUps: this.isLevelUpModalOpen() ? 1 : 0,
       chosenSkills: this.chosenSkillRanks(),
       collectedResourceIds: this.collectedResourceIds,
-      collectedPickupIds: this.collectedPickupIds
+      collectedPickupIds: this.collectedPickupIds,
+      activeEnemies: this.activeEnemies
     });
   }
 
@@ -475,6 +481,7 @@ export class Game implements OnInit, OnDestroy {
       this.chosenSkillRanks.set(savedSession.chosenSkills ?? {});
       this.collectedResourceIds = savedSession.collectedResourceIds ?? [];
       this.collectedPickupIds = savedSession.collectedPickupIds ?? [];
+      this.activeEnemies = savedSession.activeEnemies ?? [];
     } else {
       this.runBiomass.set(0);
       this.runRpCoins.set(0);
@@ -490,6 +497,7 @@ export class Game implements OnInit, OnDestroy {
       this.chosenSkillRanks.set({});
       this.collectedResourceIds = [];
       this.collectedPickupIds = [];
+      this.activeEnemies = [];
     }
 
     const Phaser = await import('phaser');

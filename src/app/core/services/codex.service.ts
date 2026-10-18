@@ -20,12 +20,12 @@ export class CodexService {
       classification: 'Apex Catalyst // Rare Resource',
       summary: 'High-value crystalline biomass core harvested from rare dormant spires.',
       description:
-        'A rare, diamond-grade biological catalyst formed at high-density Sector 7 spires. Harvesting a Spire grants +1 Biomass, +100+ level-scaled EXP, and a cache of RP Coins for Research Lab synthesis.',
+        'A rare, diamond-grade biological catalyst formed at high-density Sector 7 spires. Harvesting a Spire grants +1 Biomass, +35 level-scaled EXP, and a cache of RP Coins for Research Lab synthesis.',
       unlockHint: 'Locate a rare Biomass Spire in Sector 7 and press E (or tap Harvest) to examine this record.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
         { label: 'Biomass Yield', value: '+1 Rare Biomass' },
-        { label: 'EXP Surge', value: '+100 Base EXP (Scales w/ Level & Time)' },
+        { label: 'EXP Surge', value: '+35 Base EXP (Scales w/ Level & Time)' },
         { label: 'Currency Bonus', value: '+10 to +25 RP Coins' }
       ]
     },
@@ -39,12 +39,12 @@ export class CodexService {
       classification: 'Meta-Currency // Field Token',
       summary: 'Standardized Research Parasitic Coin used in the Research Lab.',
       description:
-        'Scattered across Sector 7 (80% field presence) and awarded when harvesting Biomass Spires. Automatically magnetized to the operator on close proximity and persisted to IndexedDB.',
+        'Scattered across Sector 7 (60% field presence) and awarded when harvesting Biomass Spires. Grants 3–5 RP Coins per pickup, automatically magnetized to the operator and persisted to IndexedDB.',
       unlockHint: 'Walk near a golden RP Coin in Sector 7 to magnetize and collect it.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
-        { label: 'Field Spawn Rate', value: '80% Sector Presence' },
-        { label: 'Acquisition', value: 'Proximity Auto-Magnet' },
+        { label: 'Field Spawn Rate', value: '60% Sector Presence' },
+        { label: 'Drop Value', value: '3 – 5 RP Coins' },
         { label: 'Primary Use', value: 'Bio-Research & Rig Cosmetics' }
       ]
     },
@@ -55,33 +55,33 @@ export class CodexService {
       category: 'items',
       status: 'undiscovered',
       icon: '🔹',
-      classification: 'In-Run Progression // 70% Common',
+      classification: 'In-Run Progression // 85% Common',
       summary: 'Azure bio-energy orb that fuels in-run operator level progression.',
       description:
-        'Accounts for 70% of field EXP spores. Automatically magnetized toward the operator within close proximity. Grants 1–15 base EXP at Level 1 and scales upward as the operator levels up.',
+        'Accounts for 85% of field EXP spores. Automatically magnetized toward the operator within close proximity. Grants 3–5 base EXP at Level 1 and scales upward (+1/lvl) as the operator levels up.',
       unlockHint: 'Walk near a Blue EXP Spore in Sector 7 to absorb it.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
-        { label: 'Distribution', value: '70% Common Spore' },
-        { label: 'Base Yield (Lv.1)', value: '1 – 15 EXP (+Level Scaling)' }
+        { label: 'Distribution', value: '85% Common Spore' },
+        { label: 'Base Yield (Lv.1)', value: '3 – 5 EXP (+Level Scaling)' }
       ]
     },
     {
-      id: 'exp-orb-orange',
+      id: 'exp-orb-violet',
       code: 'ITM-04',
-      title: 'Rare Orange EXP Core',
+      title: 'Rare Violet EXP Core',
       category: 'items',
       status: 'undiscovered',
-      icon: '🔶',
-      classification: 'In-Run Progression // 30% Rare',
-      summary: 'High-density amber bio-energy core that accelerates operator leveling.',
+      icon: '🟣',
+      classification: 'In-Run Progression // 15% Rare',
+      summary: 'High-density glowing violet bio-energy core that accelerates operator leveling.',
       description:
-        'Accounts for 30% of field EXP spores. Emits a bright orange luminescence and grants 15–25 base EXP at Level 1, scaling upward with operator level to match ramping EXP requirements.',
-      unlockHint: 'Walk near an Orange EXP Core in Sector 7 to absorb it.',
+        'Accounts for 15% of field EXP spores. Emits a radiant glowing violet luminescence clearly distinct from golden RP coins. Grants 8–12 base EXP at Level 1, scaling upward (+2/lvl) with operator level.',
+      unlockHint: 'Walk near a glowing Violet EXP Core in Sector 7 to absorb it.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
-        { label: 'Distribution', value: '30% Rare Spore' },
-        { label: 'Base Yield (Lv.1)', value: '15 – 25 EXP (+Level Scaling)' }
+        { label: 'Distribution', value: '15% Rare Spore' },
+        { label: 'Base Yield (Lv.1)', value: '8 – 12 EXP (+Level Scaling)' }
       ]
     },
     {
@@ -558,29 +558,31 @@ export class CodexService {
   }
 
   isUnlocked(id: string): boolean {
-    return this.unlockedIds().has(id);
+    const effectiveId = id === 'exp-orb-orange' ? 'exp-orb-violet' : id;
+    return this.unlockedIds().has(effectiveId) || this.unlockedIds().has(id);
   }
 
   /**
-   * Grants/unlocks a discoverable Codex entry when the player encounters or collects it in-game.
-   * Returns the newly unlocked CodexEntry if this was the first time it was granted, or null if already unlocked.
+   * Examines/unlocks a discoverable Codex entry when the player encounters or collects it in-game.
+   * Returns the newly unlocked CodexEntry if this was the first time it was examined, or null if already unlocked.
    */
   unlockEntry(id: string): CodexEntry | null {
-    const target = this.baseCatalog.find((e) => e.id === id);
+    const effectiveId = id === 'exp-orb-orange' ? 'exp-orb-violet' : id;
+    const target = this.baseCatalog.find((e) => e.id === effectiveId);
     if (!target || target.status === 'development') {
       return null;
     }
 
     const current = this.unlockedIds();
-    if (current.has(id)) {
+    if (current.has(effectiveId)) {
       return null;
     }
 
     const updated = new Set<string>(current);
-    updated.add(id);
+    updated.add(effectiveId);
     this.unlockedIds.set(updated);
     this.saveUnlockedIds(updated);
 
-    return this.entries().find((e) => e.id === id) ?? null;
+    return this.entries().find((e) => e.id === effectiveId) ?? null;
   }
 }
