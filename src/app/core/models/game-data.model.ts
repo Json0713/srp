@@ -9,6 +9,14 @@ export interface CodexStat {
   value: string;
 }
 
+export interface CodexVariant {
+  label: string;
+  icon: string;
+  color: string;
+  tag: string;
+  description: string;
+}
+
 export interface CodexEntry {
   id: string;
   code: string;
@@ -22,6 +30,7 @@ export interface CodexEntry {
   unlockHint: string;
   phaseTag: string;
   stats: CodexStat[];
+  variants?: CodexVariant[];
 }
 
 export interface OperatorAttribute {
@@ -83,7 +92,7 @@ export interface GamePhaseInfo {
   summary: string;
 }
 
-export type FieldPickupKind = 'exp-blue' | 'exp-orange' | 'rp-coin';
+export type FieldPickupKind = 'exp-blue' | 'exp-orange' | 'rp-coin' | 'biomass';
 
 export interface FieldPickupItem {
   id: string;

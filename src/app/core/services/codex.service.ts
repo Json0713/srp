@@ -139,6 +139,22 @@ export class CodexService {
         { label: 'Threat Level', value: 'Tier 0 — Swift Pest' },
         { label: 'Sub-Species', value: 'Obsidian Black (Common) / Violet (Rare)' },
         { label: 'Movement', value: 'Fast Wriggle & High Velocity' }
+      ],
+      variants: [
+        {
+          label: 'Obsidian Larva',
+          icon: '🪱',
+          color: '#94a3b8',
+          tag: 'STANDARD',
+          description: 'Baseline fast scout pest (6 DMG, 165 SPD).'
+        },
+        {
+          label: 'Aberrant Violet',
+          icon: '🔮',
+          color: '#c084fc',
+          tag: 'RARE SPECIMEN',
+          description: 'Rare neural strain with high-value core drops (8 DMG, 185 SPD).'
+        }
       ]
     },
     {
@@ -158,6 +174,29 @@ export class CodexService {
         { label: 'Threat Level', value: 'Tier I — Pack Hunter' },
         { label: 'Color Classes', value: 'Black (Standard), Green (Poison), Red (Blooded)' },
         { label: 'Special Hazards', value: 'Bio-Corrosion DOT / Heavy Melee Damage' }
+      ],
+      variants: [
+        {
+          label: 'Obsidian Crawler',
+          icon: '🕷️',
+          color: '#94a3b8',
+          tag: 'STANDARD',
+          description: 'Balanced pack hunter (10 DMG, 115 SPD, 22 HP).'
+        },
+        {
+          label: 'Toxic Green',
+          icon: '☣️',
+          color: '#4ade80',
+          tag: 'CORROSIVE',
+          description: 'Secretes venom inflicting Bio-Corrosion DOT (-3 HP/s, 8 DMG).'
+        },
+        {
+          label: 'Crimson Blooded',
+          icon: '🩸',
+          color: '#f87171',
+          tag: 'APEX HITTER',
+          description: 'Frenzied blood sprint with devastating direct bite (18 DMG, 132 SPD).'
+        }
       ]
     },
     {

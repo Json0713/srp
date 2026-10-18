@@ -178,75 +178,66 @@ export function generateChunkData(
     });
   }
 
-  // 3. Rare Unlimited Biomass Spires (Diamond-tier high-value nodes)
-  // Origin chunk spawns 1 guaranteed spire; outer chunks roll an 18% rare chance
-  const shouldSpawnBiomassSpire = isOriginChunk || rng() < RARE_BIOMASS_SPAWN_CHANCE;
-  if (shouldSpawnBiomassSpire) {
-    const margin = 72;
-    for (let attempt = 0; attempt < 8; attempt++) {
-      const rx = Math.round(worldX + margin + rng() * (chunkSize - margin * 2));
-      const ry = Math.round(worldY + margin + rng() * (chunkSize - margin * 2));
+  // 3. Rare Unlimited Biomass Spires, EXP Orbs, and RP Coins
+  // Clean origin chunk policy: Spawn point chunk (0,0) does NOT spawn biomass, EXP orbs, or RP coins.
+  if (!isOriginChunk) {
+    // 3. Rare Unlimited Biomass Spires (Diamond-tier high-value nodes)
+    const shouldSpawnBiomassSpire = rng() < RARE_BIOMASS_SPAWN_CHANCE;
+    if (shouldSpawnBiomassSpire) {
+      const margin = 72;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const rx = Math.round(worldX + margin + rng() * (chunkSize - margin * 2));
+        const ry = Math.round(worldY + margin + rng() * (chunkSize - margin * 2));
 
-      if (isOriginChunk && Math.hypot(rx - chunkSize * 0.5, ry - chunkSize * 0.5) < 92) {
-        continue;
+        resources.push({
+          id: `spire_${chunkX}_${chunkY}_0`,
+          position: { x: rx, y: ry },
+          collected: false
+        });
+        break;
       }
-
-      resources.push({
-        id: `spire_${chunkX}_${chunkY}_0`,
-        position: { x: rx, y: ry },
-        collected: false
-      });
-      break;
-    }
-  }
-
-  // 4. Spawn Field EXP Orbs (70% Common Blue, 30% Rare Orange)
-  const expOrbCount = 5 + Math.floor(rng() * 4); // 5 to 8 EXP orbs per chunk
-  const orbMargin = 40;
-  for (let i = 0; i < expOrbCount; i++) {
-    const ox = Math.round(worldX + orbMargin + rng() * (chunkSize - orbMargin * 2));
-    const oy = Math.round(worldY + orbMargin + rng() * (chunkSize - orbMargin * 2));
-
-    if (isOriginChunk && Math.hypot(ox - chunkSize * 0.5, oy - chunkSize * 0.5) < 56) {
-      continue;
     }
 
-    const isCommonBlue = rng() < COMMON_BLUE_EXP_RATIO;
-    const kind: FieldPickupKind = isCommonBlue ? 'exp-blue' : 'exp-orange';
-    const baseValue = isCommonBlue
-      ? 1 + Math.floor(rng() * 15) // 1..15 base EXP
-      : 15 + Math.floor(rng() * 11); // 15..25 base EXP
+    // 4. Spawn Field EXP Orbs (70% Common Blue, 30% Rare Orange)
+    const expOrbCount = 5 + Math.floor(rng() * 4); // 5 to 8 EXP orbs per chunk
+    const orbMargin = 40;
+    for (let i = 0; i < expOrbCount; i++) {
+      const ox = Math.round(worldX + orbMargin + rng() * (chunkSize - orbMargin * 2));
+      const oy = Math.round(worldY + orbMargin + rng() * (chunkSize - orbMargin * 2));
 
-    pickups.push({
-      id: `orb_${chunkX}_${chunkY}_${i}`,
-      kind,
-      x: ox,
-      y: oy,
-      baseValue,
-      collected: false
-    });
-  }
-
-  // 5. Spawn Field RP Coins (80% chunk presence across the map)
-  const shouldSpawnCoins = isOriginChunk || rng() < RP_COIN_CHUNK_PRESENCE_CHANCE;
-  if (shouldSpawnCoins) {
-    const coinCount = 2 + Math.floor(rng() * 3); // 2 to 4 coins
-    for (let c = 0; c < coinCount; c++) {
-      const cx = Math.round(worldX + orbMargin + rng() * (chunkSize - orbMargin * 2));
-      const cy = Math.round(worldY + orbMargin + rng() * (chunkSize - orbMargin * 2));
-
-      if (isOriginChunk && Math.hypot(cx - chunkSize * 0.5, cy - chunkSize * 0.5) < 56) {
-        continue;
-      }
+      const isCommonBlue = rng() < COMMON_BLUE_EXP_RATIO;
+      const kind: FieldPickupKind = isCommonBlue ? 'exp-blue' : 'exp-orange';
+      const baseValue = isCommonBlue
+        ? 1 + Math.floor(rng() * 15) // 1..15 base EXP
+        : 15 + Math.floor(rng() * 11); // 15..25 base EXP
 
       pickups.push({
-        id: `coin_${chunkX}_${chunkY}_${c}`,
-        kind: 'rp-coin',
-        x: cx,
-        y: cy,
-        baseValue: 1 + Math.floor(rng() * 3), // 1..3 RP Coins
+        id: `orb_${chunkX}_${chunkY}_${i}`,
+        kind,
+        x: ox,
+        y: oy,
+        baseValue,
         collected: false
       });
+    }
+
+    // 5. Spawn Field RP Coins (80% chunk presence across the map)
+    const shouldSpawnCoins = rng() < RP_COIN_CHUNK_PRESENCE_CHANCE;
+    if (shouldSpawnCoins) {
+      const coinCount = 2 + Math.floor(rng() * 3); // 2 to 4 coins
+      for (let c = 0; c < coinCount; c++) {
+        const cx = Math.round(worldX + orbMargin + rng() * (chunkSize - orbMargin * 2));
+        const cy = Math.round(worldY + orbMargin + rng() * (chunkSize - orbMargin * 2));
+
+        pickups.push({
+          id: `coin_${chunkX}_${chunkY}_${c}`,
+          kind: 'rp-coin',
+          x: cx,
+          y: cy,
+          baseValue: 1 + Math.floor(rng() * 3), // 1..3 RP Coins
+          collected: false
+        });
+      }
     }
   }
 
@@ -277,6 +268,7 @@ export class ChunkManager {
   private readonly discoveredChunks = new Map<string, ChunkData>();
   private readonly collectedResourceIds = new Set<string>();
   private readonly collectedPickupIds = new Set<string>();
+  private readonly chunkHarvestTimestamps = new Map<string, number>();
   private activeChunks: ChunkData[] = [];
   private lastCenterChunk: ChunkCoords | null = null;
   private totalCollected = 0;
@@ -318,8 +310,12 @@ export class ChunkManager {
     }
   }
 
-  recordPickupCollected(pickupId: string): void {
+  recordPickupCollected(pickupId: string, elapsedSeconds = 0): void {
     this.collectedPickupIds.add(pickupId);
+    const chunk = this.activeChunks.find((c) => c.pickups.some((p) => p.id === pickupId));
+    if (chunk) {
+      this.chunkHarvestTimestamps.set(chunk.key, elapsedSeconds);
+    }
   }
 
   getCollectedResourceIds(): string[] {
@@ -411,7 +407,7 @@ export class ChunkManager {
     return this.totalCollected;
   }
 
-  collectResource(resourceId: string): ResourceState | null {
+  collectResource(resourceId: string, elapsedSeconds = 0): ResourceState | null {
     for (const chunk of this.activeChunks) {
       const idx = chunk.resources.findIndex((r) => r.id === resourceId);
       if (idx !== -1 && !chunk.resources[idx].collected) {
@@ -422,10 +418,103 @@ export class ChunkManager {
         chunk.resources[idx] = updated;
         this.collectedResourceIds.add(resourceId);
         this.totalCollected += 1;
+        this.chunkHarvestTimestamps.set(chunk.key, elapsedSeconds);
         return updated;
       }
     }
     return null;
+  }
+
+  /**
+   * Evaluates chunk regeneration for harvested chunks after 1:30 mins (90 seconds).
+   * Spawns random placements of EXP orbs, RP coins, or rare Biomass Spires.
+   */
+  updateChunkRegeneration(
+    elapsedSeconds: number,
+    rng: () => number = Math.random
+  ): { regenerated: boolean; regeneratedChunks: ChunkData[] } {
+    let regenerated = false;
+    const regeneratedChunks: ChunkData[] = [];
+
+    for (const [chunkKey, harvestTime] of this.chunkHarvestTimestamps.entries()) {
+      // 1:30 mins = 90 seconds
+      if (elapsedSeconds - harvestTime >= 90) {
+        const chunk = this.discoveredChunks.get(chunkKey);
+        if (!chunk) continue;
+
+        // Reset the timer for this chunk
+        this.chunkHarvestTimestamps.set(chunkKey, elapsedSeconds);
+
+        const orbMargin = 40;
+        const worldX = chunk.worldX;
+        const worldY = chunk.worldY;
+        const chunkSize = this.chunkSize;
+        let chunkChanged = false;
+
+        // 1. Chance to regrow a fresh Biomass Spire (35% chance if no active spire currently in this chunk)
+        const hasActiveSpire = chunk.resources.some((r) => !r.collected);
+        if (!hasActiveSpire && rng() < 0.35) {
+          const rx = Math.round(worldX + 72 + rng() * (chunkSize - 144));
+          const ry = Math.round(worldY + 72 + rng() * (chunkSize - 144));
+          const spireId = `spire_${chunk.chunkX}_${chunk.chunkY}_re_${Math.floor(elapsedSeconds)}`;
+          chunk.resources.push({
+            id: spireId,
+            position: { x: rx, y: ry },
+            collected: false
+          });
+          chunkChanged = true;
+        }
+
+        // 2. Chance to respawn 2-4 fresh EXP Orbs (50% chance)
+        if (rng() < 0.5) {
+          const count = 2 + Math.floor(rng() * 3);
+          for (let i = 0; i < count; i++) {
+            const ox = Math.round(worldX + orbMargin + rng() * (chunkSize - orbMargin * 2));
+            const oy = Math.round(worldY + orbMargin + rng() * (chunkSize - orbMargin * 2));
+            const isCommonBlue = rng() < COMMON_BLUE_EXP_RATIO;
+            const kind: FieldPickupKind = isCommonBlue ? 'exp-blue' : 'exp-orange';
+            const baseValue = isCommonBlue
+              ? 1 + Math.floor(rng() * 15)
+              : 15 + Math.floor(rng() * 11);
+
+            chunk.pickups.push({
+              id: `orb_${chunk.chunkX}_${chunk.chunkY}_re_${Math.floor(elapsedSeconds)}_${i}`,
+              kind,
+              x: ox,
+              y: oy,
+              baseValue,
+              collected: false
+            });
+          }
+          chunkChanged = true;
+        }
+
+        // 3. Chance to respawn 1-2 RP Coins (40% chance)
+        if (rng() < 0.4) {
+          const coinCount = 1 + Math.floor(rng() * 2);
+          for (let c = 0; c < coinCount; c++) {
+            const cx = Math.round(worldX + orbMargin + rng() * (chunkSize - orbMargin * 2));
+            const cy = Math.round(worldY + orbMargin + rng() * (chunkSize - orbMargin * 2));
+            chunk.pickups.push({
+              id: `coin_${chunk.chunkX}_${chunk.chunkY}_re_${Math.floor(elapsedSeconds)}_${c}`,
+              kind: 'rp-coin',
+              x: cx,
+              y: cy,
+              baseValue: 1 + Math.floor(rng() * 3),
+              collected: false
+            });
+          }
+          chunkChanged = true;
+        }
+
+        if (chunkChanged) {
+          regenerated = true;
+          regeneratedChunks.push(chunk);
+        }
+      }
+    }
+
+    return { regenerated, regeneratedChunks };
   }
 
   addDropPickup(pickup: FieldPickupItem): void {

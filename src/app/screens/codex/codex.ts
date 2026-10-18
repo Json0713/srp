@@ -114,6 +114,24 @@ type FilterTab = 'all' | CodexCategory;
                       </div>
                     }
                   </div>
+
+                  @if (detail.variants && detail.variants.length > 0) {
+                    <div class="codex-variants-section">
+                      <span class="variants-title">IDENTIFIED STRAINS & CLASSES</span>
+                      <div class="variants-row">
+                        @for (v of detail.variants; track v.label) {
+                          <div class="codex-variant-card" [style.borderColor]="v.color">
+                            <div class="variant-card-head">
+                              <span class="variant-icon" aria-hidden="true">{{ v.icon }}</span>
+                              <strong class="variant-name" [style.color]="v.color">{{ v.label }}</strong>
+                              <span class="variant-badge" [style.color]="v.color">{{ v.tag }}</span>
+                            </div>
+                            <p class="variant-desc">{{ v.description }}</p>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
                 }
               </aside>
             }

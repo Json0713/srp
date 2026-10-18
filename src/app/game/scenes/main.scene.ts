@@ -566,6 +566,18 @@ export class MainScene extends Scene {
         this.pickupGraphics.fillCircle(item.x, item.y, 6.5);
         this.pickupGraphics.lineStyle(1.5, 0xfef08a, 0.95);
         this.pickupGraphics.strokeCircle(item.x, item.y, 6.5);
+      } else if (item.kind === 'biomass') {
+        // Emerald Parasitic Biomass Capsule
+        this.pickupGraphics.fillStyle(0x000000, 0.45);
+        this.pickupGraphics.fillEllipse(item.x, item.y + 6, 14, 5);
+        this.pickupGraphics.fillStyle(0x064e3b, 0.9);
+        this.pickupGraphics.fillCircle(item.x, item.y, 7);
+        this.pickupGraphics.fillStyle(0x10b981, 1);
+        this.pickupGraphics.fillCircle(item.x, item.y, 4.5);
+        this.pickupGraphics.fillStyle(0xa7f3d0, 1);
+        this.pickupGraphics.fillCircle(item.x - 1.5, item.y - 1.5, 2);
+        this.pickupGraphics.lineStyle(1.5, 0x34d399, 0.95);
+        this.pickupGraphics.strokeCircle(item.x, item.y, 7);
       }
     }
   }
@@ -731,8 +743,11 @@ export class MainScene extends Scene {
     isPlayer = false,
     colorOverride?: string
   ): void {
-    const txt = this.damageTextPool.find((t) => !t.visible);
-    if (!txt) return;
+    let txt = this.damageTextPool.find((t) => !t.visible);
+    if (!txt) {
+      txt = this.damageTextPool[0];
+      this.tweens.killTweensOf(txt);
+    }
 
     txt.setText(isPlayer ? `-${damage} HP` : `-${damage}`);
     txt.setColor(colorOverride ?? (isPlayer ? '#ef4444' : '#fde047'));
@@ -1055,7 +1070,7 @@ export class MainScene extends Scene {
 
     // 1. Rare Biomass Spire Harvest (Grants +1 In-Run Biomass, +100+ Scaled EXP, and +In-Run RP Coins)
     if (wantsInteract && this.nearestResourceId) {
-      const collected = this.chunkManager.collectResource(this.nearestResourceId);
+      const collected = this.chunkManager.collectResource(this.nearestResourceId, this.elapsedSeconds);
       if (collected) {
         const reward = calculateBiomassSpireReward(
           this.playerLevel,
@@ -1117,7 +1132,16 @@ export class MainScene extends Scene {
       this.emitHudSnapshot();
     }
 
-    // 4. Proximity Auto-Magnet for EXP Orbs (Blue/Orange) & RP Coins (No E key required)
+    // 3B. Chunk Resource Regeneration after 1:30 mins (90s)
+    const regenResult = this.chunkManager.updateChunkRegeneration(this.elapsedSeconds);
+    if (regenResult.regenerated) {
+      this.drawResources();
+      this.drawPickups();
+      this.drawSporeCompass();
+      this.emitHudSnapshot();
+    }
+
+    // 4. Proximity Auto-Magnet for EXP Orbs (Blue/Orange), RP Coins & Parasitic Biomass
     const activePickups = this.chunkManager.getActivePickups();
     const magnetResult = updateMagnetPickups(
       newPos,
@@ -1137,7 +1161,7 @@ export class MainScene extends Scene {
       let totalCoinsFromPickups = 0;
 
       for (const item of magnetResult.collectedPickups) {
-        this.chunkManager.recordPickupCollected(item.id);
+        this.chunkManager.recordPickupCollected(item.id, this.elapsedSeconds);
         if (item.kind === 'exp-blue' || item.kind === 'exp-orange') {
           const normalizedRoll =
             item.kind === 'exp-blue'
@@ -1152,6 +1176,10 @@ export class MainScene extends Scene {
         } else if (item.kind === 'rp-coin') {
           totalCoinsFromPickups += item.baseValue;
           this.game.events.emit('codex-grant', 'rp-coin');
+        } else if (item.kind === 'biomass') {
+          this.runBiomass += item.baseValue;
+          this.game.events.emit('codex-grant', 'raw-biomass');
+          this.showInteractFeedback(item.x, item.y, `+${item.baseValue} BIOMASS`);
         }
       }
 
@@ -1254,7 +1282,10 @@ export class MainScene extends Scene {
           720,
           960,
           Math.random,
-          this.elapsedSeconds
+          this.elapsedSeconds,
+          undefined,
+          undefined,
+          this.facingVector
         );
         this.activeEnemies.push(enemy);
       }

@@ -50,7 +50,7 @@ export interface HitEvent {
 }
 
 export interface DropItem {
-  kind: 'exp-blue' | 'exp-orange' | 'rp-coin';
+  kind: 'exp-blue' | 'exp-orange' | 'rp-coin' | 'biomass';
   baseValue: number;
 }
 
@@ -213,6 +213,18 @@ export function updateParasites(
     const toPlayerX = playerPos.x - e.x;
     const toPlayerY = playerPos.y - e.y;
     const distToPlayer = Math.hypot(toPlayerX, toPlayerY) || 1;
+
+    // Off-screen retention: If the player moves too fast away (distToPlayer > 1400px),
+    // reposition the parasite into the outer render perimeter (760-920px) so it continues pursuing
+    if (distToPlayer > 1400) {
+      const wrapAngle = Math.random() * Math.PI * 2;
+      const wrapDist = 760 + Math.random() * 160;
+      e.x = Math.round(playerPos.x + Math.cos(wrapAngle) * wrapDist);
+      e.y = Math.round(playerPos.y + Math.sin(wrapAngle) * wrapDist);
+      e.facingAngle = Math.atan2(playerPos.y - e.y, playerPos.x - e.x);
+      continue;
+    }
+
     let dirX = toPlayerX / distToPlayer;
     let dirY = toPlayerY / distToPlayer;
 
@@ -371,9 +383,18 @@ export function spawnParasite(
   rng: () => number = Math.random,
   elapsedSeconds = 0,
   overrideSpec?: { kind: ParasiteKind; variant: ParasiteVariant },
-  customId?: string
+  customId?: string,
+  playerFacing?: { x: number; y: number }
 ): ParasiteEnemy {
-  const angle = rng() * Math.PI * 2;
+  let angle = rng() * Math.PI * 2;
+  if (
+    playerFacing &&
+    (Math.abs(playerFacing.x) > 0.05 || Math.abs(playerFacing.y) > 0.05) &&
+    rng() < 0.5
+  ) {
+    const moveAngle = Math.atan2(playerFacing.y, playerFacing.x);
+    angle = moveAngle + (rng() - 0.5) * Math.PI * 0.72;
+  }
   const dist = minDistance + rng() * (maxDistance - minDistance);
   const x = Math.round(playerX + Math.cos(angle) * dist);
   const y = Math.round(playerY + Math.sin(angle) * dist);
@@ -442,61 +463,54 @@ export function spawnParasite(
 
 /**
  * Determines item drops when an enemy is eliminated.
- * Guaranteed EXP drop + potential RP Coins, with elevated rewards for rare/elite variants.
+ * Standard parasites have a 60% drop rate for EXP and RP Coins.
+ * Rare colored variants have a 50% drop rate for Orange EXP Cores and RP Coins, and 15% for Biomass.
  */
 export function rollParasiteDrops(
   enemy: ParasiteEnemy,
   rng: () => number = Math.random
 ): DropItem[] {
   const drops: DropItem[] = [];
+  const isRareColored =
+    enemy.variant === 'aberrant-violet' ||
+    enemy.variant === 'toxic-green' ||
+    enemy.variant === 'crimson-red';
 
-  if (enemy.kind === 'buglin') {
-    if (enemy.variant === 'aberrant-violet') {
-      // Rare Violet Buglin: high yield neural core
-      drops.push({ kind: 'exp-orange', baseValue: 20 });
-      if (rng() < 0.65) {
-        drops.push({ kind: 'rp-coin', baseValue: 1 });
-      }
-    } else {
-      // Standard Black Buglin: swift pest
-      if (rng() < 0.2) {
-        drops.push({ kind: 'exp-orange', baseValue: 16 });
-      } else {
-        drops.push({ kind: 'exp-blue', baseValue: 5 });
-      }
-      if (rng() < 0.22) {
-        drops.push({ kind: 'rp-coin', baseValue: 1 });
-      }
+  if (isRareColored) {
+    // Rare colored parasite: 50% chance for Orange EXP Core, 50% chance for RP Coins, 15% chance for Biomass
+    if (rng() < 0.5) {
+      drops.push({
+        kind: 'exp-orange',
+        baseValue: enemy.variant === 'crimson-red' ? 24 : 20
+      });
     }
-    return drops;
-  }
-
-  // Rupter / Crawler
-  if (enemy.variant === 'crimson-red') {
-    // Elite Blood Crawler: guaranteed orange core
-    drops.push({ kind: 'exp-orange', baseValue: 24 });
-    if (rng() < 0.55) {
-      drops.push({ kind: 'rp-coin', baseValue: 2 });
+    if (rng() < 0.5) {
+      drops.push({
+        kind: 'rp-coin',
+        baseValue: enemy.variant === 'crimson-red' ? 2 : 1
+      });
     }
-  } else if (enemy.variant === 'toxic-green') {
-    // Toxic Spore Crawler
-    if (rng() < 0.45) {
-      drops.push({ kind: 'exp-orange', baseValue: 18 });
-    } else {
-      drops.push({ kind: 'exp-blue', baseValue: 7 });
-    }
-    if (rng() < 0.4) {
-      drops.push({ kind: 'rp-coin', baseValue: 1 });
+    if (rng() < 0.15) {
+      drops.push({
+        kind: 'biomass',
+        baseValue: 1
+      });
     }
   } else {
-    // Standard Obsidian Crawler
-    if (rng() < 0.28) {
-      drops.push({ kind: 'exp-orange', baseValue: 18 });
-    } else {
-      drops.push({ kind: 'exp-blue', baseValue: 6 });
+    // Standard baseline parasite (Buglin larva / Obsidian Crawler):
+    // 60% chance to drop EXP, 60% chance to drop RP Coins
+    if (rng() < 0.6) {
+      const isOrange = rng() < 0.15;
+      drops.push({
+        kind: isOrange ? 'exp-orange' : 'exp-blue',
+        baseValue: isOrange ? 16 : enemy.kind === 'buglin' ? 5 : 6
+      });
     }
-    if (rng() < 0.35) {
-      drops.push({ kind: 'rp-coin', baseValue: 1 });
+    if (rng() < 0.6) {
+      drops.push({
+        kind: 'rp-coin',
+        baseValue: 1
+      });
     }
   }
 

@@ -19,14 +19,6 @@
         <strong class="hp-count">{{ playerHp() }}/{{ playerMaxHp() }}</strong>
       </div>
 
-      @if (isCorroded()) {
-        <div class="hud-card toxin-hud" role="status" aria-label="Bio-Corrosion Status">
-          <span aria-hidden="true">☣️</span>
-          <span class="resource-label">TOXIN</span>
-          <strong class="toxin-count">{{ corrosionSeconds() }}s</strong>
-        </div>
-      }
-
       <div class="hud-card biomass-hud" [class.interact-ready]="nearbyInteractable()" aria-label="Run Rare Biomass">
         <span aria-hidden="true">🧪</span>
         <span class="resource-label">RUN BIO</span>
@@ -64,6 +56,43 @@
       </button>
     </div>
   </header>
+
+  <!-- Dedicated Active Status Effects Stack (Vertically below HP with interactive popover) -->
+  @if (isCorroded()) {
+    <div class="status-effects-stack" role="region" aria-label="Active Status Effects">
+      <button
+        type="button"
+        class="status-effect-badge toxin-badge"
+        (click)="toggleStatusEffectInfo('corrosion')"
+        aria-label="Bio-Corrosion active: {{ corrosionSeconds() }}s remaining. Tap for tactical breakdown.">
+        <span class="effect-icon" aria-hidden="true">☣️</span>
+        <span class="effect-label">TOXIN</span>
+        <strong class="effect-timer">{{ corrosionSeconds() }}s</strong>
+      </button>
+
+      @if (activeStatusPopover() === 'corrosion') {
+        <div class="status-effect-popover" role="dialog" aria-modal="false" aria-labelledby="status-popover-title">
+          <div class="popover-top">
+            <h4 id="status-popover-title" class="popover-title">
+              <span aria-hidden="true">☣️</span> BIO-CORROSION
+            </h4>
+            <button
+              type="button"
+              class="popover-close-btn"
+              (click)="closeStatusEffectInfo()"
+              aria-label="Dismiss effect details">✕</button>
+          </div>
+          <p class="popover-text">
+            Parasitic acid corrodes cellular armor. Deals <strong>-3 HP/s</strong> periodic damage over time until purged.
+          </p>
+          <div class="popover-footer">
+            <span>Remaining Duration:</span>
+            <strong class="popover-time">{{ corrosionSeconds() }}s</strong>
+          </div>
+        </div>
+      }
+    </div>
+  }
 
   <!-- Phaser 4 Canvas Host -->
   <div class="canvas-container" #gameContainer></div>
@@ -420,6 +449,24 @@
                         </div>
                       }
                     </div>
+
+                    @if (detail.variants && detail.variants.length > 0) {
+                      <div class="inmodal-variants-section">
+                        <span class="variants-subhead">IDENTIFIED STRAINS</span>
+                        <div class="inmodal-variants-list">
+                          @for (v of detail.variants; track v.label) {
+                            <div class="inmodal-variant-card" [style.borderColor]="v.color">
+                              <div class="variant-top-row">
+                                <span class="variant-icon" aria-hidden="true">{{ v.icon }}</span>
+                                <strong class="variant-label" [style.color]="v.color">{{ v.label }}</strong>
+                                <span class="variant-badge" [style.color]="v.color">{{ v.tag }}</span>
+                              </div>
+                              <p class="variant-desc">{{ v.description }}</p>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
                   }
                 </div>
               }

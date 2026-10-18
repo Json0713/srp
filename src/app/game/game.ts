@@ -111,6 +111,7 @@ export class Game implements OnInit, OnDestroy {
   readonly sectorLabel = signal('SEC +0:+0');
   readonly isCorroded = signal(false);
   readonly corrosionSeconds = signal(0);
+  readonly activeStatusPopover = signal<string | null>(null);
   readonly unlockedCodexTitle = signal<string | null>(null);
   readonly recentBiomassReward = signal<{ biomass: number; exp: number; rpCoins: number } | null>(
     null
@@ -239,6 +240,14 @@ export class Game implements OnInit, OnDestroy {
     this.selectedCodexId.set(id);
   }
 
+  toggleStatusEffectInfo(id: string): void {
+    this.activeStatusPopover.update((current) => (current === id ? null : id));
+  }
+
+  closeStatusEffectInfo(): void {
+    this.activeStatusPopover.set(null);
+  }
+
   setInputMode(mode: InputMode): void {
     this.settingsService.setInputMode(mode, true);
     if (this.game) {
@@ -277,6 +286,9 @@ export class Game implements OnInit, OnDestroy {
     this.nearbyInteractable.set(snapshot.nearbyInteractable);
     if (snapshot.isCorroded !== undefined) {
       this.isCorroded.set(snapshot.isCorroded);
+      if (!snapshot.isCorroded && this.activeStatusPopover() === 'corrosion') {
+        this.activeStatusPopover.set(null);
+      }
     }
     if (snapshot.corrosionSeconds !== undefined) {
       this.corrosionSeconds.set(snapshot.corrosionSeconds);
