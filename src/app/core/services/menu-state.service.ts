@@ -3,6 +3,7 @@ import {
   GamePhaseInfo,
   OperatorItem,
   PersistedProfileV1,
+  PersistedSessionV1,
   ResearchNode,
   ResearchTrack,
   SelectionItem,
@@ -323,6 +324,15 @@ export class MenuStateService {
   readonly selectedZoneId = signal<string>('sector7');
   readonly researchRanks = signal<Record<string, number>>({});
 
+  readonly activeSession = signal<PersistedSessionV1 | null>(null);
+  readonly hasActiveSession = computed(() => Boolean(this.activeSession()?.isActive));
+  readonly shouldResumeRun = signal<boolean>(true);
+  readonly lastExtractionSummary = signal<{
+    biomass: number;
+    rpCoins: number;
+    level: number;
+  } | null>(null);
+
   readonly selectedOperator = computed<OperatorItem>(
     () => this.operators.find((op) => op.id === this.selectedOperatorId()) ?? this.operators[0]
   );
@@ -341,6 +351,10 @@ export class MenuStateService {
     if (mirror) {
       this.applyProfileState(mirror);
     }
+    const sessionMirror = this.persistence.readMirrorSync<PersistedSessionV1>('active_session');
+    if (sessionMirror && sessionMirror.isActive) {
+      this.activeSession.set(sessionMirror);
+    }
   }
 
   private async hydrateFromIndexedDb(): Promise<void> {
@@ -349,6 +363,11 @@ export class MenuStateService {
       this.applyProfileState(profile);
     } else {
       await this.persistProfile();
+    }
+
+    const session = await this.persistence.loadSession();
+    if (session && session.isActive) {
+      this.activeSession.set(session);
     }
   }
 
@@ -376,6 +395,71 @@ export class MenuStateService {
       unlockedZoneIds: ['sector7'],
       researchRanks: this.researchRanks()
     });
+  }
+
+  /**
+   * Starts a fresh deployment by resetting any previous saved session so in-run
+   * Biomass and RP Coins always begin at 0.
+   */
+  prepareNewRun(): void {
+    this.shouldResumeRun.set(false);
+    this.activeSession.set(null);
+    this.lastExtractionSummary.set(null);
+    void this.persistence.clearSession();
+  }
+
+  /**
+   * Prepares to resume the currently saved in-progress deployment.
+   */
+  prepareContinueRun(): void {
+    this.shouldResumeRun.set(true);
+    this.lastExtractionSummary.set(null);
+  }
+
+  /**
+   * Autosaves the active run progress without adding unextracted items to the meta-economy yet.
+   */
+  saveActiveRunSession(
+    session: Omit<PersistedSessionV1, 'id' | 'schemaVersion' | 'updatedAt'>
+  ): void {
+    const record: PersistedSessionV1 = {
+      id: 'v1_session',
+      schemaVersion: 1,
+      ...session,
+      isActive: true,
+      updatedAt: Date.now()
+    };
+    this.activeSession.set(record);
+    this.shouldResumeRun.set(true);
+    void this.persistence.saveSession(session);
+  }
+
+  /**
+   * Called ONLY when the player Aborts the Mission or finishes/dies in a run.
+   * Transfers collected in-run Biomass and RP Coins into the persistent Meta-Economy
+   * and clears the active session so the aborted run cannot be continued.
+   */
+  completeOrAbortRun(runBiomass: number, runRpCoins: number, finalLevel = 1): void {
+    const safeBiomass = Math.max(0, Math.floor(runBiomass));
+    const safeRp = Math.max(0, Math.floor(runRpCoins));
+
+    if (safeBiomass > 0 || safeRp > 0) {
+      this.addRunRewards(safeBiomass, safeRp);
+    }
+
+    this.lastExtractionSummary.set({
+      biomass: safeBiomass,
+      rpCoins: safeRp,
+      level: Math.max(1, Math.floor(finalLevel))
+    });
+
+    this.activeSession.set(null);
+    this.shouldResumeRun.set(false);
+    void this.persistence.clearSession();
+  }
+
+  clearExtractionSummary(): void {
+    this.lastExtractionSummary.set(null);
   }
 
   addRunRewards(biomassDelta: number, rpCoinsDelta: number): void {

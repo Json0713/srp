@@ -60,8 +60,15 @@
 - **Hardware Input Auto-Detection & Instant Dynamic Switching:** `SettingsService.detectHardwareInputMode()` automatically detects mobile/touch hardware vs. desktop keyboard on first boot, and `MainScene` listens to `input-mode-changed` + scene `resume` events so switching between Keyboard and Joystick takes effect immediately even while paused.
 - **Versioned IndexedDB (`v1`) Storage Engine (`PersistenceService`):** Implemented `srp_project_parasite_db` (`version: 1`) with 4 object stores (`meta_profile`, `codex_records`, `user_settings`, `active_session`) and synchronous `localStorage` fallback so Biomass, RP Coins, Codex unlocks, settings, and active run checkpoints survive browser refreshes.
 
+### 6. In-Run Extraction Economy, Active Run Autosave/Continue, Real-Time Tab Auto-Pause, Landscape Two-Section Pause Modal & `<app-info-popover>` (`!`) System
+- **0-Start In-Run Loot & Abort/Finish Extraction Banking:** Fresh deployments always reset in-run `runBiomass` and `runRpCoins` to `0`. Collected Biomass and RP Coins are banked into the persistent Command Vault (`MenuStateService.completeOrAbortRun()`) only when the player clicks **Abort Mission** (or completes/dies in a run), displaying an extraction summary banner on the Home Command Deck.
+- **Continuous Run Autosave & Continue Last Run:** Active runs automatically save seed, operator position, elapsed time, level/EXP, unbanked loot, chosen skills, and collected Spire/Orb/Coin IDs to IndexedDB (`active_session`). Players can resume via **Continue Run** on the Home screen or start fresh via **New Run**.
+- **Real-Time Tab Switch & Blur Auto-Pause:** Switching browser tabs (`document:visibilitychange`) or minimizing/blurring the window (`window:blur`) automatically pauses `MainScene` and autosaves the active run.
+- **Landscape-First Two-Section Pause Modal & In-Modal Subviews (`Operator Stats`, `Field Codex`, `Controls`):** Rebuilt the Pause Modal into a landscape two-section layout (`01 // Mission Control` + `02 // In-Game Systems Grid` with real-time `Operator Stats`, `Field Codex`, `Controls`, and Phase 2/3 preview tiles) that opens Codex and Settings directly inside the modal without kicking the player out of the active run.
+- **Minimal UI Copy & Reusable `<app-info-popover>` (`!`):** Created `src/app/shared/ui/info-popover.ts` and streamlined text across Home, Operators, Zones, Codex, Research Lab, Settings, and Game modals so cards show concise metrics by default and disclose extended details when clicking `!`.
+
 ## Next Target
-- **Milestone 1E (Phase 1: The Fallout) — Sprite & Animation Pipeline**, replacing procedural operator/node shapes with directional sprite animations.
+- **Milestone 1F (Phase 1: The Fallout) — Sprite & Animation Pipeline**, replacing procedural operator/node shapes with directional sprite animations.
 
 ## Update Policy
 When updating this document:

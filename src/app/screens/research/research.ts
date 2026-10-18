@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MenuStateService, ResearchNode, ResearchTrack } from '../../core/services/menu-state.service';
 import { PageHeader } from '../../shared/ui/page-header';
+import { InfoPopover } from '../../shared/ui/info-popover';
 
 interface ResearchTab {
   id: ResearchTrack;
@@ -11,7 +12,7 @@ interface ResearchTab {
 
 @Component({
   selector: 'app-research',
-  imports: [PageHeader],
+  imports: [PageHeader, InfoPopover],
   template: `
     <div class="screen-shell">
       <app-page-header
@@ -47,16 +48,23 @@ interface ResearchTab {
             <!-- Left Column: Research & Cosmetic Nodes -->
             <section class="node-list" aria-label="Research Nodes">
               @for (node of filteredNodes(); track node.id) {
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabindex="0"
                   class="node-card"
                   [class.selected]="selectedNode().id === node.id"
-                  (click)="selectNode(node.id)">
+                  (click)="selectNode(node.id)"
+                  (keydown.enter)="selectNode(node.id)">
                   <div class="node-icon" aria-hidden="true">{{ node.icon }}</div>
                   <div class="node-meta">
                     <div class="node-top">
                       <span class="node-code">{{ node.code }}</span>
-                      <span class="tag-rank">RANK {{ node.currentRank }}/{{ node.maxRank }}</span>
+                      <span class="tag-rank">RNK {{ node.currentRank }}/{{ node.maxRank }}</span>
+                      <app-info-popover
+                        [title]="node.title"
+                        [tag]="node.code"
+                        [text]="node.description"
+                        [hint]="node.effectSummary" />
                     </div>
                     <h2 class="node-title">{{ node.title }}</h2>
                     <p class="node-effect">{{ node.effectSummary }}</p>
@@ -67,34 +75,39 @@ interface ResearchTab {
                     }
                     <span class="currency-pill">🪙 {{ node.cost }} RP</span>
                   </div>
-                </button>
+                </div>
               }
             </section>
 
-            <!-- Right Column: Blueprint & Synthesis Inspector -->
+            <!-- Right Column: Blueprint & Synthesis Inspector (Concise + ! Popover) -->
             @if (selectedNode(); as node) {
               <aside class="inspector-card" aria-label="Research Blueprint Inspector">
                 <header class="inspector-head">
                   <div class="node-icon" aria-hidden="true">{{ node.icon }}</div>
-                  <div>
+                  <div class="node-meta">
                     <div class="node-top">
                       <span class="node-code">{{ node.code }}</span>
                       <span class="tag-rank">{{ node.category }}</span>
                       <span class="currency-pill">{{ node.phaseTag }}</span>
                     </div>
-                    <h3 class="inspector-name">{{ node.title }}</h3>
+                    <div class="effect-row">
+                      <h3 class="inspector-name">{{ node.title }}</h3>
+                      <app-info-popover
+                        [title]="node.title"
+                        [tag]="node.phaseTag"
+                        [text]="node.description"
+                        [hint]="node.effectSummary" />
+                    </div>
                   </div>
                 </header>
 
-                <p class="inspector-desc">{{ node.description }}</p>
-
                 <div class="effect-box">
                   <div class="effect-row">
-                    <span>SYNTHESIS EFFECT</span>
+                    <span>EFFECT</span>
                     <strong>{{ node.effectSummary }}</strong>
                   </div>
                   <div class="effect-row">
-                    <span>PROGRESSION TIER</span>
+                    <span>TIER</span>
                     <div class="rank-pips" [attr.aria-label]="'Rank ' + node.currentRank + ' of ' + node.maxRank">
                       @for (pip of getRankPips(node.maxRank); track pip) {
                         <span class="pip" [class.filled]="pip <= node.currentRank"></span>
@@ -106,13 +119,13 @@ interface ResearchTab {
 
                 <footer class="synthesis-footer">
                   <div class="effect-row">
-                    <span>REQUIRED REAGENTS</span>
+                    <span>REAGENTS</span>
                     <strong class="cost-val">
-                      🧪 {{ node.biomassCost ?? 1 }} Biomass + 🪙 {{ node.cost }} RP Coins
+                      🧪 {{ node.biomassCost ?? 1 }} Biomass + 🪙 {{ node.cost }} RP
                     </strong>
                   </div>
                   <button type="button" class="synth-btn" disabled>
-                    🔒 SYNTHESIS LOCKED ({{ node.phaseTag }})
+                    🔒 LOCKED ({{ node.phaseTag }})
                   </button>
                 </footer>
               </aside>
@@ -137,11 +150,11 @@ interface ResearchTab {
     .node-meta { flex: 1; min-width: 0; }
     .node-code { font-family: var(--font-mono); font-size: 0.64rem; color: var(--color-text-secondary); }
     .node-title, .inspector-name { margin: 0.1rem 0; font-family: var(--font-display); font-size: 1.05rem; }
-    .inspector-name { font-size: 1.3rem; }
-    .node-effect, .inspector-desc { margin: 0.15rem 0 0; font-size: 0.84rem; color: var(--color-text-secondary); }
+    .inspector-name { font-size: 1.25rem; }
+    .node-effect { margin: 0.1rem 0 0; font-size: 0.78rem; color: var(--color-text-secondary); }
     .inspector-card { background: var(--color-bg-panel); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); padding: var(--spacing-lg); }
-    .inspector-head { display: flex; align-items: center; gap: var(--spacing-md); padding-bottom: var(--spacing-md); margin-bottom: var(--spacing-md); border-bottom: 1px solid var(--color-border); }
-    .effect-box { margin: var(--spacing-md) 0; padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radius-sm); background: rgba(5, 7, 11, 0.6); border: 1px solid var(--color-border); }
+    .inspector-head { display: flex; align-items: center; gap: var(--spacing-md); padding-bottom: var(--spacing-sm); margin-bottom: var(--spacing-sm); border-bottom: 1px solid var(--color-border); }
+    .effect-box { margin: var(--spacing-sm) 0; padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radius-sm); background: rgba(5, 7, 11, 0.6); border: 1px solid var(--color-border); }
     .effect-row { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 0.74rem; color: var(--color-text-secondary); }
     .effect-row strong { color: var(--color-primary-light); }
     .cost-val { color: var(--color-accent-light) !important; }

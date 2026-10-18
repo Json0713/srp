@@ -13,19 +13,27 @@ import {
   signal
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import type { Game as PhaserGame } from 'phaser';
 import { SettingsService, InputMode } from '../core/services/settings.service';
 import { MenuStateService } from '../core/services/menu-state.service';
 import { CodexService } from '../core/services/codex.service';
-import { PersistenceService } from '../core/services/persistence.service';
-import { GameHudSnapshot, SurvivalSkillOption } from '../core/models/game-data.model';
+import {
+  CodexCategory,
+  CodexEntry,
+  GameHudSnapshot,
+  SurvivalSkillOption
+} from '../core/models/game-data.model';
 import { rollRandomSkillChoices } from './systems/progression.system';
 import { Button } from '../shared/ui/button';
+import { InfoPopover } from '../shared/ui/info-popover';
+
+export type PauseModalView = 'main' | 'stats' | 'codex' | 'settings';
+type CodexFilterTab = 'all' | CodexCategory;
 
 @Component({
   selector: 'app-game',
-  imports: [Button, RouterLink],
+  imports: [Button, InfoPopover],
   templateUrl: './game.html',
   styleUrl: './game.css'
 })
@@ -37,26 +45,47 @@ export class Game implements OnInit, OnDestroy {
   private readonly ngZone = inject(NgZone);
   private readonly settingsService = inject(SettingsService);
   private readonly menuState = inject(MenuStateService);
-  private readonly codexService = inject(CodexService);
-  private readonly persistence = inject(PersistenceService);
+  readonly codexService = inject(CodexService);
   private readonly router = inject(Router);
 
   private isDestroyed = false;
   private isInitializing = false;
+  private isAborted = false;
   private unlockToastTimer: ReturnType<typeof setTimeout> | null = null;
   private biomassBannerTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly isPaused = signal(false);
+  readonly autoPausedNotice = signal(false);
+  readonly pauseView = signal<PauseModalView>('main');
   readonly isLevelUpModalOpen = signal(false);
+
   readonly inputMode = this.settingsService.inputMode;
+  readonly detectedDeviceMode = this.settingsService.detectedDeviceMode;
   readonly operator = this.menuState.selectedOperator;
   readonly zone = this.menuState.selectedZone;
 
-  // Persistent meta totals + active run counters
+  // Persistent meta totals (Vault) + active in-run counters (always start at 0 on a new run)
   readonly totalBiomass = this.menuState.biomass;
   readonly totalRpCoins = this.menuState.rpCoins;
   readonly runBiomass = signal(0);
   readonly runRpCoins = signal(0);
+
+  // Real-time run telemetry for autosave & Operator Stats modal
+  readonly runSeed = signal(1);
+  readonly playerX = signal(256);
+  readonly playerY = signal(256);
+  readonly elapsedSeconds = signal(0);
+  readonly playerSpeed = signal(300);
+  readonly magnetRadius = signal(78);
+  private collectedResourceIds: string[] = [];
+  private collectedPickupIds: string[] = [];
+
+  readonly formattedRunTime = computed(() => {
+    const total = Math.max(0, Math.floor(this.elapsedSeconds()));
+    const mins = Math.floor(total / 60);
+    const secs = total % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  });
 
   // In-run EXP & Level state
   readonly level = signal(1);
@@ -77,6 +106,30 @@ export class Game implements OnInit, OnDestroy {
   // Level-up 3-skill choice state
   readonly skillChoices = signal<SurvivalSkillOption[]>([]);
   readonly chosenSkillRanks = signal<Record<string, number>>({});
+  readonly activeSkillsList = computed(() => {
+    const ranks = this.chosenSkillRanks();
+    return this.menuState.survivalSkills
+      .filter((s) => (ranks[s.id] ?? 0) > 0)
+      .map((s) => ({ ...s, rank: ranks[s.id] ?? 0 }));
+  });
+
+  // In-modal Field Codex state (keeps player inside the active run!)
+  readonly codexTabs: { id: CodexFilterTab; label: string; icon: string }[] = [
+    { id: 'all', label: 'All', icon: '📘' },
+    { id: 'items', label: 'Items', icon: '🧪' },
+    { id: 'parasites', label: 'Parasites', icon: '🕷️' },
+    { id: 'powers', label: 'Powers', icon: '⚡' },
+    { id: 'archive', label: 'Archive', icon: '🛡️' }
+  ];
+  readonly activeCodexTab = signal<CodexFilterTab>('all');
+  readonly selectedCodexId = signal<string>('raw-biomass');
+  readonly filteredCodexEntries = computed<CodexEntry[]>(() =>
+    this.codexService.getEntriesByCategory(this.activeCodexTab())
+  );
+  readonly selectedCodexEntry = computed<CodexEntry | undefined>(() => {
+    const list = this.filteredCodexEntries();
+    return list.find((e) => e.id === this.selectedCodexId()) ?? list[0];
+  });
 
   constructor() {
     effect(() => {
@@ -93,15 +146,78 @@ export class Game implements OnInit, OnDestroy {
     if (this.isLevelUpModalOpen()) {
       return;
     }
+    if (this.isPaused() && this.pauseView() !== 'main') {
+      this.pauseView.set('main');
+      return;
+    }
     this.togglePause();
+  }
+
+  /**
+   * Real-time dynamic auto-pause & autosave when switching browser tabs or minimizing app.
+   */
+  @HostListener('document:visibilitychange')
+  onVisibilityChange(): void {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+      this.triggerAutoPauseAndSave();
+    }
+  }
+
+  @HostListener('window:blur')
+  onWindowBlur(): void {
+    this.triggerAutoPauseAndSave();
+  }
+
+  @HostListener('window:pagehide')
+  @HostListener('window:beforeunload')
+  onPageUnload(): void {
+    if (!this.isAborted) {
+      this.autosaveCurrentRun();
+    }
+  }
+
+  triggerAutoPauseAndSave(): void {
+    if (this.isAborted || this.isDestroyed) {
+      return;
+    }
+    this.autosaveCurrentRun();
+    if (!this.isPaused() && !this.isLevelUpModalOpen()) {
+      this.autoPausedNotice.set(true);
+      this.pauseView.set('main');
+      this.isPaused.set(true);
+      this.syncScenePauseState();
+    }
   }
 
   togglePause(): void {
     if (this.isLevelUpModalOpen()) {
       return;
     }
-    this.isPaused.set(!this.isPaused());
+    const nextPaused = !this.isPaused();
+    this.isPaused.set(nextPaused);
+    if (!nextPaused) {
+      this.autoPausedNotice.set(false);
+      this.pauseView.set('main');
+    } else {
+      this.autosaveCurrentRun();
+    }
     this.syncScenePauseState();
+  }
+
+  openPauseSubview(view: PauseModalView): void {
+    this.pauseView.set(view);
+  }
+
+  selectCodexTab(tab: CodexFilterTab): void {
+    this.activeCodexTab.set(tab);
+    const list = this.codexService.getEntriesByCategory(tab);
+    if (list.length > 0 && !list.some((e) => e.id === this.selectedCodexId())) {
+      this.selectedCodexId.set(list[0].id);
+    }
+  }
+
+  selectCodexEntry(id: string): void {
+    this.selectedCodexId.set(id);
   }
 
   setInputMode(mode: InputMode): void {
@@ -110,6 +226,10 @@ export class Game implements OnInit, OnDestroy {
       this.game.registry?.set('inputMode', mode);
       this.game.events?.emit('input-mode-changed', mode);
     }
+  }
+
+  useAutoDetectedInput(): void {
+    this.settingsService.useAutoDetectedMode();
   }
 
   selectLevelUpSkill(skill: SurvivalSkillOption): void {
@@ -124,16 +244,7 @@ export class Game implements OnInit, OnDestroy {
       this.game.events.emit('skill-selected', skill.id);
     }
 
-    void this.persistence.saveSession({
-      runSeed: 1,
-      level: this.level(),
-      currentExp: this.currentExp(),
-      expToNextLevel: this.expToNextLevel(),
-      runBiomass: this.runBiomass(),
-      runRpCoins: this.runRpCoins(),
-      chosenSkills: nextRanks
-    });
-
+    this.autosaveCurrentRun();
     this.syncScenePauseState();
   }
 
@@ -149,6 +260,24 @@ export class Game implements OnInit, OnDestroy {
     if (snapshot.sectorLabel) {
       this.sectorLabel.set(snapshot.sectorLabel);
     }
+    if (snapshot.runSeed !== undefined) {
+      this.runSeed.set(snapshot.runSeed);
+    }
+    if (snapshot.playerX !== undefined) {
+      this.playerX.set(snapshot.playerX);
+    }
+    if (snapshot.playerY !== undefined) {
+      this.playerY.set(snapshot.playerY);
+    }
+    if (snapshot.elapsedSeconds !== undefined) {
+      this.elapsedSeconds.set(snapshot.elapsedSeconds);
+    }
+    if (snapshot.playerSpeed !== undefined) {
+      this.playerSpeed.set(snapshot.playerSpeed);
+    }
+    if (snapshot.magnetRadius !== undefined) {
+      this.magnetRadius.set(snapshot.magnetRadius);
+    }
     if (snapshot.level !== undefined) {
       this.level.set(snapshot.level);
     }
@@ -157,6 +286,12 @@ export class Game implements OnInit, OnDestroy {
     }
     if (snapshot.expToNextLevel !== undefined) {
       this.expToNextLevel.set(snapshot.expToNextLevel);
+    }
+    if (snapshot.collectedResourceIds) {
+      this.collectedResourceIds = snapshot.collectedResourceIds;
+    }
+    if (snapshot.collectedPickupIds) {
+      this.collectedPickupIds = snapshot.collectedPickupIds;
     }
 
     if (snapshot.lastBiomassReward) {
@@ -176,6 +311,32 @@ export class Game implements OnInit, OnDestroy {
     if ((snapshot.pendingLevelUps ?? 0) > 0 && !this.isLevelUpModalOpen()) {
       this.openLevelUpSkillModal();
     }
+
+    this.autosaveCurrentRun();
+  }
+
+  autosaveCurrentRun(): void {
+    if (this.isAborted) {
+      return;
+    }
+    this.menuState.saveActiveRunSession({
+      isActive: true,
+      operatorId: this.operator().id,
+      zoneId: this.zone().id,
+      runSeed: this.runSeed(),
+      playerX: this.playerX(),
+      playerY: this.playerY(),
+      elapsedSeconds: this.elapsedSeconds(),
+      level: this.level(),
+      currentExp: this.currentExp(),
+      expToNextLevel: this.expToNextLevel(),
+      runBiomass: this.runBiomass(),
+      runRpCoins: this.runRpCoins(),
+      pendingLevelUps: this.isLevelUpModalOpen() ? 1 : 0,
+      chosenSkills: this.chosenSkillRanks(),
+      collectedResourceIds: this.collectedResourceIds,
+      collectedPickupIds: this.collectedPickupIds
+    });
   }
 
   private openLevelUpSkillModal(): void {
@@ -207,8 +368,14 @@ export class Game implements OnInit, OnDestroy {
     }
   }
 
-  returnHome(): void {
-    this.router.navigate(['/']);
+  /**
+   * Aborts the active mission: banks all collected in-run Biomass and RP Coins
+   * into the persistent Meta-Economy, clears the saved active run, and returns to Home.
+   */
+  abortMission(): void {
+    this.isAborted = true;
+    this.menuState.completeOrAbortRun(this.runBiomass(), this.runRpCoins(), this.level());
+    void this.router.navigate(['/']);
   }
 
   ngOnInit(): void {
@@ -223,6 +390,32 @@ export class Game implements OnInit, OnDestroy {
     }
 
     this.isInitializing = true;
+
+    // Check if we should resume an active saved session or start fresh at 0
+    const savedSession = this.menuState.shouldResumeRun() ? this.menuState.activeSession() : null;
+    if (savedSession && savedSession.isActive) {
+      this.runSeed.set(savedSession.runSeed);
+      this.playerX.set(savedSession.playerX ?? 256);
+      this.playerY.set(savedSession.playerY ?? 256);
+      this.elapsedSeconds.set(savedSession.elapsedSeconds ?? 0);
+      this.level.set(savedSession.level);
+      this.currentExp.set(savedSession.currentExp);
+      this.expToNextLevel.set(savedSession.expToNextLevel);
+      this.runBiomass.set(savedSession.runBiomass);
+      this.runRpCoins.set(savedSession.runRpCoins);
+      this.chosenSkillRanks.set(savedSession.chosenSkills ?? {});
+      this.collectedResourceIds = savedSession.collectedResourceIds ?? [];
+      this.collectedPickupIds = savedSession.collectedPickupIds ?? [];
+    } else {
+      this.runBiomass.set(0);
+      this.runRpCoins.set(0);
+      this.level.set(1);
+      this.currentExp.set(0);
+      this.expToNextLevel.set(100);
+      this.chosenSkillRanks.set({});
+      this.collectedResourceIds = [];
+      this.collectedPickupIds = [];
+    }
 
     const Phaser = await import('phaser');
     const { MainScene } = await import('./scenes/main.scene');
@@ -247,16 +440,11 @@ export class Game implements OnInit, OnDestroy {
       this.game.registry.set('inputMode', this.settingsService.inputMode());
       this.game.registry.set('operatorId', this.operator().id);
       this.game.registry.set('zoneId', this.zone().id);
+      this.game.registry.set('resumeSession', savedSession?.isActive ? savedSession : null);
 
       this.game.events.on('hud-update', (snapshot: GameHudSnapshot) => {
         this.ngZone.run(() => {
           this.handleHudSnapshot(snapshot);
-        });
-      });
-
-      this.game.events.on('meta-reward', (reward: { biomass: number; rpCoins: number }) => {
-        this.ngZone.run(() => {
-          this.menuState.addRunRewards(reward.biomass, reward.rpCoins);
         });
       });
 
@@ -271,6 +459,9 @@ export class Game implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (!this.isAborted) {
+      this.autosaveCurrentRun();
+    }
     this.isDestroyed = true;
     if (this.unlockToastTimer) {
       clearTimeout(this.unlockToastTimer);
@@ -282,7 +473,6 @@ export class Game implements OnInit, OnDestroy {
     }
     if (this.game) {
       this.game.events.off('hud-update');
-      this.game.events.off('meta-reward');
       this.game.events.off('codex-grant');
       this.game.destroy(true);
       this.game = null;

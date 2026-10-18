@@ -18,6 +18,8 @@ The project uses Angular, TypeScript, and Phaser. See `.agents/context/GAME_DESI
 - Follow the root `AGENTS.md` and applicable project rules.
 - Implement only the requested task and necessary supporting work.
 - Keep `.agents/context/CODEX.md` and `CodexService` synchronized whenever items, parasites, powers, operators, or zones are added or updated.
+- **Minimal UI Copy & Interactive (`!`) Info Disclosure Policy:** Keep cards, headers, HUD elements, and modals concise and free of noisy text walls. Show only essential titles/metrics by default and place detailed lore, mechanics, or hints inside the reusable `<app-info-popover>` (`!`) button (`src/app/shared/ui/info-popover.ts`).
+- **In-Run Extraction, Autosave & Zero-Kick Modal Policy:** Every new deployment starts in-run Biomass and RP Coins at `0`, autosaves the active run continuously (and on tab hide/blur with auto-pause), and only banks collected Biomass & RP Coins into the Command Vault when the player Aborts or Finishes the mission. In-game Pause Menu subviews (`Operator Stats`, `Field Codex`, `Settings`) must remain inside the modal and never kick the player out of the active run.
 - **Focused Ephemeral Spec Policy:** Write `.spec.ts` tests **only** for the newly implemented, enhanced, or fixed behavior in the current task, run `npm test -- --watch=false` once to verify it passes, and **delete the `.spec.ts` file(s) immediately afterward** so zero test files remain in `src/`.
 - Preserve existing behavior unless a change is explicitly required.
 - Do not overwrite user work or perform destructive operations without approval.

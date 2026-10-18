@@ -36,6 +36,7 @@ src/
     ├── shared/                 # Reusable tactical UI components (Signal inputs/outputs)
     │   └── ui/
     │       ├── button.ts
+    │       ├── info-popover.ts
     │       ├── page-header.ts
     │       └── selection-card.ts
     ├── screens/                # Out-of-game command deck screens (Portrait & Landscape responsive)

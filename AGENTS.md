@@ -274,7 +274,9 @@ These responsibilities may evolve as requirements become clearer, but do not cas
 - Use semantic HTML, accessible names, keyboard-operable controls, visible focus indicators, and appropriate color contrast.
 - Do not rely on color alone to communicate important information.
 - Provide suitable labels and interaction feedback for menus, settings, inventory, and crafting controls.
-- Ensure UI overlays and dialogs handle focus and keyboard interaction appropriately.
+- **Minimal UI Copy & Interactive (`!`) Info Disclosure (Mandatory):** Avoid cluttered, long-winded text blocks on cards, headers, and modals. Display only concise, high-signal metrics and titles by default, and place extended descriptions, lore, or rules inside the reusable `<app-info-popover>` (`!`) component (`src/app/shared/ui/info-popover.ts`) so players can inspect full details on demand.
+- **Landscape-First In-Run Modals & Zero-Kick Navigation:** In-game modals (Pause, Level-Up, Operator Stats, Field Codex, and Controls) must render in a landscape-first layout (`width: min(95dvw, 850px)`) that scales down cleanly on smaller mobile screens without overflow. Opening the Field Codex or Settings from the Pause Menu must stay inside the Pause Modal rather than navigating away and destroying the active run.
+- Ensure UI overlays and dialogs handle focus, keyboard interaction, and automatic pause/autosave on browser tab switch (`visibilitychange`) or window blur.
 - Consider browser zoom, viewport resizing, and different input methods.
 - For the Phaser canvas, account for keyboard access, focus behavior, pause behavior, and a reasonable alternative to interactions that would otherwise be inaccessible.
 - Do not claim that automated accessibility checks guarantee complete WCAG compliance.

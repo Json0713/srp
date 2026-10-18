@@ -275,6 +275,8 @@ export class ChunkManager {
   readonly renderRadius: number;
 
   private readonly discoveredChunks = new Map<string, ChunkData>();
+  private readonly collectedResourceIds = new Set<string>();
+  private readonly collectedPickupIds = new Set<string>();
   private activeChunks: ChunkData[] = [];
   private lastCenterChunk: ChunkCoords | null = null;
   private totalCollected = 0;
@@ -287,6 +289,45 @@ export class ChunkManager {
     this.runSeed = seed;
     this.chunkSize = chunkSize;
     this.renderRadius = renderRadius;
+  }
+
+  restoreCollectedState(resourceIds: string[] = [], pickupIds: string[] = []): void {
+    for (const id of resourceIds) {
+      this.collectedResourceIds.add(id);
+    }
+    for (const id of pickupIds) {
+      this.collectedPickupIds.add(id);
+    }
+    this.totalCollected = this.collectedResourceIds.size;
+
+    for (const chunk of this.discoveredChunks.values()) {
+      this.applyCollectedFlagsToChunk(chunk);
+    }
+  }
+
+  private applyCollectedFlagsToChunk(chunk: ChunkData): void {
+    for (const res of chunk.resources) {
+      if (this.collectedResourceIds.has(res.id)) {
+        res.collected = true;
+      }
+    }
+    for (const item of chunk.pickups) {
+      if (this.collectedPickupIds.has(item.id)) {
+        item.collected = true;
+      }
+    }
+  }
+
+  recordPickupCollected(pickupId: string): void {
+    this.collectedPickupIds.add(pickupId);
+  }
+
+  getCollectedResourceIds(): string[] {
+    return Array.from(this.collectedResourceIds);
+  }
+
+  getCollectedPickupIds(): string[] {
+    return Array.from(this.collectedPickupIds);
   }
 
   updateActiveWindow(playerPosition: Position, forceRefresh = false): ActiveChunkUpdateResult {
@@ -318,6 +359,7 @@ export class ChunkManager {
         let chunk = this.discoveredChunks.get(key);
         if (!chunk) {
           chunk = generateChunkData(this.runSeed, cx, cy, this.chunkSize);
+          this.applyCollectedFlagsToChunk(chunk);
           this.discoveredChunks.set(key, chunk);
         }
         nextActive.push(chunk);
@@ -378,6 +420,7 @@ export class ChunkManager {
           collected: true
         };
         chunk.resources[idx] = updated;
+        this.collectedResourceIds.add(resourceId);
         this.totalCollected += 1;
         return updated;
       }

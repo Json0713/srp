@@ -6,35 +6,35 @@
     </div>
     <div class="exp-bar-meta">
       <span class="exp-lvl-badge">LVL {{ level() }}</span>
-      <span class="exp-numbers">{{ currentExp() }} / {{ expToNextLevel() }} EXP ({{ expPercent() }}%)</span>
+      <span class="exp-numbers">{{ currentExp() }} / {{ expToNextLevel() }} EXP ({{ expPercent() }}%) • ⏱️ {{ formattedRunTime() }}</span>
     </div>
   </div>
 
-  <!-- Tactical Top HUD Layer (Unlimited Rare Biomass + RP Coins) -->
+  <!-- Tactical Top HUD Layer (In-Run Biomass & RP Coins start at 0 every deploy) -->
   <header class="hud-layer" aria-label="Gameplay Telemetry HUD">
     <div class="hud-left">
-      <div class="hud-card biomass-hud" [class.interact-ready]="nearbyInteractable()" aria-label="Rare Biomass">
+      <div class="hud-card biomass-hud" [class.interact-ready]="nearbyInteractable()" aria-label="Run Rare Biomass">
         <span aria-hidden="true">🧪</span>
-        <span class="resource-label">BIOMASS</span>
-        <strong class="biomass-count">{{ totalBiomass() }}</strong>
+        <span class="resource-label">RUN BIO</span>
+        <strong class="biomass-count">{{ runBiomass() }}</strong>
       </div>
 
-      <div class="hud-card coin-hud" aria-label="Research Parasitic Coins">
+      <div class="hud-card coin-hud" aria-label="Run Research Parasitic Coins">
         <span aria-hidden="true">🪙</span>
-        <span class="resource-label">RP</span>
-        <strong class="coin-count">{{ totalRpCoins() }}</strong>
+        <span class="resource-label">RUN RP</span>
+        <strong class="coin-count">{{ runRpCoins() }}</strong>
       </div>
 
       @if (recentBiomassReward(); as reward) {
         <div class="hud-card reward-toast" role="status">
-          <span>🧪 +{{ reward.biomass }} Biomass • ⚡ +{{ reward.exp }} EXP • 🪙 +{{ reward.rpCoins }} RP</span>
+          <span>🧪 +{{ reward.biomass }} • ⚡ +{{ reward.exp }} EXP • 🪙 +{{ reward.rpCoins }} RP</span>
         </div>
       }
 
       @if (unlockedCodexTitle(); as codexTitle) {
         <div class="hud-card codex-unlock-toast" role="status">
           <span aria-hidden="true">📘</span>
-          <span>CODEX GRANTED: <strong>{{ codexTitle }}</strong></span>
+          <span>GRANTED: <strong>{{ codexTitle }}</strong></span>
         </div>
       }
     </div>
@@ -64,104 +64,402 @@
   <!-- Desktop Controls Footer Hint -->
   @if (inputMode() === 'pc' && !isPaused() && !isLevelUpModalOpen()) {
     <div class="hud-bottom-hint" aria-hidden="true">
-      <span><strong>WASD / ARROWS</strong> Move (Auto-Magnet Orbs & RP)</span>
+      <span><strong>WASD</strong> Move (Auto-Magnet)</span>
       <span>•</span>
-      <span><strong>E</strong> Harvest Rare Biomass Spire</span>
+      <span><strong>E</strong> Harvest Spire</span>
       <span>•</span>
       <span><strong>ESC</strong> Pause</span>
     </div>
   }
 
-  <!-- Level-Up 3-Skill Selection Popup Modal (Magic Survival Inspired) -->
+  <!-- Level-Up 3-Skill Selection Popup Modal (Landscape-Optimized & Minimal Copy) -->
   @if (isLevelUpModalOpen()) {
     <div class="pause-overlay" role="dialog" aria-modal="true" aria-labelledby="levelup-heading">
-      <div class="levelup-modal">
-        <span class="pause-kicker">GENETIC ADAPTATION // LEVEL {{ level() }} REACHED</span>
-        <h2 id="levelup-heading">SELECT SURVIVAL SKILL</h2>
-        <p class="levelup-sub">Choose 1 of 3 randomized containment protocols to augment your rig.</p>
+      <div class="tactical-modal levelup-modal">
+        <div class="modal-top-bar">
+          <div>
+            <span class="pause-kicker">GENETIC ADAPTATION // LEVEL {{ level() }}</span>
+            <h2 id="levelup-heading">SELECT 1 OF 3 SURVIVAL PROTOCOLS</h2>
+          </div>
+          <app-info-popover
+            title="Survival Skill Selection"
+            tag="LEVEL UP"
+            text="Every level-up presents 3 randomized containment protocols. Active bonuses apply immediately; Phase 2 weapon blueprints pre-register rank upgrades."
+            hint="Pick 1 card to resume deployment." />
+        </div>
 
         <div class="skill-choices-grid">
           @for (skill of skillChoices(); track skill.id) {
-            <button
-              type="button"
+            <div
+              role="button"
+              tabindex="0"
               class="skill-choice-card"
-              (click)="selectLevelUpSkill(skill)">
+              (click)="selectLevelUpSkill(skill)"
+              (keydown.enter)="selectLevelUpSkill(skill)">
               <div class="skill-card-top">
                 <span class="skill-icon" aria-hidden="true">{{ skill.icon }}</span>
                 <div class="skill-meta">
                   <span class="skill-phase-tag">{{ skill.phaseTag }}</span>
                   <span class="skill-rank-tag">
-                    {{ getSkillRank(skill.id) === 0 ? 'NEW PROTOCOL' : 'RANK ' + getSkillRank(skill.id) + ' → ' + (getSkillRank(skill.id) + 1) }}
+                    {{ getSkillRank(skill.id) === 0 ? 'NEW' : 'RNK ' + getSkillRank(skill.id) + '→' + (getSkillRank(skill.id) + 1) }}
                   </span>
                 </div>
               </div>
-              <h3 class="skill-title">{{ skill.title }}</h3>
+              <div class="skill-title-row">
+                <h3 class="skill-title">{{ skill.title }}</h3>
+                <app-info-popover
+                  [title]="skill.title"
+                  [tag]="skill.code"
+                  [text]="skill.description"
+                  [hint]="skill.effectPerLevel" />
+              </div>
               <span class="skill-cat">{{ skill.category }}</span>
-              <p class="skill-desc">{{ skill.description }}</p>
               <div class="skill-effect">{{ skill.effectPerLevel }}</div>
-            </button>
+            </div>
           }
         </div>
       </div>
     </div>
   }
 
-  <!-- Tactical Pause & In-Run Settings Overlay -->
+  <!-- Landscape-Optimized Tactical Pause Modal (Never kicks player out of the run!) -->
   @if (isPaused()) {
     <div class="pause-overlay" role="dialog" aria-modal="true" aria-labelledby="pause-heading">
-      <div class="pause-menu">
-        <span class="pause-kicker">SIMULATION SUSPENDED</span>
-        <h2 id="pause-heading">PAUSED</h2>
+      <div class="tactical-modal pause-modal-wide">
+        <!-- Modal Top Header -->
+        <header class="modal-top-bar">
+          <div class="modal-title-group">
+            @if (pauseView() !== 'main') {
+              <button
+                type="button"
+                class="modal-back-btn"
+                (click)="openPauseSubview('main')">
+                ← BACK
+              </button>
+            }
+            <div>
+              <span class="pause-kicker">
+                {{ autoPausedNotice() ? 'AUTO-PAUSED // TAB INACTIVE — RUN AUTOSAVED' : 'SIMULATION SUSPENDED // RUN AUTOSAVED' }}
+              </span>
+              <h2 id="pause-heading">
+                @switch (pauseView()) {
+                  @case ('stats') { OPERATOR REAL-TIME STATS }
+                  @case ('codex') { FIELD CODEX // IN-RUN ENCYCLOPEDIA }
+                  @case ('settings') { TACTICAL CONTROLS & INPUT }
+                  @default { TACTICAL PAUSE MENU }
+                }
+              </h2>
+            </div>
+          </div>
 
-        <div class="pause-telemetry">
-          <div class="telemetry-item">
-            <span>Operator / Sector</span>
-            <strong>{{ operator().title }} ({{ sectorLabel() }})</strong>
+          <div class="modal-head-right">
+            <span class="run-pill">⏱️ {{ formattedRunTime() }}</span>
+            <span class="run-pill">🧪 +{{ runBiomass() }}</span>
+            <span class="run-pill">🪙 +{{ runRpCoins() }} RP</span>
+            <app-info-popover
+              title="Run Extraction & Autosave Rules"
+              tag="ECONOMY"
+              text="In-run Biomass and RP Coins start at 0 every new deployment and are autosaved continuously. Aborting or finishing the mission banks all collected items into your permanent Command Vault."
+              [hint]="'Command Vault: 🧪 ' + totalBiomass() + ' Biomass | 🪙 ' + totalRpCoins() + ' RP'" />
           </div>
-          <div class="telemetry-item">
-            <span>Operator Level</span>
-            <strong>LVL {{ level() }} ({{ currentExp() }}/{{ expToNextLevel() }} EXP)</strong>
-          </div>
-          <div class="telemetry-item">
-            <span>Rare Biomass / RP Coins</span>
-            <strong>🧪 {{ totalBiomass() }}  |  🪙 {{ totalRpCoins() }} RP</strong>
-          </div>
-        </div>
+        </header>
 
-        <div class="pause-mode-switch" role="group" aria-label="Quick Switch Input Mode">
-          <span class="switch-label">Input Mode (Dynamic Switch):</span>
-          <div class="switch-buttons">
-            <button
-              type="button"
-              class="mode-switch-btn"
-              [class.active]="inputMode() === 'pc'"
-              (click)="setInputMode('pc')">
-              Keyboard (PC)
-            </button>
-            <button
-              type="button"
-              class="mode-switch-btn"
-              [class.active]="inputMode() === 'mobile'"
-              (click)="setInputMode('mobile')">
-              Joystick (Mobile)
-            </button>
-          </div>
-        </div>
+        <!-- VIEW 1: Default Two-Section Landscape Pause Menu -->
+        @if (pauseView() === 'main') {
+          <div class="pause-two-sections">
+            <!-- Section 1: Current Run Telemetry & Primary Mission Actions -->
+            <section class="pause-section" aria-label="Mission Control">
+              <div class="section-head-row">
+                <span class="section-tag">01 // MISSION CONTROL</span>
+                <span class="sector-chip">{{ zone().title }} • {{ sectorLabel() }}</span>
+              </div>
 
-        <div class="pause-actions">
-          <app-button variant="primary" [fullWidth]="true" class="full-width" (onClick)="togglePause()">
-            Resume
-          </app-button>
-          <app-button variant="secondary" [fullWidth]="true" class="full-width" routerLink="/codex">
-            📘 Field Codex
-          </app-button>
-          <app-button variant="secondary" [fullWidth]="true" class="full-width" routerLink="/settings">
-            Settings
-          </app-button>
-          <app-button variant="danger" [fullWidth]="true" class="full-width" (onClick)="returnHome()">
-            Return Home
-          </app-button>
-        </div>
+              <div class="pause-telemetry">
+                <div class="telemetry-item">
+                  <span>Operator / Level</span>
+                  <strong>{{ operator().icon }} {{ operator().title }} • LVL {{ level() }} ({{ expPercent() }}%)</strong>
+                </div>
+                <div class="telemetry-item">
+                  <span>Unbanked Run Loot</span>
+                  <strong class="loot-highlight">🧪 +{{ runBiomass() }} BIO  |  🪙 +{{ runRpCoins() }} RP</strong>
+                </div>
+                <div class="telemetry-item">
+                  <span>Command Vault Total</span>
+                  <strong>🧪 {{ totalBiomass() }} BIO  |  🪙 {{ totalRpCoins() }} RP</strong>
+                </div>
+              </div>
+
+              <div class="pause-mode-switch" role="group" aria-label="Quick Switch Input Mode">
+                <span class="switch-label">Input Mode:</span>
+                <div class="switch-buttons">
+                  <button
+                    type="button"
+                    class="mode-switch-btn"
+                    [class.active]="inputMode() === 'pc'"
+                    (click)="setInputMode('pc')">
+                    ⌨️ PC Keyboard
+                  </button>
+                  <button
+                    type="button"
+                    class="mode-switch-btn"
+                    [class.active]="inputMode() === 'mobile'"
+                    (click)="setInputMode('mobile')">
+                    📱 Touch Joystick
+                  </button>
+                </div>
+              </div>
+
+              <div class="pause-primary-actions">
+                <app-button variant="primary" [fullWidth]="true" class="full-width" (onClick)="togglePause()">
+                  ▶ Resume Mission
+                </app-button>
+                <app-button variant="danger" [fullWidth]="true" class="full-width" (onClick)="abortMission()">
+                  ⏹ Abort Mission (Save Loot)
+                </app-button>
+              </div>
+            </section>
+
+            <!-- Section 2: In-Game Systems & Real-Time Menus Grid -->
+            <section class="pause-section" aria-label="In-Game Tactical Systems Grid">
+              <div class="section-head-row">
+                <span class="section-tag">02 // IN-GAME SYSTEMS GRID</span>
+                <span class="sector-chip">STAY IN RUN</span>
+              </div>
+
+              <div class="pause-systems-grid">
+                <button
+                  type="button"
+                  class="grid-menu-tile active-tile"
+                  (click)="openPauseSubview('stats')">
+                  <span class="tile-icon" aria-hidden="true">📊</span>
+                  <div class="tile-body">
+                    <strong>Operator Stats</strong>
+                    <span>SPD {{ playerSpeed() }} • MAG {{ magnetRadius() }}px</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  class="grid-menu-tile active-tile"
+                  (click)="openPauseSubview('codex')">
+                  <span class="tile-icon" aria-hidden="true">📘</span>
+                  <div class="tile-body">
+                    <strong>Field Codex</strong>
+                    <span>{{ codexService.discoveredCount() }}/{{ codexService.discoverableTotal() }} Granted</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  class="grid-menu-tile active-tile"
+                  (click)="openPauseSubview('settings')">
+                  <span class="tile-icon" aria-hidden="true">⚙️</span>
+                  <div class="tile-body">
+                    <strong>Controls</strong>
+                    <span>{{ inputMode() === 'pc' ? 'Keyboard' : 'Joystick' }}</span>
+                  </div>
+                </button>
+
+                <div class="grid-menu-tile placeholder-tile">
+                  <span class="tile-icon" aria-hidden="true">🧬</span>
+                  <div class="tile-body">
+                    <div class="tile-title-inline">
+                      <strong>Evolutions</strong>
+                      <app-info-popover
+                        title="Skill Synergies & Evolutions"
+                        tag="PHASE 2"
+                        text="Combine max-rank survival powers with passive catalysts to unlock Apex Evolved Weapons."
+                        hint="Scheduled for Phase 2: The Assimilation." />
+                    </div>
+                    <span>Phase 2 Preview</span>
+                  </div>
+                </div>
+
+                <div class="grid-menu-tile placeholder-tile">
+                  <span class="tile-icon" aria-hidden="true">🗺️</span>
+                  <div class="tile-body">
+                    <div class="tile-title-inline">
+                      <strong>Sector Radar</strong>
+                      <app-info-popover
+                        title="Sector Threat Heatmap"
+                        tag="PHASE 2"
+                        text="Displays discovered chunk coordinates, Biomass Spire pings, and Parasite wave vectors."
+                        [hint]="'Active Sector: ' + sectorLabel()" />
+                    </div>
+                    <span>{{ sectorLabel() }}</span>
+                  </div>
+                </div>
+
+                <div class="grid-menu-tile placeholder-tile">
+                  <span class="tile-icon" aria-hidden="true">🧪</span>
+                  <div class="tile-body">
+                    <div class="tile-title-inline">
+                      <strong>Field Craft</strong>
+                      <app-info-popover
+                        title="Emergency Field Synthesis"
+                        tag="PHASE 3"
+                        text="Synthesize temporary Chitin armor plates and stim charges mid-run using harvested Biomass."
+                        hint="Scheduled for Phase 3: The Synthesis." />
+                    </div>
+                    <span>Phase 3 Preview</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        }
+
+        <!-- VIEW 2: Real-Time Operator Status & Stats Subview -->
+        @if (pauseView() === 'stats') {
+          <div class="pause-two-sections">
+            <section class="pause-section">
+              <div class="section-head-row">
+                <span class="section-tag">LIVE TELEMETRY // {{ operator().title }}</span>
+                <span class="sector-chip">{{ operator().role }}</span>
+              </div>
+              <div class="pause-telemetry">
+                <div class="telemetry-item"><span>Level / EXP</span><strong>LVL {{ level() }} ({{ currentExp() }}/{{ expToNextLevel() }})</strong></div>
+                <div class="telemetry-item"><span>Move Speed</span><strong>{{ playerSpeed() }} px/s</strong></div>
+                <div class="telemetry-item"><span>Magnet Pickup Radius</span><strong>{{ magnetRadius() }} px</strong></div>
+                <div class="telemetry-item"><span>Primary Armament</span><strong>{{ operator().weapon }}</strong></div>
+                <div class="telemetry-item"><span>Passive Rig Trait</span><strong>{{ operator().passiveTrait }}</strong></div>
+                <div class="telemetry-item"><span>World Position</span><strong>X:{{ playerX() }} Y:{{ playerY() }} ({{ sectorLabel() }})</strong></div>
+              </div>
+            </section>
+
+            <section class="pause-section">
+              <div class="section-head-row">
+                <span class="section-tag">ACQUIRED SURVIVAL SKILLS ({{ activeSkillsList().length }})</span>
+              </div>
+              @if (activeSkillsList().length === 0) {
+                <p class="empty-subview-note">No skills acquired yet in this run. Collect Blue/Orange EXP Orbs to level up.</p>
+              } @else {
+                <div class="compact-list">
+                  @for (sk of activeSkillsList(); track sk.id) {
+                    <div class="compact-list-item">
+                      <span>{{ sk.icon }} <strong>{{ sk.title }}</strong></span>
+                      <span class="skill-rank-tag">RANK {{ sk.rank }}</span>
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+          </div>
+        }
+
+        <!-- VIEW 3: In-Modal Field Codex Subview (Never leaves active run!) -->
+        @if (pauseView() === 'codex') {
+          <div class="inmodal-codex-wrap">
+            <div class="inmodal-tabs">
+              @for (tab of codexTabs; track tab.id) {
+                <button
+                  type="button"
+                  class="mode-switch-btn"
+                  [class.active]="activeCodexTab() === tab.id"
+                  (click)="selectCodexTab(tab.id)">
+                  {{ tab.icon }} {{ tab.label }}
+                </button>
+              }
+            </div>
+
+            <div class="pause-two-sections">
+              <div class="compact-list scrollable-sublist">
+                @for (entry of filteredCodexEntries(); track entry.id) {
+                  <button
+                    type="button"
+                    class="compact-list-item clickable-row"
+                    [class.active]="selectedCodexEntry()?.id === entry.id"
+                    (click)="selectCodexEntry(entry.id)">
+                    <span>
+                      {{ entry.status === 'undiscovered' ? '🔒' : entry.icon }}
+                      <strong>{{ entry.status === 'undiscovered' ? 'Encrypted Record' : entry.title }}</strong>
+                    </span>
+                    <span class="sector-chip">{{ entry.status === 'discovered' ? 'GRANTED' : entry.code }}</span>
+                  </button>
+                }
+              </div>
+
+              @if (selectedCodexEntry(); as detail) {
+                <div class="pause-section">
+                  <div class="section-head-row">
+                    <span class="section-tag">{{ detail.code }} // {{ detail.phaseTag }}</span>
+                    <app-info-popover
+                      [title]="detail.status === 'undiscovered' ? 'Encrypted Record' : detail.title"
+                      [tag]="detail.code"
+                      [text]="detail.status === 'undiscovered' ? detail.unlockHint : detail.description"
+                      [hint]="detail.classification" />
+                  </div>
+                  <h3 class="subview-title">
+                    {{ detail.status === 'undiscovered' ? '🔒 Encrypted Record' : detail.icon + ' ' + detail.title }}
+                  </h3>
+                  <p class="empty-subview-note">
+                    {{ detail.status === 'undiscovered' ? detail.unlockHint : detail.summary }}
+                  </p>
+                  @if (detail.status !== 'undiscovered') {
+                    <div class="pause-telemetry">
+                      @for (st of detail.stats; track st.label) {
+                        <div class="telemetry-item">
+                          <span>{{ st.label }}</span>
+                          <strong>{{ st.value }}</strong>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- VIEW 4: In-Modal Controls & Settings Subview (Never leaves active run!) -->
+        @if (pauseView() === 'settings') {
+          <div class="pause-two-sections">
+            <section class="pause-section">
+              <div class="section-head-row">
+                <span class="section-tag">HARDWARE INPUT MODE</span>
+                <span class="sector-chip">AUTO: {{ detectedDeviceMode() === 'pc' ? 'PC' : 'MOBILE' }}</span>
+              </div>
+              <div class="switch-buttons">
+                <button
+                  type="button"
+                  class="mode-switch-btn"
+                  [class.active]="inputMode() === 'pc'"
+                  (click)="setInputMode('pc')">
+                  ⌨️ Keyboard (PC)
+                </button>
+                <button
+                  type="button"
+                  class="mode-switch-btn"
+                  [class.active]="inputMode() === 'mobile'"
+                  (click)="setInputMode('mobile')">
+                  📱 Virtual Joystick
+                </button>
+              </div>
+              <app-button variant="secondary" [fullWidth]="true" class="full-width" (onClick)="useAutoDetectedInput()">
+                🔄 Reset to Auto-Detected ({{ detectedDeviceMode() === 'pc' ? 'PC' : 'Mobile' }})
+              </app-button>
+            </section>
+
+            <section class="pause-section">
+              <div class="section-head-row">
+                <span class="section-tag">ACTIVE CONTROL BINDINGS</span>
+              </div>
+              @if (inputMode() === 'pc') {
+                <div class="pause-telemetry">
+                  <div class="telemetry-item"><span>WASD / Arrows</span><strong>8-Way Move + Auto-Magnet</strong></div>
+                  <div class="telemetry-item"><span>E Key</span><strong>Harvest Rare Biomass Spire</strong></div>
+                  <div class="telemetry-item"><span>ESC Key</span><strong>Pause / Back</strong></div>
+                </div>
+              } @else {
+                <div class="pause-telemetry">
+                  <div class="telemetry-item"><span>Left Thumb Zone</span><strong>360° Smooth Analog Joystick</strong></div>
+                  <div class="telemetry-item"><span>Right Action (E)</span><strong>Harvest Rare Biomass Spire</strong></div>
+                  <div class="telemetry-item"><span>Proximity Magnet</span><strong>Automatic Orb & RP Pickup</strong></div>
+                </div>
+              }
+            </section>
+          </div>
+        }
       </div>
     </div>
   }

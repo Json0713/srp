@@ -194,6 +194,33 @@ export class PersistenceService {
     return this.putRecord('active_session', payload);
   }
 
+  async clearSession(): Promise<boolean> {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        window.localStorage.removeItem(BACKUP_KEYS.active_session);
+      } catch {
+        // Ignore storage errors
+      }
+    }
+
+    const db = await this.openDatabase();
+    if (!db) {
+      return false;
+    }
+
+    return new Promise<boolean>((resolve) => {
+      try {
+        const tx = db.transaction('active_session', 'readwrite');
+        const store = tx.objectStore('active_session');
+        const req = store.delete('v1_session');
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => resolve(false);
+      } catch {
+        resolve(false);
+      }
+    });
+  }
+
   private readMirror<T>(storeName: SrpStoreName): T | null {
     if (typeof window === 'undefined' || !window.localStorage) {
       return null;

@@ -1,13 +1,14 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { PageHeader } from '../../shared/ui/page-header';
 import { SelectionCard } from '../../shared/ui/selection-card';
 import { Button } from '../../shared/ui/button';
+import { InfoPopover } from '../../shared/ui/info-popover';
 import { MenuStateService } from '../../core/services/menu-state.service';
 
 @Component({
   selector: 'app-zones',
-  imports: [PageHeader, SelectionCard, Button, RouterLink],
+  imports: [PageHeader, SelectionCard, Button, InfoPopover],
   template: `
     <div class="screen-shell">
       <app-page-header title="Deployment Zones" subtitle="Outbreak Sectors">
@@ -34,18 +35,27 @@ import { MenuStateService } from '../../core/services/menu-state.service';
 
           <aside class="mission-brief-card" aria-label="Deployment Confirmation">
             <div class="brief-header">
-              <span class="brief-kicker">DROP MANIFEST</span>
-              <h2 class="brief-title">{{ activeZone().title }}</h2>
+              <div class="brief-title-row">
+                <div>
+                  <span class="brief-kicker">DROP MANIFEST</span>
+                  <h2 class="brief-title">{{ activeZone().title }}</h2>
+                </div>
+                <app-info-popover
+                  [title]="activeZone().title"
+                  [tag]="activeZone().code"
+                  [text]="activeZone().description"
+                  [hint]="activeZone().threatLevel" />
+              </div>
               <span class="brief-threat">{{ activeZone().threatLevel }}</span>
             </div>
 
             <div class="brief-rows">
               <div class="brief-row">
-                <span>Assigned Operator</span>
+                <span>Operator</span>
                 <strong>{{ activeOperator().title }} ({{ activeOperator().code }})</strong>
               </div>
               <div class="brief-row">
-                <span>Biome Classification</span>
+                <span>Biome</span>
                 <strong>{{ activeZone().environmentType }}</strong>
               </div>
               <div class="brief-row">
@@ -55,8 +65,13 @@ import { MenuStateService } from '../../core/services/menu-state.service';
             </div>
 
             <div class="action-footer">
-              <app-button variant="primary" routerLink="/game" [fullWidth]="true" class="full-width">
-                <span>DEPLOY</span>
+              @if (menuState.hasActiveSession()) {
+                <app-button variant="secondary" [fullWidth]="true" class="full-width" (onClick)="continueRun()">
+                  <span>▶ CONTINUE SAVED RUN</span>
+                </app-button>
+              }
+              <app-button variant="primary" [fullWidth]="true" class="full-width" (onClick)="deployNewRun()">
+                <span>DEPLOY NEW RUN</span>
                 <span aria-hidden="true">⚡</span>
               </app-button>
             </div>
@@ -67,97 +82,42 @@ import { MenuStateService } from '../../core/services/menu-state.service';
   `,
   styles: [`
     .sector-tag {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--color-danger-light);
-      background: var(--color-danger-surface);
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      padding: 0.25rem 0.6rem;
-      border-radius: var(--radius-xs);
+      font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-danger-light);
+      background: var(--color-danger-surface); border: 1px solid rgba(239, 68, 68, 0.35);
+      padding: 0.25rem 0.6rem; border-radius: var(--radius-xs);
     }
-
-    .zones-layout {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: var(--spacing-lg);
-      align-items: start;
-    }
-
-    .selection-list {
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-md);
-    }
-
+    .zones-layout { display: grid; grid-template-columns: 1fr; gap: var(--spacing-lg); align-items: start; }
+    .selection-list, .brief-rows, .action-footer { display: flex; flex-direction: column; gap: var(--spacing-sm); }
     .mission-brief-card {
-      background: var(--color-bg-panel);
-      border: 1px solid var(--color-border-strong);
-      border-radius: var(--radius-md);
-      padding: var(--spacing-lg);
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-md);
+      background: var(--color-bg-panel); border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-md); padding: var(--spacing-lg);
+      display: flex; flex-direction: column; gap: var(--spacing-md);
     }
-
-    .brief-header {
-      padding-bottom: var(--spacing-sm);
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .brief-kicker {
-      display: block;
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      letter-spacing: 0.14em;
-      color: var(--color-text-secondary);
-    }
-
-    .brief-title {
-      margin: 0.15rem 0;
-      font-family: var(--font-display);
-      font-size: 1.4rem;
-      letter-spacing: 0.06em;
-    }
-
-    .brief-threat {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--color-accent-light);
-    }
-
-    .brief-rows {
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-sm);
-    }
-
-    .brief-row {
-      display: flex;
-      justify-content: space-between;
-      gap: var(--spacing-sm);
-      font-size: 0.85rem;
-      color: var(--color-text-secondary);
-    }
-
-    .brief-row strong {
-      color: var(--color-text-primary);
-      text-align: right;
-    }
-
-    .action-footer {
-      padding-top: var(--spacing-xs);
-    }
-
+    .brief-header { padding-bottom: var(--spacing-sm); border-bottom: 1px solid var(--color-border); }
+    .brief-title-row, .brief-row { display: flex; justify-content: space-between; align-items: center; gap: var(--spacing-sm); }
+    .brief-kicker { display: block; font-family: var(--font-mono); font-size: 0.68rem; color: var(--color-text-secondary); }
+    .brief-title { margin: 0.1rem 0; font-family: var(--font-display); font-size: 1.4rem; }
+    .brief-threat { font-family: var(--font-mono); font-size: 0.74rem; color: var(--color-accent-light); }
+    .brief-row { font-size: 0.84rem; color: var(--color-text-secondary); }
+    .brief-row strong { color: var(--color-text-primary); text-align: right; }
     @media (min-width: 768px), ((orientation: landscape) and (min-width: 640px)) {
-      .zones-layout {
-        grid-template-columns: 1.25fr 1fr;
-      }
+      .zones-layout { grid-template-columns: 1.25fr 1fr; }
     }
   `]
 })
 export class Zones {
   readonly menuState = inject(MenuStateService);
+  private readonly router = inject(Router);
   readonly activeZone = this.menuState.selectedZone;
   readonly activeOperator = this.menuState.selectedOperator;
-}
 
+  deployNewRun(): void {
+    this.menuState.prepareNewRun();
+    void this.router.navigate(['/game']);
+  }
+
+  continueRun(): void {
+    this.menuState.prepareContinueRun();
+    void this.router.navigate(['/game']);
+  }
+}

@@ -5,7 +5,7 @@
     <div class="spore-glow spore-glow-crimson"></div>
   </div>
 
-  <!-- Top Telemetry & Command Bar -->
+  <!-- Top Telemetry & Command Vault Bar -->
   <header class="top-bar">
     <div class="top-status">
       <span class="status-dot" aria-hidden="true"></span>
@@ -15,20 +15,26 @@
     <div class="top-actions">
       <div class="mode-badge" [attr.aria-label]="'Active control mode: ' + inputMode()">
         <span class="mode-prefix">CTRL:</span>
-        <strong>{{ inputMode() === 'pc' ? 'PC KEYBOARD' : 'MOBILE TOUCH' }}</strong>
+        <strong>{{ inputMode() === 'pc' ? 'PC' : 'TOUCH' }}</strong>
       </div>
 
-      <div class="currency-display" aria-label="Rare Biomass">
+      <div class="currency-display" aria-label="Vault Rare Biomass">
         <span class="currency-icon" aria-hidden="true">🧪</span>
         <span class="currency-label">BIOMASS</span>
         <span class="currency-value">{{ biomass() }}</span>
       </div>
 
-      <div class="currency-display" aria-label="Research Parasitic Coins">
+      <div class="currency-display" aria-label="Vault Research Parasitic Coins">
         <span class="currency-icon" aria-hidden="true">🪙</span>
         <span class="currency-label">RP</span>
         <span class="currency-value">{{ rpCoins() }}</span>
       </div>
+
+      <app-info-popover
+        title="Command Vault Economy"
+        tag="VAULT"
+        text="Rare Biomass and RP Coins collected during a deployment are banked into your permanent Command Vault when you Abort or Finish a mission."
+        [hint]="'Current Vault: 🧪 ' + biomass() + ' Biomass | 🪙 ' + rpCoins() + ' RP'" />
 
       <app-button variant="icon" routerLink="/codex" ariaLabel="Field Codex">📘</app-button>
       <app-button variant="icon" routerLink="/settings" ariaLabel="Settings">⚙️</app-button>
@@ -37,30 +43,43 @@
 
   <!-- Central Command Deck (Responsive Portrait + Dual Landscape Layout) -->
   <main class="main-content">
-    <!-- Hero Identity Block -->
+    <!-- Hero Identity Block (Minimal & Clean with ! Info Trigger) -->
     <section class="title-section">
       <div class="outbreak-badge">
         <span class="badge-pulse" aria-hidden="true"></span>
         <span>{{ currentPhase.badge }}</span>
       </div>
       <h1 class="game-title">PROJECT PARASITE</h1>
-      <p class="subtitle">{{ currentPhase.title }} — {{ currentPhase.subtitle }}</p>
-      <p class="lore-tagline">{{ currentPhase.summary }}</p>
+      <div class="subtitle-row">
+        <p class="subtitle">{{ currentPhase.title }} — {{ currentPhase.subtitle }}</p>
+        <app-info-popover
+          [title]="currentPhase.title"
+          [tag]="currentPhase.code"
+          [text]="currentPhase.summary"
+          hint="In-run loot starts at 0 every deploy and banks on mission abort/completion." />
+      </div>
+
+      @if (lastExtraction(); as report) {
+        <div class="extraction-banner" role="status">
+          <span>✅ <strong>MISSION EXTRACTED (LVL {{ report.level }}):</strong> Banked +{{ report.biomass }} 🧪 Biomass & +{{ report.rpCoins }} 🪙 RP</span>
+          <button type="button" class="banner-close" (click)="dismissExtraction()" aria-label="Dismiss">✕</button>
+        </div>
+      }
     </section>
 
     <!-- Tactical Loadout & Deployment Pod -->
     <section class="action-container" aria-label="Deployment Loadout">
       <div class="current-loadout">
         <div class="loadout-header">
-          <span class="loadout-kicker">ACTIVE DEPLOYMENT MANIFEST</span>
-          <span class="loadout-ready">READY</span>
+          <span class="loadout-kicker">DEPLOYMENT MANIFEST</span>
+          <span class="loadout-ready">{{ hasActiveSession() ? 'SAVED RUN READY' : 'READY' }}</span>
         </div>
 
         <div class="loadout-grid">
           <a routerLink="/operators" class="loadout-slot" aria-label="Change Operator">
             <div class="slot-icon" aria-hidden="true">{{ operator().icon }}</div>
             <div class="slot-info">
-              <span class="slot-label">Operator:</span>
+              <span class="slot-label">Operator</span>
               <p class="slot-title"><strong>{{ operator().title }}</strong></p>
               <span class="slot-sub">{{ operator().role }}</span>
             </div>
@@ -70,9 +89,9 @@
           <a routerLink="/zones" class="loadout-slot" aria-label="Change Deployment Zone">
             <div class="slot-icon" aria-hidden="true">{{ zone().icon }}</div>
             <div class="slot-info">
-              <span class="slot-label">Zone:</span>
+              <span class="slot-label">Sector</span>
               <p class="slot-title"><strong>{{ zone().title }}</strong></p>
-              <span class="slot-sub">{{ zone().badge }}</span>
+              <span class="slot-sub">{{ zone().code }}</span>
             </div>
             <span class="slot-arrow" aria-hidden="true">›</span>
           </a>
@@ -80,10 +99,27 @@
       </div>
 
       <div class="deploy-cta-wrap">
-        <app-button routerLink="/zones" variant="primary" [fullWidth]="true" class="full-width">
-          <span>START RUN</span>
-          <span aria-hidden="true">→</span>
-        </app-button>
+        @if (activeSession(); as saved) {
+          <div class="saved-run-card">
+            <div class="saved-run-meta">
+              <span class="saved-tag">AUTOSAVED RUN // LVL {{ saved.level }}</span>
+              <strong>🧪 +{{ saved.runBiomass }} BIO • 🪙 +{{ saved.runRpCoins }} RP</strong>
+            </div>
+            <div class="saved-run-actions">
+              <app-button variant="primary" [fullWidth]="true" class="full-width" (onClick)="continueLastRun()">
+                <span>▶ CONTINUE RUN</span>
+              </app-button>
+              <app-button variant="secondary" [fullWidth]="true" class="full-width" (onClick)="startNewRun()">
+                <span>↻ NEW RUN (RESET TO 0)</span>
+              </app-button>
+            </div>
+          </div>
+        } @else {
+          <app-button variant="primary" [fullWidth]="true" class="full-width" (onClick)="startNewRun()">
+            <span>START NEW RUN</span>
+            <span aria-hidden="true">→</span>
+          </app-button>
+        }
       </div>
     </section>
   </main>

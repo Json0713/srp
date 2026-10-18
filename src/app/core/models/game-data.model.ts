@@ -111,12 +111,20 @@ export interface GameHudSnapshot {
   totalResources: number;
   nearbyInteractable: boolean;
   sectorLabel?: string;
+  runSeed?: number;
+  playerX?: number;
+  playerY?: number;
+  elapsedSeconds?: number;
+  playerSpeed?: number;
+  magnetRadius?: number;
   level?: number;
   currentExp?: number;
   expToNextLevel?: number;
   runRpCoins?: number;
   runBiomass?: number;
   pendingLevelUps?: number;
+  collectedResourceIds?: string[];
+  collectedPickupIds?: string[];
   lastBiomassReward?: {
     biomass: number;
     exp: number;
@@ -159,12 +167,21 @@ export interface PersistedSettingsV1 {
 export interface PersistedSessionV1 {
   id: 'v1_session';
   schemaVersion: 1;
+  isActive?: boolean;
+  operatorId?: string;
+  zoneId?: string;
   runSeed: number;
+  playerX?: number;
+  playerY?: number;
+  elapsedSeconds?: number;
   level: number;
   currentExp: number;
   expToNextLevel: number;
   runBiomass: number;
   runRpCoins: number;
+  pendingLevelUps?: number;
   chosenSkills: Record<string, number>;
+  collectedResourceIds?: string[];
+  collectedPickupIds?: string[];
   updatedAt: number;
 }

@@ -18,7 +18,7 @@ import {
   calculateOrbExpValue,
   updateMagnetPickups
 } from '../systems/progression.system';
-import { GameHudSnapshot, InputMode } from '../../core/models/game-data.model';
+import { GameHudSnapshot, InputMode, PersistedSessionV1 } from '../../core/models/game-data.model';
 
 interface WasdKeys {
   W: Input.Keyboard.Key;
@@ -59,8 +59,9 @@ export class MainScene extends Scene {
   private nearestResourceId: string | null = null;
   private facingVector = { x: 0, y: 1 };
 
-  // In-run progression state
+  // In-run progression state (always starts at 0 on a new run; banked only on Abort/Death)
   private elapsedSeconds = 0;
+  private autosaveTimer = 0;
   private playerLevel = 1;
   private currentExp = 0;
   private expToNextLevel = calculateExpRequired(1);
@@ -128,19 +129,51 @@ export class MainScene extends Scene {
   create(): void {
     this.cameras.main.setBackgroundColor('#090d14');
 
-    // Reset in-run progression state on new deployment
-    this.elapsedSeconds = 0;
-    this.playerLevel = 1;
-    this.currentExp = 0;
-    this.expToNextLevel = calculateExpRequired(1);
-    this.runBiomass = 0;
-    this.runRpCoins = 0;
-    this.pendingLevelUps = 0;
-    this.playerSpeed = 300;
-    this.magnetRadius = 78;
+    const resumeSession = this.registry.get('resumeSession') as PersistedSessionV1 | null;
+    const defaultSpawnX = Math.round(CHUNK_SIZE * 0.5);
+    const defaultSpawnY = Math.round(CHUNK_SIZE * 0.5);
 
-    // 1. Initialize True-RNG Per-Run Chunk Manager (5x5 active grid around centered player)
-    this.chunkManager = new ChunkManager(generateRunSeed(), CHUNK_SIZE, 2);
+    if (resumeSession && resumeSession.isActive) {
+      this.elapsedSeconds = Math.max(0, Number(resumeSession.elapsedSeconds) || 0);
+      this.playerLevel = Math.max(1, Number(resumeSession.level) || 1);
+      this.currentExp = Math.max(0, Number(resumeSession.currentExp) || 0);
+      this.expToNextLevel =
+        Math.max(100, Number(resumeSession.expToNextLevel)) ||
+        calculateExpRequired(this.playerLevel);
+      this.runBiomass = Math.max(0, Number(resumeSession.runBiomass) || 0);
+      this.runRpCoins = Math.max(0, Number(resumeSession.runRpCoins) || 0);
+      this.pendingLevelUps = Math.max(0, Number(resumeSession.pendingLevelUps) || 0);
+
+      const skills = resumeSession.chosenSkills ?? {};
+      const magnetRanks = Math.max(0, Number(skills['passive-magnet-coil']) || 0);
+      const speedRanks = Math.max(0, Number(skills['passive-servo-boost']) || 0);
+      this.magnetRadius = 78 + magnetRanks * 18;
+      this.playerSpeed = Math.round(300 * Math.pow(1.08, speedRanks));
+
+      this.chunkManager = new ChunkManager(
+        resumeSession.runSeed || generateRunSeed(),
+        CHUNK_SIZE,
+        2
+      );
+      this.chunkManager.restoreCollectedState(
+        resumeSession.collectedResourceIds ?? [],
+        resumeSession.collectedPickupIds ?? []
+      );
+    } else {
+      // Fresh deployment: Biomass and RP Coins always start at 0
+      this.elapsedSeconds = 0;
+      this.playerLevel = 1;
+      this.currentExp = 0;
+      this.expToNextLevel = calculateExpRequired(1);
+      this.runBiomass = 0;
+      this.runRpCoins = 0;
+      this.pendingLevelUps = 0;
+      this.playerSpeed = 300;
+      this.magnetRadius = 78;
+      this.chunkManager = new ChunkManager(generateRunSeed(), CHUNK_SIZE, 2);
+    }
+
+    this.autosaveTimer = 0;
 
     // 2. World-Space Graphics Layers (Depth-ordered for 2.5D presentation)
     this.environmentGraphics = this.add.graphics().setDepth(1);
@@ -149,9 +182,15 @@ export class MainScene extends Scene {
     this.proximityGraphics = this.add.graphics().setDepth(4);
     this.compassGraphics = this.add.graphics().setDepth(5);
 
-    // 3. Player Entity Spawned at Origin Chunk (0,0) Center with Smooth Camera Follow
-    const startX = Math.round(CHUNK_SIZE * 0.5);
-    const startY = Math.round(CHUNK_SIZE * 0.5);
+    // 3. Player Entity Spawned at Origin or Restored Position with Smooth Camera Follow
+    const startX =
+      resumeSession && resumeSession.isActive && typeof resumeSession.playerX === 'number'
+        ? resumeSession.playerX
+        : defaultSpawnX;
+    const startY =
+      resumeSession && resumeSession.isActive && typeof resumeSession.playerY === 'number'
+        ? resumeSession.playerY
+        : defaultSpawnY;
 
     this.playerShadow = this.add
       .ellipse(startX, startY + 14, 30, 12, 0x000000, 0.55)
@@ -594,12 +633,20 @@ export class MainScene extends Scene {
       totalResources: this.chunkManager.getDiscoveredResourcesCount(),
       nearbyInteractable: this.nearestResourceId !== null,
       sectorLabel: this.currentSectorLabel,
+      runSeed: this.chunkManager.runSeed,
+      playerX: this.player ? Math.round(this.player.x) : Math.round(CHUNK_SIZE * 0.5),
+      playerY: this.player ? Math.round(this.player.y) : Math.round(CHUNK_SIZE * 0.5),
+      elapsedSeconds: Math.round(this.elapsedSeconds),
+      playerSpeed: this.playerSpeed,
+      magnetRadius: this.magnetRadius,
       level: this.playerLevel,
       currentExp: this.currentExp,
       expToNextLevel: this.expToNextLevel,
       runRpCoins: this.runRpCoins,
       runBiomass: this.runBiomass,
       pendingLevelUps: this.pendingLevelUps,
+      collectedResourceIds: this.chunkManager.getCollectedResourceIds(),
+      collectedPickupIds: this.chunkManager.getCollectedPickupIds(),
       lastBiomassReward
     };
     this.game.events.emit('hud-update', snapshot);
@@ -609,6 +656,7 @@ export class MainScene extends Scene {
     if (!this.player) return;
 
     this.elapsedSeconds += delta / 1000;
+    this.autosaveTimer += delta;
 
     let moveInput: MovementInput = { left: false, right: false, up: false, down: false };
     let wantsInteract = false;
@@ -655,7 +703,7 @@ export class MainScene extends Scene {
       }
     }
 
-    // 1. Rare Biomass Spire Harvest (Grants +1 Biomass, +100+ Scaled EXP, and +RP Coins)
+    // 1. Rare Biomass Spire Harvest (Grants +1 In-Run Biomass, +100+ Scaled EXP, and +In-Run RP Coins)
     if (wantsInteract && this.nearestResourceId) {
       const collected = this.chunkManager.collectResource(this.nearestResourceId);
       if (collected) {
@@ -677,10 +725,6 @@ export class MainScene extends Scene {
           `+${reward.biomass} BIOMASS  +${reward.exp} EXP  +${reward.rpCoins} RP`
         );
 
-        this.game.events.emit('meta-reward', {
-          biomass: reward.biomass,
-          rpCoins: reward.rpCoins
-        });
         this.game.events.emit('codex-grant', 'raw-biomass');
 
         this.emitHudSnapshot({
@@ -743,6 +787,7 @@ export class MainScene extends Scene {
       let totalCoinsFromPickups = 0;
 
       for (const item of magnetResult.collectedPickups) {
+        this.chunkManager.recordPickupCollected(item.id);
         if (item.kind === 'exp-blue' || item.kind === 'exp-orange') {
           const normalizedRoll =
             item.kind === 'exp-blue'
@@ -766,10 +811,6 @@ export class MainScene extends Scene {
 
       if (totalCoinsFromPickups > 0) {
         this.runRpCoins += totalCoinsFromPickups;
-        this.game.events.emit('meta-reward', {
-          biomass: 0,
-          rpCoins: totalCoinsFromPickups
-        });
       }
 
       this.emitHudSnapshot();
@@ -777,6 +818,12 @@ export class MainScene extends Scene {
 
     if (moved) {
       this.drawSporeCompass();
+    }
+
+    // Periodic autosave checkpoint while moving/surviving
+    if (this.autosaveTimer >= 2500) {
+      this.autosaveTimer = 0;
+      this.emitHudSnapshot();
     }
 
     // 5. Check Proximity to Rare Biomass Spires
