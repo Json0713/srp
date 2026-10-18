@@ -4,6 +4,7 @@ import { Button } from '../../shared/ui/button';
 import { InfoPopover } from '../../shared/ui/info-popover';
 import { MenuStateService } from '../../core/services/menu-state.service';
 import { SettingsService } from '../../core/services/settings.service';
+import { PwaService } from '../../core/services/pwa.service';
 
 @Component({
   selector: 'app-home',
@@ -14,6 +15,7 @@ import { SettingsService } from '../../core/services/settings.service';
 export class Home {
   readonly menuState = inject(MenuStateService);
   readonly settingsService = inject(SettingsService);
+  readonly pwa = inject(PwaService);
   private readonly router = inject(Router);
 
   readonly currentPhase = this.menuState.currentPhase;
@@ -39,5 +41,13 @@ export class Home {
 
   dismissExtraction(): void {
     this.menuState.clearExtractionSummary();
+  }
+
+  installPwa(): void {
+    void this.pwa.promptInstall();
+  }
+
+  applyPwaUpdate(): void {
+    void this.pwa.activateUpdate();
   }
 }

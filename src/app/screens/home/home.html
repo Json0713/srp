@@ -8,11 +8,25 @@
   <!-- Top Telemetry & Command Vault Bar -->
   <header class="top-bar">
     <div class="top-status">
-      <span class="status-dot" aria-hidden="true"></span>
-      <span class="status-label">CONTAINMENT NET // ONLINE</span>
+      <span class="status-dot" [class.offline]="pwa.isOffline()" aria-hidden="true"></span>
+      <span class="status-label">
+        {{ pwa.isOffline() ? 'OFFLINE MODE // LOCAL VAULT' : (pwa.isStandalone() ? 'INSTALLED PWA // READY' : 'CONTAINMENT NET // PWA READY') }}
+      </span>
     </div>
 
     <div class="top-actions">
+      @if (pwa.updateAvailable()) {
+        <button type="button" class="pwa-pill-btn update-pill" (click)="applyPwaUpdate()">
+          🔄 UPDATE
+        </button>
+      }
+
+      @if (pwa.canInstall()) {
+        <button type="button" class="pwa-pill-btn install-pill" (click)="installPwa()">
+          📲 INSTALL
+        </button>
+      }
+
       <div class="mode-badge" [attr.aria-label]="'Active control mode: ' + inputMode()">
         <span class="mode-prefix">CTRL:</span>
         <strong>{{ inputMode() === 'pc' ? 'PC' : 'TOUCH' }}</strong>
@@ -31,9 +45,9 @@
       </div>
 
       <app-info-popover
-        title="Command Vault Economy"
-        tag="VAULT"
-        text="Rare Biomass and RP Coins collected during a deployment are banked into your permanent Command Vault when you Abort or Finish a mission."
+        title="Command Vault & Offline PWA"
+        tag="VAULT // PWA"
+        text="Project Parasite is a 100% offline-capable Progressive Web App. All assets, chunks, and your Command Vault are cached locally on your device."
         [hint]="'Current Vault: 🧪 ' + biomass() + ' Biomass | 🪙 ' + rpCoins() + ' RP'" />
 
       <app-button variant="icon" routerLink="/codex" ariaLabel="Field Codex">📘</app-button>
