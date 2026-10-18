@@ -587,6 +587,13 @@ export class MainScene extends Scene {
     const activeResources: ResourceState[] = this.chunkManager.getActiveResources();
 
     for (const res of activeResources) {
+      if (res.collected) {
+        // Harvested empty shell vanishes completely after 30 seconds
+        if (this.elapsedSeconds - (res.collectedAtSeconds ?? 0) >= 30) {
+          continue;
+        }
+      }
+
       const { x, y } = res.position;
 
       // 2.5D Ground Shadow
@@ -1084,6 +1091,12 @@ export class MainScene extends Scene {
 
         this.drawResources();
         this.drawSporeCompass();
+
+        // Ensure depleted shell vanishes after 30 seconds even if stationary
+        this.time.delayedCall(30000, () => {
+          this.drawResources();
+        });
+
         this.showInteractFeedback(
           collected.position.x,
           collected.position.y,

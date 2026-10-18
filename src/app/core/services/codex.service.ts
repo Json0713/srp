@@ -21,7 +21,7 @@ export class CodexService {
       summary: 'High-value crystalline biomass core harvested from rare dormant spires.',
       description:
         'A rare, diamond-grade biological catalyst formed at high-density Sector 7 spires. Harvesting a Spire grants +1 Biomass, +100+ level-scaled EXP, and a cache of RP Coins for Research Lab synthesis.',
-      unlockHint: 'Locate a rare Biomass Spire in Sector 7 and press E (or tap Harvest) to grant this record.',
+      unlockHint: 'Locate a rare Biomass Spire in Sector 7 and press E (or tap Harvest) to examine this record.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
         { label: 'Biomass Yield', value: '+1 Rare Biomass' },
@@ -342,7 +342,7 @@ export class CodexService {
       summary: 'Initial containment collapse at Sector 7 and frontline biomass extraction.',
       description:
         'The inaugural outbreak phase of Project Parasite. Containment operatives deploy into the Sector 7 perimeter to absorb EXP spores, collect RP Coins, harvest rare Biomass Spires, and establish the Field Codex and Research Lab baseline.',
-      unlockHint: 'Granted upon initial protocol activation.',
+      unlockHint: 'Examined upon initial protocol activation.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
         { label: 'Season Status', value: 'Active Now (Phase 1)' },
@@ -397,7 +397,7 @@ export class CodexService {
       summary: 'Standard Issue frontline operative equipped for sustained biomass extraction.',
       description:
         'Outfitted with a balanced Bio-Filter Rig and standard Pulse Carbine. Deployed as the primary responder to the Phase 1: The Fallout quarantine breach.',
-      unlockHint: 'Granted upon initial protocol activation.',
+      unlockHint: 'Examined upon initial protocol activation.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
         { label: 'Vitality Rating', value: '80 / 100' },
@@ -416,7 +416,7 @@ export class CodexService {
       summary: 'Initial outbreak site containing EXP spores, RP Coins, and rare Biomass Spires.',
       description:
         'An overrun research perimeter where parasitic spores first breached containment during Phase 1: The Fallout. Features unbounded 512px chunks with magnetic EXP spores, RP Coins, and rare Biomass Spires.',
-      unlockHint: 'Granted upon initial protocol activation.',
+      unlockHint: 'Examined upon initial protocol activation.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
         { label: 'Threat Level', value: 'Level I — Low Breach' },

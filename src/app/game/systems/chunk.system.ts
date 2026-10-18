@@ -4,7 +4,7 @@ import { Position, ResourceState } from './interaction.system';
 export const CHUNK_SIZE = 512;
 export const TILE_SIZE = 32;
 export const DEFAULT_RENDER_RADIUS = 1;
-export const RARE_BIOMASS_SPAWN_CHANCE = 0.18; // 18% rare chance per outer chunk
+export const RARE_BIOMASS_SPAWN_CHANCE = 0.25; // 25% rare chance per outer chunk
 export const RP_COIN_CHUNK_PRESENCE_CHANCE = 0.8; // 80% of chunks spawn RP Coins
 export const COMMON_BLUE_EXP_RATIO = 0.7; // 70% Common Blue EXP Orbs, 30% Rare Orange EXP Cores
 
@@ -413,7 +413,8 @@ export class ChunkManager {
       if (idx !== -1 && !chunk.resources[idx].collected) {
         const updated: ResourceState = {
           ...chunk.resources[idx],
-          collected: true
+          collected: true,
+          collectedAtSeconds: elapsedSeconds
         };
         chunk.resources[idx] = updated;
         this.collectedResourceIds.add(resourceId);
@@ -451,9 +452,9 @@ export class ChunkManager {
         const chunkSize = this.chunkSize;
         let chunkChanged = false;
 
-        // 1. Chance to regrow a fresh Biomass Spire (35% chance if no active spire currently in this chunk)
+        // 1. Chance to regrow a fresh Biomass Spire (10% chance if no active spire currently in this chunk)
         const hasActiveSpire = chunk.resources.some((r) => !r.collected);
-        if (!hasActiveSpire && rng() < 0.35) {
+        if (!hasActiveSpire && rng() < 0.10) {
           const rx = Math.round(worldX + 72 + rng() * (chunkSize - 144));
           const ry = Math.round(worldY + 72 + rng() * (chunkSize - 144));
           const spireId = `spire_${chunk.chunkX}_${chunk.chunkY}_re_${Math.floor(elapsedSeconds)}`;

@@ -2,11 +2,12 @@ import { Component, inject } from '@angular/core';
 import { PageHeader } from '../../shared/ui/page-header';
 import { SelectionCard } from '../../shared/ui/selection-card';
 import { InfoPopover } from '../../shared/ui/info-popover';
+import { FloatingNav } from '../../shared/ui/floating-nav';
 import { MenuStateService } from '../../core/services/menu-state.service';
 
 @Component({
   selector: 'app-operators',
-  imports: [PageHeader, SelectionCard, InfoPopover],
+  imports: [PageHeader, SelectionCard, InfoPopover, FloatingNav],
   template: `
     <div class="screen-shell">
       <app-page-header title="Operators" subtitle="Containment Roster">
@@ -76,6 +77,8 @@ import { MenuStateService } from '../../core/services/menu-state.service';
           }
         </div>
       </main>
+
+      <app-floating-nav />
     </div>
   `,
   styles: [`

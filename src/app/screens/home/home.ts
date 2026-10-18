@@ -1,14 +1,15 @@
 import { Component, inject } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Button } from '../../shared/ui/button';
 import { InfoPopover } from '../../shared/ui/info-popover';
+import { FloatingNav } from '../../shared/ui/floating-nav';
 import { MenuStateService } from '../../core/services/menu-state.service';
 import { SettingsService } from '../../core/services/settings.service';
 import { PwaService } from '../../core/services/pwa.service';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, RouterLinkActive, Button, InfoPopover],
+  imports: [RouterLink, Button, InfoPopover, FloatingNav],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })

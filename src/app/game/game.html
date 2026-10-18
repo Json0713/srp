@@ -40,7 +40,7 @@
       @if (unlockedCodexTitle(); as codexTitle) {
         <div class="hud-card codex-unlock-toast" role="status">
           <span aria-hidden="true">📘</span>
-          <span>GRANTED: <strong>{{ codexTitle }}</strong></span>
+          <span>EXAMINED: <strong>{{ codexTitle }}</strong></span>
         </div>
       }
     </div>
@@ -288,7 +288,7 @@
                   <span class="tile-icon" aria-hidden="true">📘</span>
                   <div class="tile-body">
                     <strong>Field Codex</strong>
-                    <span>{{ codexService.discoveredCount() }}/{{ codexService.discoverableTotal() }} Granted</span>
+                    <span>{{ codexService.discoveredCount() }}/{{ codexService.discoverableTotal() }} Examined</span>
                   </div>
                 </button>
 
@@ -419,7 +419,7 @@
                       {{ entry.status === 'undiscovered' ? '🔒' : entry.icon }}
                       <strong>{{ entry.status === 'undiscovered' ? 'Encrypted Record' : entry.title }}</strong>
                     </span>
-                    <span class="sector-chip">{{ entry.status === 'discovered' ? 'GRANTED' : entry.code }}</span>
+                    <span class="sector-chip">{{ entry.status === 'discovered' ? 'EXAMINED' : entry.code }}</span>
                   </button>
                 }
               </div>

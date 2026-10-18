@@ -28,7 +28,7 @@ Whenever a new item, parasite, power, operator, sector, or research node is adde
 
 ## 3. Visibility & Grant States (`CodexStatus`)
 
-- **`discovered` (Granted):** The player has obtained, encountered, or unlocked this entry during gameplay. Full lore, telemetry stats, and behavioral notes are visible in the player's Field Codex (`📘`).
+- **`discovered` (Examined):** The player has obtained, encountered, or unlocked this entry during gameplay. Full lore, telemetry stats, and behavioral notes are visible in the player's Field Codex (`📘`).
 - **`undiscovered` (Locked / Encrypted):** The feature exists in the active build, but the player has not yet triggered its grant condition in-game. The UI masks the full description and displays the **Unlock Hint**.
 - **`development` (Upcoming Phase Blueprint):** Planned content for **Phase 2: The Assimilation** or **Phase 3: The Synthesis**. Displayed in the Codex with a phase badge so players and developers can preview upcoming *Scape and Run: Parasites* and *Magic Survival* systems.
 

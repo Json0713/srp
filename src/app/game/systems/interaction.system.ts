@@ -7,6 +7,7 @@ export interface ResourceState {
   id: string;
   position: Position;
   collected: boolean;
+  collectedAtSeconds?: number;
 }
 
 export function canInteract(

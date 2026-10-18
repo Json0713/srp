@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { MenuStateService, ResearchNode, ResearchTrack } from '../../core/services/menu-state.service';
 import { PageHeader } from '../../shared/ui/page-header';
 import { InfoPopover } from '../../shared/ui/info-popover';
+import { FloatingNav } from '../../shared/ui/floating-nav';
 
 interface ResearchTab {
   id: ResearchTrack;
@@ -12,7 +13,7 @@ interface ResearchTab {
 
 @Component({
   selector: 'app-research',
-  imports: [PageHeader, InfoPopover],
+  imports: [PageHeader, InfoPopover, FloatingNav],
   template: `
     <div class="screen-shell">
       <app-page-header
@@ -133,6 +134,8 @@ interface ResearchTab {
           </div>
         </div>
       </main>
+
+      <app-floating-nav />
     </div>
   `,
   styles: [`

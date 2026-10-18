@@ -65,12 +65,14 @@
       </div>
       <h1 class="game-title">PROJECT PARASITE</h1>
       <div class="subtitle-row">
-        <p class="subtitle">{{ currentPhase.title }} — {{ currentPhase.subtitle }}</p>
-        <app-info-popover
-          [title]="currentPhase.title"
-          [tag]="currentPhase.code"
-          [text]="currentPhase.summary"
-          hint="In-run loot starts at 0 every deploy and banks on mission abort/completion." />
+        <p class="subtitle">
+          {{ currentPhase.title }} — {{ currentPhase.subtitle }}
+          <app-info-popover
+            [title]="currentPhase.title"
+            [tag]="currentPhase.code"
+            [text]="currentPhase.summary"
+            hint="In-run loot starts at 0 every deploy and banks on mission abort/completion." />
+        </p>
       </div>
 
       @if (lastExtraction(); as report) {
@@ -138,36 +140,6 @@
     </section>
   </main>
 
-  <!-- Adaptive Tactical Navigation Dock -->
-  <nav class="floating-nav" aria-label="Primary Navigation">
-    <a
-      routerLink="/"
-      routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }"
-      class="nav-tab center-tab">
-      <span class="tab-icon" aria-hidden="true">🚀</span>
-      <span class="tab-label">Deploy</span>
-    </a>
-    <a
-      routerLink="/operators"
-      routerLinkActive="active"
-      class="nav-tab left-tab">
-      <span class="tab-icon" aria-hidden="true">👤</span>
-      <span class="tab-label">Operators</span>
-    </a>
-    <a
-      routerLink="/codex"
-      routerLinkActive="active"
-      class="nav-tab codex-tab">
-      <span class="tab-icon" aria-hidden="true">📘</span>
-      <span class="tab-label">Codex</span>
-    </a>
-    <a
-      routerLink="/research"
-      routerLinkActive="active"
-      class="nav-tab right-tab">
-      <span class="tab-icon" aria-hidden="true">🧬</span>
-      <span class="tab-label">Research</span>
-    </a>
-  </nav>
+  <!-- Adaptive Tactical Navigation Dock (Persistent across mobile & desktop) -->
+  <app-floating-nav />
 </div>

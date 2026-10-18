@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { PageHeader } from '../../shared/ui/page-header';
 import { InfoPopover } from '../../shared/ui/info-popover';
+import { FloatingNav } from '../../shared/ui/floating-nav';
 import { CodexService } from '../../core/services/codex.service';
 import { CodexCategory, CodexEntry } from '../../core/models/game-data.model';
 
@@ -8,12 +9,12 @@ type FilterTab = 'all' | CodexCategory;
 
 @Component({
   selector: 'app-codex',
-  imports: [PageHeader, InfoPopover],
+  imports: [PageHeader, InfoPopover, FloatingNav],
   template: `
     <div class="screen-shell">
       <app-page-header title="Field Codex" subtitle="Containment Encyclopedia">
         <span class="codex-progress-pill" aria-label="Discovered Records">
-          📘 {{ codex.discoveredCount() }}/{{ codex.discoverableTotal() }} GRANTED
+          📘 {{ codex.discoveredCount() }}/{{ codex.discoverableTotal() }} EXAMINED
         </span>
       </app-page-header>
 
@@ -53,7 +54,7 @@ type FilterTab = 'all' | CodexCategory;
                     <div class="item-top">
                       <span class="item-code">{{ entry.code }}</span>
                       @if (entry.status === 'discovered') {
-                        <span class="status-tag tag-granted">GRANTED</span>
+                        <span class="status-tag tag-granted">EXAMINED</span>
                       } @else if (entry.status === 'undiscovered') {
                         <span class="status-tag tag-locked">LOCKED</span>
                       } @else {
@@ -138,6 +139,8 @@ type FilterTab = 'all' | CodexCategory;
           </div>
         </div>
       </main>
+
+      <app-floating-nav />
     </div>
   `,
   styles: [`
