@@ -1,8 +1,12 @@
+import { FieldPickupItem, FieldPickupKind } from '../../core/models/game-data.model';
 import { Position, ResourceState } from './interaction.system';
 
 export const CHUNK_SIZE = 512;
 export const TILE_SIZE = 32;
-export const DEFAULT_RENDER_RADIUS = 1; // 3x3 chunk window (1536x1536 px) around the centered player
+export const DEFAULT_RENDER_RADIUS = 1;
+export const RARE_BIOMASS_SPAWN_CHANCE = 0.18; // 18% rare chance per outer chunk
+export const RP_COIN_CHUNK_PRESENCE_CHANCE = 0.8; // 80% of chunks spawn RP Coins
+export const COMMON_BLUE_EXP_RATIO = 0.7; // 70% Common Blue EXP Orbs, 30% Rare Orange EXP Cores
 
 export type TileFeatureType = 'corrupted-patch' | 'moss-slate' | 'spore-fleck' | 'crimson-vein';
 
@@ -37,6 +41,7 @@ export interface ChunkData {
   features: ChunkTileFeature[];
   props: ChunkProp[];
   resources: ResourceState[];
+  pickups: FieldPickupItem[];
 }
 
 export interface ActiveChunkUpdateResult {
@@ -105,6 +110,7 @@ export function generateChunkData(
   const features: ChunkTileFeature[] = [];
   const props: ChunkProp[] = [];
   const resources: ResourceState[] = [];
+  const pickups: FieldPickupItem[] = [];
 
   // 1. Pre-compute 2.5D terrain tile features for this chunk
   for (let ty = 0; ty < chunkSize; ty += TILE_SIZE) {
@@ -154,12 +160,13 @@ export function generateChunkData(
   }
 
   // 2. Spawn 1-2 decorative 2.5D containment rubble props per chunk (avoiding origin spawn)
+  const isOriginChunk = chunkX === 0 && chunkY === 0;
   const propCount = 1 + Math.floor(rng() * 2);
   for (let i = 0; i < propCount; i++) {
     const px = Math.round(worldX + 56 + rng() * (chunkSize - 112));
     const py = Math.round(worldY + 56 + rng() * (chunkSize - 112));
     const distFromOrigin = Math.hypot(px - chunkSize * 0.5, py - chunkSize * 0.5);
-    if (chunkX === 0 && chunkY === 0 && distFromOrigin < 96) {
+    if (isOriginChunk && distFromOrigin < 96) {
       continue;
     }
     props.push({
@@ -171,38 +178,75 @@ export function generateChunkData(
     });
   }
 
-  // 3. Randomly spawn Biomass Spire resource nodes inside the chunk
-  // Origin chunk (0,0) guarantees 2-3 spires near the starting drop zone; outer chunks roll 1-3 spires
-  const isOriginChunk = chunkX === 0 && chunkY === 0;
-  const minSpires = isOriginChunk ? 2 : 1;
-  const maxExtra = isOriginChunk ? 2 : 3;
-  const spireCount = minSpires + Math.floor(rng() * maxExtra);
-  const margin = 64;
-  const minSpacing = 92;
-
-  for (let i = 0; i < spireCount; i++) {
-    let placed = false;
-    for (let attempt = 0; attempt < 8 && !placed; attempt++) {
+  // 3. Rare Unlimited Biomass Spires (Diamond-tier high-value nodes)
+  // Origin chunk spawns 1 guaranteed spire; outer chunks roll an 18% rare chance
+  const shouldSpawnBiomassSpire = isOriginChunk || rng() < RARE_BIOMASS_SPAWN_CHANCE;
+  if (shouldSpawnBiomassSpire) {
+    const margin = 72;
+    for (let attempt = 0; attempt < 8; attempt++) {
       const rx = Math.round(worldX + margin + rng() * (chunkSize - margin * 2));
       const ry = Math.round(worldY + margin + rng() * (chunkSize - margin * 2));
 
-      // Keep center of origin chunk (0,0) clear where the operator spawns at (256, 256)
-      if (isOriginChunk && Math.hypot(rx - chunkSize * 0.5, ry - chunkSize * 0.5) < 76) {
+      if (isOriginChunk && Math.hypot(rx - chunkSize * 0.5, ry - chunkSize * 0.5) < 92) {
         continue;
       }
 
-      const tooClose = resources.some(
-        (existing) => Math.hypot(existing.position.x - rx, existing.position.y - ry) < minSpacing
-      );
+      resources.push({
+        id: `spire_${chunkX}_${chunkY}_0`,
+        position: { x: rx, y: ry },
+        collected: false
+      });
+      break;
+    }
+  }
 
-      if (!tooClose) {
-        resources.push({
-          id: `spire_${chunkX}_${chunkY}_${i}`,
-          position: { x: rx, y: ry },
-          collected: false
-        });
-        placed = true;
+  // 4. Spawn Field EXP Orbs (70% Common Blue, 30% Rare Orange)
+  const expOrbCount = 5 + Math.floor(rng() * 4); // 5 to 8 EXP orbs per chunk
+  const orbMargin = 40;
+  for (let i = 0; i < expOrbCount; i++) {
+    const ox = Math.round(worldX + orbMargin + rng() * (chunkSize - orbMargin * 2));
+    const oy = Math.round(worldY + orbMargin + rng() * (chunkSize - orbMargin * 2));
+
+    if (isOriginChunk && Math.hypot(ox - chunkSize * 0.5, oy - chunkSize * 0.5) < 56) {
+      continue;
+    }
+
+    const isCommonBlue = rng() < COMMON_BLUE_EXP_RATIO;
+    const kind: FieldPickupKind = isCommonBlue ? 'exp-blue' : 'exp-orange';
+    const baseValue = isCommonBlue
+      ? 1 + Math.floor(rng() * 15) // 1..15 base EXP
+      : 15 + Math.floor(rng() * 11); // 15..25 base EXP
+
+    pickups.push({
+      id: `orb_${chunkX}_${chunkY}_${i}`,
+      kind,
+      x: ox,
+      y: oy,
+      baseValue,
+      collected: false
+    });
+  }
+
+  // 5. Spawn Field RP Coins (80% chunk presence across the map)
+  const shouldSpawnCoins = isOriginChunk || rng() < RP_COIN_CHUNK_PRESENCE_CHANCE;
+  if (shouldSpawnCoins) {
+    const coinCount = 2 + Math.floor(rng() * 3); // 2 to 4 coins
+    for (let c = 0; c < coinCount; c++) {
+      const cx = Math.round(worldX + orbMargin + rng() * (chunkSize - orbMargin * 2));
+      const cy = Math.round(worldY + orbMargin + rng() * (chunkSize - orbMargin * 2));
+
+      if (isOriginChunk && Math.hypot(cx - chunkSize * 0.5, cy - chunkSize * 0.5) < 56) {
+        continue;
       }
+
+      pickups.push({
+        id: `coin_${chunkX}_${chunkY}_${c}`,
+        kind: 'rp-coin',
+        x: cx,
+        y: cy,
+        baseValue: 1 + Math.floor(rng() * 3), // 1..3 RP Coins
+        collected: false
+      });
     }
   }
 
@@ -215,14 +259,15 @@ export function generateChunkData(
     sectorLabel: formatSectorLabel(chunkX, chunkY),
     features,
     props,
-    resources
+    resources,
+    pickups
   };
 }
 
 /**
  * Manages active chunk streaming and Minecraft-style chunk persistence in memory for a run.
  * Chunks outside the render radius are unloaded from rendering, but their state (including
- * harvested vs. unharvested Biomass Spires) is preserved in `discoveredChunks` when the player returns.
+ * harvested Biomass Spires and collected EXP Orbs / RP Coins) is preserved in `discoveredChunks`.
  */
 export class ChunkManager {
   readonly runSeed: number;
@@ -300,6 +345,14 @@ export class ChunkManager {
     return list;
   }
 
+  getActivePickups(): FieldPickupItem[] {
+    const list: FieldPickupItem[] = [];
+    for (const chunk of this.activeChunks) {
+      list.push(...chunk.pickups);
+    }
+    return list;
+  }
+
   getDiscoveredChunkCount(): number {
     return this.discoveredChunks.size;
   }
@@ -332,4 +385,3 @@ export class ChunkManager {
     return null;
   }
 }
-

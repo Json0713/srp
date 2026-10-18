@@ -47,11 +47,21 @@
 - Implemented `ChunkManager` (`src/app/game/systems/chunk.system.ts`) and upgraded `MainScene` (`src/app/game/scenes/main.scene.ts`):
   - **Centered Smooth Camera (`cameras.main.startFollow`):** The operator remains centered while the camera smoothly tracks movement (`lerp = 0.14`) across unbounded world coordinates.
   - **True-RNG Per-Run Seed + Minecraft-Style Chunk State Preservation:** Every deployment generates a fresh 32-bit cryptographic seed (`generateRunSeed()`) so terrain and Biomass Spire positions are genuinely random every run. Chunks outside the active render window are unloaded from rendering, while their generated layout and harvested/unharvested Spire states remain preserved in memory (`discoveredChunks`) when the player returns.
-  - **Spore Compass & Sector Telemetry:** Added a directional bio-radar indicator around the operator pointing toward the nearest uncollected Biomass Spire, and live sector chunk coordinates (`SEC +0:+0`) in the HUD.
-- Production build (`npm run build`) succeeds with 0 errors and 0 warnings.
+  - **Spore Compass & Sector Telemetry:** Added a directional bio-radar indicator around the operator pointing toward the nearest uncollected Biomass Spire, and live sector chunk coordinates (`SEC +0:+0`) in a minimal see-through bottom-left watermark.
+
+### 5. Unlimited Rare Biomass, EXP Orbs, RP Coins, Level-Up Skill Modal & IndexedDB `v1` Persistence (`Milestone 1D`)
+- **Rare Biomass Spires & Triple Yield:** Removed the `0/176` denominator cap so Biomass is unlimited and rare (`18%` chunk spawn probability; `1` guaranteed in the origin chunk). Harvesting a Spire (`E`) grants **3 attributes**: `+1 Biomass`, `+100+ EXP` (scaled with player level and survival time), and `+10–25 RP Coins` (*Research Parasitic Coins*).
+- **Research Lab & Command Deck Vaults:** Added live `🧪 Biomass` and `🪙 RP Coins` badges to the header-right of `/research` and the `/` Command Deck.
+- **In-Game EXP Curve, 70/30 EXP Orbs & 80% RP Coins (`progression.system.ts`):**
+  - EXP requirement starts at `100 EXP` for Level 1 → 2 and ramps smoothly (`100 + (level - 1) * 25 + (level - 1)^2 * 5`).
+  - Chunks spawn **Common Blue EXP Orbs (`70%`)** granting `1–15` base EXP (`+2/lvl`) and **Rare Orange EXP Orbs (`30%`)** granting `15–25` base EXP (`+4/lvl`), plus **RP Coins** across `80%` of chunks.
+  - **Automatic Proximity Magnet Pickup:** EXP Orbs and RP Coins automatically magnetize and accelerate toward the operator within close proximity (`78 px` base radius) and collect on contact without pressing `E`.
+  - **Top EXP Progress Bar & 3-Skill Level-Up Modal:** Added a top-of-screen EXP progress bar (`LVL X`, fill bar, `currentExp / expToNextLevel`) and a Level-Up modal that pauses the simulation to present **3 randomly rolled survival skills** (pick 1 of 3).
+- **Hardware Input Auto-Detection & Instant Dynamic Switching:** `SettingsService.detectHardwareInputMode()` automatically detects mobile/touch hardware vs. desktop keyboard on first boot, and `MainScene` listens to `input-mode-changed` + scene `resume` events so switching between Keyboard and Joystick takes effect immediately even while paused.
+- **Versioned IndexedDB (`v1`) Storage Engine (`PersistenceService`):** Implemented `srp_project_parasite_db` (`version: 1`) with 4 object stores (`meta_profile`, `codex_records`, `user_settings`, `active_session`) and synchronous `localStorage` fallback so Biomass, RP Coins, Codex unlocks, settings, and active run checkpoints survive browser refreshes.
 
 ## Next Target
-- **Milestone 1D (Phase 1: The Fallout) — Sprite & Animation Pipeline**, replacing procedural operator/node shapes with directional sprite animations.
+- **Milestone 1E (Phase 1: The Fallout) — Sprite & Animation Pipeline**, replacing procedural operator/node shapes with directional sprite animations.
 
 ## Update Policy
 When updating this document:

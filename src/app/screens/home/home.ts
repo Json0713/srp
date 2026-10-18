@@ -17,8 +17,10 @@ export class Home {
   readonly currentPhase = this.menuState.currentPhase;
   readonly operator = this.menuState.selectedOperator;
   readonly zone = this.menuState.selectedZone;
-  readonly srpCoins = this.menuState.srpCoins;
+  readonly rpCoins = this.menuState.rpCoins;
+  readonly biomass = this.menuState.biomass;
   readonly inputMode = this.settingsService.inputMode;
 }
+
 
 

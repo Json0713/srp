@@ -1,20 +1,35 @@
 <div class="game-wrapper">
-  <!-- Tactical Top HUD Layer -->
+  <!-- Magic Survival Style Top EXP Progress Bar -->
+  <div class="exp-bar-container" role="region" aria-label="Experience Progression">
+    <div class="exp-bar-track">
+      <div class="exp-bar-fill" [style.width.%]="expPercent()"></div>
+    </div>
+    <div class="exp-bar-meta">
+      <span class="exp-lvl-badge">LVL {{ level() }}</span>
+      <span class="exp-numbers">{{ currentExp() }} / {{ expToNextLevel() }} EXP ({{ expPercent() }}%)</span>
+    </div>
+  </div>
+
+  <!-- Tactical Top HUD Layer (Unlimited Rare Biomass + RP Coins) -->
   <header class="hud-layer" aria-label="Gameplay Telemetry HUD">
     <div class="hud-left">
-      <div class="hud-card operator-hud">
-        <span class="hud-icon" aria-hidden="true">{{ operator().icon }}</span>
-        <div class="hud-details">
-          <span class="hud-kicker">{{ zone().title }} // {{ sectorLabel() }}</span>
-          <strong class="hud-title">{{ operator().title }}</strong>
-        </div>
+      <div class="hud-card biomass-hud" [class.interact-ready]="nearbyInteractable()" aria-label="Rare Biomass">
+        <span aria-hidden="true">🧪</span>
+        <span class="resource-label">BIOMASS</span>
+        <strong class="biomass-count">{{ totalBiomass() }}</strong>
       </div>
 
-      <div class="hud-card resource-hud" [class.interact-ready]="nearbyInteractable()">
-        <span class="resource-dot" aria-hidden="true"></span>
-        <span class="resource-label">BIOMASS:</span>
-        <strong class="resource-count">{{ resourcesCollected() }} / {{ totalResources() }}</strong>
+      <div class="hud-card coin-hud" aria-label="Research Parasitic Coins">
+        <span aria-hidden="true">🪙</span>
+        <span class="resource-label">RP</span>
+        <strong class="coin-count">{{ totalRpCoins() }}</strong>
       </div>
+
+      @if (recentBiomassReward(); as reward) {
+        <div class="hud-card reward-toast" role="status">
+          <span>🧪 +{{ reward.biomass }} Biomass • ⚡ +{{ reward.exp }} EXP • 🪙 +{{ reward.rpCoins }} RP</span>
+        </div>
+      }
 
       @if (unlockedCodexTitle(); as codexTitle) {
         <div class="hud-card codex-unlock-toast" role="status">
@@ -39,14 +54,55 @@
   <!-- Phaser 4 Canvas Host -->
   <div class="canvas-container" #gameContainer></div>
 
+  <!-- Minimal See-Through Operator & Sector Watermark -->
+  <div class="sector-watermark" aria-hidden="true">
+    <span>{{ operator().icon }} {{ operator().title }}</span>
+    <span>•</span>
+    <span>{{ zone().title }} // {{ sectorLabel() }}</span>
+  </div>
+
   <!-- Desktop Controls Footer Hint -->
-  @if (inputMode() === 'pc' && !isPaused()) {
+  @if (inputMode() === 'pc' && !isPaused() && !isLevelUpModalOpen()) {
     <div class="hud-bottom-hint" aria-hidden="true">
-      <span><strong>WASD / ARROWS</strong> Move</span>
-      <span class="divider">•</span>
-      <span><strong>E</strong> Harvest Biomass</span>
-      <span class="divider">•</span>
+      <span><strong>WASD / ARROWS</strong> Move (Auto-Magnet Orbs & RP)</span>
+      <span>•</span>
+      <span><strong>E</strong> Harvest Rare Biomass Spire</span>
+      <span>•</span>
       <span><strong>ESC</strong> Pause</span>
+    </div>
+  }
+
+  <!-- Level-Up 3-Skill Selection Popup Modal (Magic Survival Inspired) -->
+  @if (isLevelUpModalOpen()) {
+    <div class="pause-overlay" role="dialog" aria-modal="true" aria-labelledby="levelup-heading">
+      <div class="levelup-modal">
+        <span class="pause-kicker">GENETIC ADAPTATION // LEVEL {{ level() }} REACHED</span>
+        <h2 id="levelup-heading">SELECT SURVIVAL SKILL</h2>
+        <p class="levelup-sub">Choose 1 of 3 randomized containment protocols to augment your rig.</p>
+
+        <div class="skill-choices-grid">
+          @for (skill of skillChoices(); track skill.id) {
+            <button
+              type="button"
+              class="skill-choice-card"
+              (click)="selectLevelUpSkill(skill)">
+              <div class="skill-card-top">
+                <span class="skill-icon" aria-hidden="true">{{ skill.icon }}</span>
+                <div class="skill-meta">
+                  <span class="skill-phase-tag">{{ skill.phaseTag }}</span>
+                  <span class="skill-rank-tag">
+                    {{ getSkillRank(skill.id) === 0 ? 'NEW PROTOCOL' : 'RANK ' + getSkillRank(skill.id) + ' → ' + (getSkillRank(skill.id) + 1) }}
+                  </span>
+                </div>
+              </div>
+              <h3 class="skill-title">{{ skill.title }}</h3>
+              <span class="skill-cat">{{ skill.category }}</span>
+              <p class="skill-desc">{{ skill.description }}</p>
+              <div class="skill-effect">{{ skill.effectPerLevel }}</div>
+            </button>
+          }
+        </div>
+      </div>
     </div>
   }
 
@@ -59,21 +115,21 @@
 
         <div class="pause-telemetry">
           <div class="telemetry-item">
-            <span>Operator</span>
-            <strong>{{ operator().title }}</strong>
+            <span>Operator / Sector</span>
+            <strong>{{ operator().title }} ({{ sectorLabel() }})</strong>
           </div>
           <div class="telemetry-item">
-            <span>Sector</span>
-            <strong>{{ zone().title }}</strong>
+            <span>Operator Level</span>
+            <strong>LVL {{ level() }} ({{ currentExp() }}/{{ expToNextLevel() }} EXP)</strong>
           </div>
           <div class="telemetry-item">
-            <span>Biomass Harvested</span>
-            <strong>{{ resourcesCollected() }} / {{ totalResources() }}</strong>
+            <span>Rare Biomass / RP Coins</span>
+            <strong>🧪 {{ totalBiomass() }}  |  🪙 {{ totalRpCoins() }} RP</strong>
           </div>
         </div>
 
         <div class="pause-mode-switch" role="group" aria-label="Quick Switch Input Mode">
-          <span class="switch-label">Input Mode:</span>
+          <span class="switch-label">Input Mode (Dynamic Switch):</span>
           <div class="switch-buttons">
             <button
               type="button"

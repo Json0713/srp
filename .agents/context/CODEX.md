@@ -38,10 +38,12 @@ Whenever a new item, parasite, power, operator, sector, or research node is adde
 
 | ID | Code | Title | Default Status | Grant / Unlock Condition | Game Phase | Summary & Telemetry |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `raw-biomass` | `ITM-01` | **Raw Biomass Spore** | `undiscovered` | Granted automatically when the player harvests a Biomass Spire node (`E`) in `MainScene`. | `PHASE 1 // THE FALLOUT` (Active) | Luminescent parasitic spore cluster harvested from dormant spires. Primary survival catalyst. |
-| `srp-coin` | `ITM-02` | **SRP Bio-Credit** | `development` | Dropped by elite assimilated hosts and loot chests. | `PHASE 2C / 3A` (Upcoming) | Standardized containment currency used in the Research Lab to synthesize Bio-Research upgrades and Rig Cosmetics. |
-| `chitin-shard` | `ITM-03` | **Hardened Chitin Shard** | `development` | Harvested from eliminated Rupter and Assimilated husks. | `PHASE 2A // THE ASSIMILATION` | Dense exoskeletal plating used for field armor reinforcement and crafting. |
-| `containment-chest` | `ITM-04` | **Bio-Containment Cache** | `development` | Dropped by boss parasites upon elimination. | `PHASE 2C // THE ASSIMILATION` | High-security supply cache containing randomized session buffs and SRP Bio-Credits. |
+| `raw-biomass` | `ITM-01` | **Rare Biomass Crystal** | `undiscovered` | Granted automatically when the player harvests a rare Biomass Spire (`E`) in `MainScene`. | `PHASE 1 // THE FALLOUT` (Active) | Ultra-rare diamond-grade parasitic crystal (`18%` chunk spawn). Grants `+1 Biomass`, `+100+ EXP` (scaled by phase/time/level), and `+10–25 RP Coins`. |
+| `rp-coin` | `ITM-02` | **RP Coin (Research Parasitic Coin)** | `undiscovered` | Granted automatically on proximity magnet pickup of a golden RP Coin or Biomass Spire harvest. | `PHASE 1 // THE FALLOUT` (Active) | Standardized Research Parasitic Coin (`80%` chunk presence) automatically drawn by the operator's magnetic extractor for Research Lab synthesis. |
+| `exp-orb-blue` | `ITM-03` | **Common Blue EXP Spore** | `undiscovered` | Granted automatically on proximity magnet pickup of a blue EXP orb. | `PHASE 1 // THE FALLOUT` (Active) | Ambient cyan bio-luminescent spore (`70%` spawn ratio). Grants `1–15` base EXP and ramps upward (`+2 EXP/level`) alongside level requirements. |
+| `exp-orb-orange` | `ITM-04` | **Rare Orange EXP Core** | `undiscovered` | Granted automatically on proximity magnet pickup of an orange EXP orb. | `PHASE 1 // THE FALLOUT` (Active) | High-density amber neural core (`30%` spawn ratio). Grants `15–25` base EXP and ramps upward (`+4 EXP/level`) alongside level requirements. |
+| `chitin-shard` | `ITM-05` | **Hardened Chitin Shard** | `development` | Harvested from eliminated Rupter and Assimilated husks. | `PHASE 2A // THE ASSIMILATION` | Dense exoskeletal plating used for field armor reinforcement and crafting. |
+| `containment-chest` | `ITM-06` | **Bio-Containment Cache** | `development` | Dropped by boss parasites upon elimination. | `PHASE 2C // THE ASSIMILATION` | High-security supply cache containing randomized session buffs and RP Coins. |
 
 ---
 
@@ -87,14 +89,14 @@ Whenever a new item, parasite, power, operator, sector, or research node is adde
 
 ## 8. Research Lab Registry (`/research` — Bio-Research & Rig Cosmetics)
 
-Managed by `MenuStateService.researchNodes` (`src/app/core/services/menu-state.service.ts`) and rendered in `src/app/screens/research/research.ts`.
+Managed by `MenuStateService.researchNodes` (`src/app/core/services/menu-state.service.ts`) and rendered in `src/app/screens/research/research.ts`. Both `🧪 Biomass` and `🪙 RP Coins` are displayed in the top-right header of the Research Lab and persisted via IndexedDB `v1` (`PersistenceService`).
 
-| ID | Code | Track | Title | Max Rank | Cost (SRP) | Game Phase | Effect Summary |
+| ID | Code | Track | Title | Max Rank | Cost (`🪙 RP` + `🧪 BIO`) | Game Phase | Effect Summary |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `chitin-plating` | `RES-01` | `upgrades` | **Chitin Exo-Plating** | 5 | 100 | `PHASE 3B // THE SYNTHESIS` | `+6% Damage Reduction per Rank` |
-| `spore-extractor` | `RES-02` | `upgrades` | **Magnetic Spore Extractor** | 5 | 120 | `PHASE 3B // THE SYNTHESIS` | `+15% Harvest & Orb Radius per Rank` |
-| `combat-stims` | `RES-03` | `upgrades` | **Adrenaline Stims Mk.II** | 5 | 150 | `PHASE 3B // THE SYNTHESIS` | `+4% Base Move Speed per Rank` |
-| `neural-overclock` | `RES-04` | `upgrades` | **Neural Targeting Link** | 5 | 180 | `PHASE 3B // THE SYNTHESIS` | `-5% Skill Cooldown per Rank` |
-| `suit-hazmat-gold` | `COS-01` | `cosmetics` | **Aegis Hazmat Mk.IV** | 1 | 300 | `PHASE 3C // THE SYNTHESIS` | `Visual Override: Golden Visor & Trim` |
-| `suit-crimson-carapace` | `COS-02` | `cosmetics` | **Assimilated Carapace Rig** | 1 | 450 | `PHASE 3C // THE SYNTHESIS` | `Visual Override: Parasitic Crimson Aura` |
-| `trail-spore-wake` | `COS-03` | `cosmetics` | **Bioluminescent Spore Wake** | 1 | 250 | `PHASE 3C // THE SYNTHESIS` | `Visual Override: Emerald Footstep Particles` |
+| `chitin-plating` | `RES-01` | `upgrades` | **Chitin Exo-Plating** | 5 | `100 RP` + `2 BIO` | `PHASE 3B // THE SYNTHESIS` | `+6% Damage Reduction per Rank` |
+| `spore-extractor` | `RES-02` | `upgrades` | **Magnetic Spore Extractor** | 5 | `120 RP` + `2 BIO` | `PHASE 3B // THE SYNTHESIS` | `+15% Harvest & Orb Radius per Rank` |
+| `combat-stims` | `RES-03` | `upgrades` | **Adrenaline Stims Mk.II** | 5 | `150 RP` + `3 BIO` | `PHASE 3B // THE SYNTHESIS` | `+4% Base Move Speed per Rank` |
+| `neural-overclock` | `RES-04` | `upgrades` | **Neural Targeting Link** | 5 | `180 RP` + `4 BIO` | `PHASE 3B // THE SYNTHESIS` | `-5% Skill Cooldown per Rank` |
+| `suit-hazmat-gold` | `COS-01` | `cosmetics` | **Aegis Hazmat Mk.IV** | 1 | `300 RP` + `5 BIO` | `PHASE 3C // THE SYNTHESIS` | `Visual Override: Golden Visor & Trim` |
+| `suit-crimson-carapace` | `COS-02` | `cosmetics` | **Assimilated Carapace Rig** | 1 | `450 RP` + `8 BIO` | `PHASE 3C // THE SYNTHESIS` | `Visual Override: Parasitic Crimson Aura` |
+| `trail-spore-wake` | `COS-03` | `cosmetics` | **Bioluminescent Spore Wake** | 1 | `250 RP` + `4 BIO` | `PHASE 3C // THE SYNTHESIS` | `Visual Override: Emerald Footstep Particles` |

@@ -18,10 +18,16 @@
         <strong>{{ inputMode() === 'pc' ? 'PC KEYBOARD' : 'MOBILE TOUCH' }}</strong>
       </div>
 
-      <div class="currency-display" aria-label="SRP Coins">
+      <div class="currency-display" aria-label="Rare Biomass">
+        <span class="currency-icon" aria-hidden="true">🧪</span>
+        <span class="currency-label">BIOMASS</span>
+        <span class="currency-value">{{ biomass() }}</span>
+      </div>
+
+      <div class="currency-display" aria-label="Research Parasitic Coins">
         <span class="currency-icon" aria-hidden="true">🪙</span>
-        <span class="currency-label">SRP</span>
-        <span class="currency-value">{{ srpCoins() }}</span>
+        <span class="currency-label">RP</span>
+        <span class="currency-value">{{ rpCoins() }}</span>
       </div>
 
       <app-button variant="icon" routerLink="/codex" ariaLabel="Field Codex">📘</app-button>

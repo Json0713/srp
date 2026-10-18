@@ -68,6 +68,7 @@ export interface ResearchNode {
   currentRank: number;
   maxRank: number;
   cost: number;
+  biomassCost?: number;
   phaseTag: string;
 }
 
@@ -82,11 +83,88 @@ export interface GamePhaseInfo {
   summary: string;
 }
 
+export type FieldPickupKind = 'exp-blue' | 'exp-orange' | 'rp-coin';
+
+export interface FieldPickupItem {
+  id: string;
+  kind: FieldPickupKind;
+  x: number;
+  y: number;
+  baseValue: number;
+  collected: boolean;
+  magnetized?: boolean;
+}
+
+export interface SurvivalSkillOption {
+  id: string;
+  code: string;
+  title: string;
+  icon: string;
+  category: string;
+  description: string;
+  effectPerLevel: string;
+  phaseTag: string;
+}
+
 export interface GameHudSnapshot {
   resourcesCollected: number;
   totalResources: number;
   nearbyInteractable: boolean;
   sectorLabel?: string;
+  level?: number;
+  currentExp?: number;
+  expToNextLevel?: number;
+  runRpCoins?: number;
+  runBiomass?: number;
+  pendingLevelUps?: number;
+  lastBiomassReward?: {
+    biomass: number;
+    exp: number;
+    rpCoins: number;
+    timestamp: number;
+  } | null;
 }
 
+/**
+ * IndexedDB v1 Schema Contracts
+ */
+export interface PersistedProfileV1 {
+  id: 'v1_profile';
+  schemaVersion: 1;
+  rpCoins: number;
+  totalBiomass: number;
+  selectedOperatorId: string;
+  selectedZoneId: string;
+  unlockedOperatorIds: string[];
+  unlockedZoneIds: string[];
+  researchRanks: Record<string, number>;
+  updatedAt: number;
+}
 
+export interface PersistedCodexV1 {
+  id: 'v1_codex';
+  schemaVersion: 1;
+  unlockedIds: string[];
+  updatedAt: number;
+}
+
+export interface PersistedSettingsV1 {
+  id: 'v1_settings';
+  schemaVersion: 1;
+  inputMode: InputMode;
+  hasManualInputOverride: boolean;
+  updatedAt: number;
+}
+
+export interface PersistedSessionV1 {
+  id: 'v1_session';
+  schemaVersion: 1;
+  runSeed: number;
+  level: number;
+  currentExp: number;
+  expToNextLevel: number;
+  runBiomass: number;
+  runRpCoins: number;
+  chosenSkills: Record<string, number>;
+  updatedAt: number;
+}

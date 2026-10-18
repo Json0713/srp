@@ -1,12 +1,15 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import {
   GamePhaseInfo,
   OperatorItem,
+  PersistedProfileV1,
   ResearchNode,
   ResearchTrack,
   SelectionItem,
+  SurvivalSkillOption,
   ZoneItem
 } from '../models/game-data.model';
+import { PersistenceService } from './persistence.service';
 
 export type {
   SelectionItem,
@@ -14,11 +17,14 @@ export type {
   ZoneItem,
   ResearchNode,
   ResearchTrack,
-  GamePhaseInfo
+  GamePhaseInfo,
+  SurvivalSkillOption
 } from '../models/game-data.model';
 
 @Injectable({ providedIn: 'root' })
 export class MenuStateService {
+  private readonly persistence = inject(PersistenceService);
+
   readonly gamePhases: GamePhaseInfo[] = [
     {
       id: 'phase-1-fallout',
@@ -29,7 +35,7 @@ export class MenuStateService {
       badge: 'PHASE 1 // THE FALLOUT',
       status: 'active',
       summary:
-        'Deploy into the overrun Sector 7 perimeter, harvest dormant Biomass Spire nodes, decrypt the Field Codex, and prepare for the awakening swarm.'
+        'Deploy into the overrun Sector 7 perimeter, collect EXP orbs and RP Coins, harvest rare Biomass Spires, and decrypt the Field Codex.'
     },
     {
       id: 'phase-2-assimilation',
@@ -40,7 +46,7 @@ export class MenuStateService {
       badge: 'PHASE 2 // THE ASSIMILATION',
       status: 'upcoming',
       summary:
-        'Survive relentless Rupter and Assimilated Human waves, collect XP orbs, evolve Magic Survival-style powers, and eliminate Apex Bosses.'
+        'Survive relentless Rupter and Assimilated Human waves, evolve active Magic Survival-style combat skills, and eliminate Apex Bosses.'
     },
     {
       id: 'phase-3-synthesis',
@@ -51,7 +57,7 @@ export class MenuStateService {
       badge: 'PHASE 3 // THE SYNTHESIS',
       status: 'upcoming',
       summary:
-        'Synthesize permanent Bio-Research upgrades and Rig Cosmetics using SRP Bio-Credits, requisition new operators, and breach The Hive.'
+        'Synthesize permanent Bio-Research upgrades and Rig Cosmetics using RP Coins and rare Biomass, requisition new operators, and breach The Hive.'
     }
   ];
 
@@ -62,7 +68,8 @@ export class MenuStateService {
       id: 'survivor',
       code: 'OP-01',
       title: 'Survivor',
-      description: 'Standard Issue containment operative trained for frontline biomass extraction and sustained survival.',
+      description:
+        'Standard Issue containment operative trained for frontline biomass extraction and sustained survival.',
       icon: '🛡️',
       locked: false,
       badge: 'PHASE 1 ACTIVE',
@@ -79,11 +86,12 @@ export class MenuStateService {
       id: 'ranger',
       code: 'OP-02',
       title: 'Ranger',
-      description: 'Long range specialist equipped with high-velocity kinetic optics and rapid reconnaissance thrusters.',
+      description:
+        'Long range specialist equipped with high-velocity kinetic optics and rapid reconnaissance thrusters.',
       icon: '🎯',
       locked: true,
       badge: 'CLASSIFIED',
-      unlockRequirement: 'Requires 250 SRP Coins (Phase 3: The Synthesis)',
+      unlockRequirement: 'Requires 250 RP Coins & 5 Biomass (Phase 3: The Synthesis)',
       role: 'Marksman Recon',
       weapon: 'Rail Rifle // Piercing Beam',
       passiveTrait: 'Target Lock (+25% Critical Range)',
@@ -100,7 +108,8 @@ export class MenuStateService {
       id: 'sector7',
       code: 'ZN-07',
       title: 'Sector 7',
-      description: 'Initial infection site. Overrun research perimeter with dormant biomass nodes and low-tier assimilated hosts.',
+      description:
+        'Initial infection site. Overrun research perimeter with rare Biomass Spires, scattered EXP orbs, and RP Coin caches.',
       icon: '☣️',
       locked: false,
       badge: 'PHASE 1 // THREAT I',
@@ -112,7 +121,8 @@ export class MenuStateService {
       id: 'hive',
       code: 'ZN-09',
       title: 'The Hive',
-      description: 'High density outbreak epicenter. Deep subterranean flesh-network teeming with evolved parasitic forms.',
+      description:
+        'High density outbreak epicenter. Deep subterranean flesh-network teeming with evolved parasitic forms.',
       icon: '🩸',
       locked: true,
       badge: 'PHASE 3 // THREAT IV',
@@ -138,6 +148,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 5,
       cost: 100,
+      biomassCost: 2,
       phaseTag: 'PHASE 3B // THE SYNTHESIS'
     },
     {
@@ -148,11 +159,12 @@ export class MenuStateService {
       category: 'HARVEST TELEMETRY',
       icon: '🧲',
       description:
-        'Calibrates electromagnetic field coils to pull nearby Biomass Spores and XP orbs from a wider radius.',
-      effectSummary: '+15% Harvest & Orb Radius per Rank',
+        'Calibrates electromagnetic field coils to pull nearby EXP Orbs and RP Coins from a wider magnetic pickup radius.',
+      effectSummary: '+15% Magnet Pickup Radius per Rank',
       currentRank: 0,
       maxRank: 5,
       cost: 120,
+      biomassCost: 2,
       phaseTag: 'PHASE 3B // THE SYNTHESIS'
     },
     {
@@ -168,6 +180,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 5,
       cost: 150,
+      biomassCost: 3,
       phaseTag: 'PHASE 3B // THE SYNTHESIS'
     },
     {
@@ -183,6 +196,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 5,
       cost: 180,
+      biomassCost: 4,
       phaseTag: 'PHASE 3B // THE SYNTHESIS'
     },
 
@@ -200,6 +214,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 1,
       cost: 300,
+      biomassCost: 5,
       phaseTag: 'PHASE 3C // THE SYNTHESIS'
     },
     {
@@ -215,6 +230,7 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 1,
       cost: 450,
+      biomassCost: 8,
       phaseTag: 'PHASE 3C // THE SYNTHESIS'
     },
     {
@@ -230,13 +246,82 @@ export class MenuStateService {
       currentRank: 0,
       maxRank: 1,
       cost: 250,
+      biomassCost: 4,
       phaseTag: 'PHASE 3C // THE SYNTHESIS'
     }
   ];
 
-  readonly srpCoins = signal<number>(0);
+  readonly survivalSkills: SurvivalSkillOption[] = [
+    {
+      id: 'power-pulse-overclock',
+      code: 'PWR-01',
+      title: 'Pulse Carbine Overclock',
+      icon: '⚡',
+      category: 'ACTIVE WEAPON // PLACEHOLDER',
+      description: 'High-frequency kinetic bursts that lock onto the nearest parasitic signature.',
+      effectPerLevel: '+15% Burst Fire Rate (Active in Phase 2)',
+      phaseTag: 'PHASE 2 PREVIEW'
+    },
+    {
+      id: 'power-spore-barrier',
+      code: 'PWR-02',
+      title: 'Bio-Repulsor Field',
+      icon: '🛡️',
+      category: 'DEFENSIVE AURA // PLACEHOLDER',
+      description: 'Generates an electromagnetic containment ring around the operator.',
+      effectPerLevel: '+20% Aura Radius & Slow (Active in Phase 2)',
+      phaseTag: 'PHASE 2 PREVIEW'
+    },
+    {
+      id: 'power-orbital-drone',
+      code: 'PWR-03',
+      title: 'Sentinel Micro-Drones',
+      icon: '🛰️',
+      category: 'AUTONOMOUS ORBIT // PLACEHOLDER',
+      description: 'Deploys rotating perimeter blade drones around the operator.',
+      effectPerLevel: '+1 Orbital Drone Unit (Active in Phase 2)',
+      phaseTag: 'PHASE 2 PREVIEW'
+    },
+    {
+      id: 'power-thermal-purge',
+      code: 'PWR-04',
+      title: 'Thermal Incineration Wave',
+      icon: '🔥',
+      category: 'AREA ERADICATION // PLACEHOLDER',
+      description: 'Periodically unleashes a high-temperature shockwave across nearby tiles.',
+      effectPerLevel: '+18% Thermal Wave Area (Active in Phase 2)',
+      phaseTag: 'PHASE 2 PREVIEW'
+    },
+    {
+      id: 'passive-magnet-coil',
+      code: 'PAS-01',
+      title: 'Electromagnetic Field Coil',
+      icon: '🧲',
+      category: 'FIELD UTILITY // ACTIVE BONUS',
+      description: 'Amplifies the suit magnet array to pull EXP Orbs and RP Coins from farther away.',
+      effectPerLevel: '+18 px Magnet Pickup Radius (Active Now)',
+      phaseTag: 'PHASE 1 ACTIVE'
+    },
+    {
+      id: 'passive-servo-boost',
+      code: 'PAS-02',
+      title: 'Overclocked Leg Servos',
+      icon: '💨',
+      category: 'MOBILITY AUGMENT // ACTIVE BONUS',
+      description: 'Routes auxiliary bio-power to leg actuators for faster sector traversal.',
+      effectPerLevel: '+8% Operator Move Speed (Active Now)',
+      phaseTag: 'PHASE 1 ACTIVE'
+    }
+  ];
+
+  readonly rpCoins = signal<number>(0);
+  /** Alias preserved for backward compatibility */
+  readonly srpCoins = this.rpCoins;
+  readonly biomass = signal<number>(0);
+
   readonly selectedOperatorId = signal<string>('survivor');
   readonly selectedZoneId = signal<string>('sector7');
+  readonly researchRanks = signal<Record<string, number>>({});
 
   readonly selectedOperator = computed<OperatorItem>(
     () => this.operators.find((op) => op.id === this.selectedOperatorId()) ?? this.operators[0]
@@ -246,10 +331,71 @@ export class MenuStateService {
     () => this.zones.find((zone) => zone.id === this.selectedZoneId()) ?? this.zones[0]
   );
 
+  constructor() {
+    this.loadSyncBackup();
+    void this.hydrateFromIndexedDb();
+  }
+
+  private loadSyncBackup(): void {
+    const mirror = this.persistence.readMirrorSync<PersistedProfileV1>('meta_profile');
+    if (mirror) {
+      this.applyProfileState(mirror);
+    }
+  }
+
+  private async hydrateFromIndexedDb(): Promise<void> {
+    const profile = await this.persistence.loadProfile();
+    if (profile) {
+      this.applyProfileState(profile);
+    } else {
+      await this.persistProfile();
+    }
+  }
+
+  private applyProfileState(profile: PersistedProfileV1): void {
+    this.rpCoins.set(Math.max(0, Number(profile.rpCoins) || 0));
+    this.biomass.set(Math.max(0, Number(profile.totalBiomass) || 0));
+    if (profile.selectedOperatorId && this.operators.some((o) => o.id === profile.selectedOperatorId)) {
+      this.selectedOperatorId.set(profile.selectedOperatorId);
+    }
+    if (profile.selectedZoneId && this.zones.some((z) => z.id === profile.selectedZoneId)) {
+      this.selectedZoneId.set(profile.selectedZoneId);
+    }
+    if (profile.researchRanks && typeof profile.researchRanks === 'object') {
+      this.researchRanks.set({ ...profile.researchRanks });
+    }
+  }
+
+  private async persistProfile(): Promise<void> {
+    await this.persistence.saveProfile({
+      rpCoins: this.rpCoins(),
+      totalBiomass: this.biomass(),
+      selectedOperatorId: this.selectedOperatorId(),
+      selectedZoneId: this.selectedZoneId(),
+      unlockedOperatorIds: ['survivor'],
+      unlockedZoneIds: ['sector7'],
+      researchRanks: this.researchRanks()
+    });
+  }
+
+  addRunRewards(biomassDelta: number, rpCoinsDelta: number): void {
+    if (biomassDelta <= 0 && rpCoinsDelta <= 0) {
+      return;
+    }
+    if (biomassDelta > 0) {
+      this.biomass.update((v) => v + biomassDelta);
+    }
+    if (rpCoinsDelta > 0) {
+      this.rpCoins.update((v) => v + rpCoinsDelta);
+    }
+    void this.persistProfile();
+  }
+
   setOperator(id: string): void {
     const op = this.operators.find((o) => o.id === id);
     if (op && !op.locked) {
       this.selectedOperatorId.set(id);
+      void this.persistProfile();
     }
   }
 
@@ -257,11 +403,18 @@ export class MenuStateService {
     const zone = this.zones.find((z) => z.id === id);
     if (zone && !zone.locked) {
       this.selectedZoneId.set(id);
+      void this.persistProfile();
     }
   }
 
   getResearchByTrack(track: ResearchTrack): ResearchNode[] {
-    return this.researchNodes.filter((node) => node.track === track);
+    const ranks = this.researchRanks();
+    return this.researchNodes
+      .filter((node) => node.track === track)
+      .map((node) => ({
+        ...node,
+        currentRank: ranks[node.id] ?? node.currentRank
+      }));
   }
 
   getSelectedOperator(): OperatorItem {

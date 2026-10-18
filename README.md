@@ -25,12 +25,13 @@ src/
 └── app/
     ├── app.ts                  # Root application shell
     ├── app.routes.ts           # Standalone route configuration
-    ├── core/                   # Shared domain contracts & singleton state services
+    ├── core/                   # Shared domain contracts, IndexedDB v1 engine & singleton state services
     │   ├── models/
     │   │   └── game-data.model.ts
     │   └── services/
     │       ├── codex.service.ts
     │       ├── menu-state.service.ts
+    │       ├── persistence.service.ts
     │       └── settings.service.ts
     ├── shared/                 # Reusable tactical UI components (Signal inputs/outputs)
     │   └── ui/
@@ -45,14 +46,15 @@ src/
     │   ├── research/           # Research Lab (Bio-Research Upgrades & Rig Cosmetics)
     │   └── settings/           # Hardware Input & Control Configuration
     └── game/                   # Real-time Phaser 4 simulation & Angular HUD overlay
-        ├── game.ts             # Phaser lifecycle host, HUD telemetry, Codex grants & Pause overlay
+        ├── game.ts             # Phaser lifecycle host, HUD telemetry, Level-Up modal & Pause overlay
         ├── scenes/
-        │   └── main.scene.ts   # Active 2.5D survival arena & multi-touch virtual joystick
-        └── systems/            # Deterministic gameplay rules & chunked world streaming
+        │   └── main.scene.ts   # Active 2.5D survival arena, auto-magnet pickups & virtual joystick
+        └── systems/            # Deterministic gameplay rules, EXP progression & chunked streaming
             ├── chunk.system.ts
             ├── input.system.ts
             ├── interaction.system.ts
-            └── movement.system.ts
+            ├── movement.system.ts
+            └── progression.system.ts
 ```
 
 ---

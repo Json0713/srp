@@ -17,9 +17,14 @@ interface ResearchTab {
       <app-page-header
         title="Research Lab"
         subtitle="Biomass Synthesis & Rig Evolution">
-        <span class="currency-pill" aria-label="Available SRP Coins">
-          🪙 {{ srpCoins() }} SRP
-        </span>
+        <div class="header-currencies">
+          <span class="biomass-pill" aria-label="Available Rare Biomass">
+            🧪 {{ biomass() }} BIOMASS
+          </span>
+          <span class="currency-pill" aria-label="Available Research Parasitic Coins">
+            🪙 {{ rpCoins() }} RP
+          </span>
+        </div>
       </app-page-header>
 
       <main class="screen-scroll-body">
@@ -56,7 +61,12 @@ interface ResearchTab {
                     <h2 class="node-title">{{ node.title }}</h2>
                     <p class="node-effect">{{ node.effectSummary }}</p>
                   </div>
-                  <span class="currency-pill">🪙 {{ node.cost }}</span>
+                  <div class="node-costs">
+                    @if (node.biomassCost) {
+                      <span class="biomass-pill">🧪 {{ node.biomassCost }}</span>
+                    }
+                    <span class="currency-pill">🪙 {{ node.cost }} RP</span>
+                  </div>
                 </button>
               }
             </section>
@@ -96,8 +106,10 @@ interface ResearchTab {
 
                 <footer class="synthesis-footer">
                   <div class="effect-row">
-                    <span>REQUIRED REAGENT</span>
-                    <strong class="cost-val">🪙 {{ node.cost }} SRP Coins</strong>
+                    <span>REQUIRED REAGENTS</span>
+                    <strong class="cost-val">
+                      🧪 {{ node.biomassCost ?? 1 }} Biomass + 🪙 {{ node.cost }} RP Coins
+                    </strong>
                   </div>
                   <button type="button" class="synth-btn" disabled>
                     🔒 SYNTHESIS LOCKED ({{ node.phaseTag }})
@@ -111,123 +123,26 @@ interface ResearchTab {
     </div>
   `,
   styles: [`
-    .research-shell, .node-list, .effect-box, .synthesis-footer {
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-sm);
-    }
-    .track-tabs, .node-top, .rank-pips {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--spacing-xs);
-    }
-    .track-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.5rem 0.9rem;
-      border-radius: var(--radius-sm);
-      background: var(--color-bg-panel);
-      border: 1px solid var(--color-border);
-      color: var(--color-text-secondary);
-      font-family: var(--font-display);
-      font-size: 0.82rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      cursor: pointer;
-    }
-    .track-btn.active, .tag-rank {
-      color: var(--color-primary-light);
-      border-color: var(--color-primary-light);
-      background: var(--color-primary-surface);
-    }
-    .currency-pill, .synth-btn {
-      padding: 0.2rem 0.55rem;
-      border-radius: var(--radius-xs);
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--color-accent-light);
-      background: var(--color-accent-surface);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-    }
-    .tag-rank {
-      padding: 0.1rem 0.4rem;
-      border-radius: var(--radius-xs);
-      font-family: var(--font-mono);
-      font-size: 0.64rem;
-      font-weight: 700;
-    }
-    .research-layout {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: var(--spacing-lg);
-      align-items: start;
-    }
-    .node-card {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-md);
-      width: 100%;
-      text-align: left;
-      padding: var(--spacing-sm) var(--spacing-md);
-      border-radius: var(--radius-md);
-      background: var(--color-bg-panel);
-      border: 1px solid var(--color-border);
-      color: var(--color-text-primary);
-      cursor: pointer;
-    }
-    .node-card.selected {
-      border-color: var(--color-primary-light);
-      background: rgba(34, 197, 94, 0.12);
-    }
-    .node-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 46px;
-      height: 46px;
-      flex-shrink: 0;
-      font-size: 1.45rem;
-      border-radius: var(--radius-sm);
-      background: rgba(5, 7, 11, 0.65);
-      border: 1px solid var(--color-border);
-    }
+    .research-shell, .node-list, .effect-box, .synthesis-footer { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+    .track-tabs, .node-top, .rank-pips, .header-currencies, .node-costs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-xs); }
+    .track-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.9rem; border-radius: var(--radius-sm); background: var(--color-bg-panel); border: 1px solid var(--color-border); color: var(--color-text-secondary); font-family: var(--font-display); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+    .track-btn.active, .tag-rank, .biomass-pill { color: var(--color-primary-light); border: 1px solid var(--color-primary-light); background: var(--color-primary-surface); }
+    .currency-pill, .biomass-pill, .synth-btn { padding: 0.2rem 0.55rem; border-radius: var(--radius-xs); font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; }
+    .currency-pill, .synth-btn { color: var(--color-accent-light); background: var(--color-accent-surface); border: 1px solid rgba(245, 158, 11, 0.35); }
+    .tag-rank { padding: 0.1rem 0.4rem; border-radius: var(--radius-xs); font-family: var(--font-mono); font-size: 0.64rem; font-weight: 700; }
+    .research-layout { display: grid; grid-template-columns: 1fr; gap: var(--spacing-lg); align-items: start; }
+    .node-card { display: flex; align-items: center; gap: var(--spacing-md); width: 100%; text-align: left; padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radius-md); background: var(--color-bg-panel); border: 1px solid var(--color-border); color: var(--color-text-primary); cursor: pointer; }
+    .node-card.selected { border-color: var(--color-primary-light); background: rgba(34, 197, 94, 0.12); }
+    .node-icon { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; flex-shrink: 0; font-size: 1.45rem; border-radius: var(--radius-sm); background: rgba(5, 7, 11, 0.65); border: 1px solid var(--color-border); }
     .node-meta { flex: 1; min-width: 0; }
     .node-code { font-family: var(--font-mono); font-size: 0.64rem; color: var(--color-text-secondary); }
     .node-title, .inspector-name { margin: 0.1rem 0; font-family: var(--font-display); font-size: 1.05rem; }
     .inspector-name { font-size: 1.3rem; }
     .node-effect, .inspector-desc { margin: 0.15rem 0 0; font-size: 0.84rem; color: var(--color-text-secondary); }
-    .inspector-card {
-      background: var(--color-bg-panel);
-      border: 1px solid var(--color-border-strong);
-      border-radius: var(--radius-md);
-      padding: var(--spacing-lg);
-    }
-    .inspector-head {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-md);
-      padding-bottom: var(--spacing-md);
-      margin-bottom: var(--spacing-md);
-      border-bottom: 1px solid var(--color-border);
-    }
-    .effect-box {
-      margin: var(--spacing-md) 0;
-      padding: var(--spacing-sm) var(--spacing-md);
-      border-radius: var(--radius-sm);
-      background: rgba(5, 7, 11, 0.6);
-      border: 1px solid var(--color-border);
-    }
-    .effect-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: var(--font-mono);
-      font-size: 0.74rem;
-      color: var(--color-text-secondary);
-    }
+    .inspector-card { background: var(--color-bg-panel); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); padding: var(--spacing-lg); }
+    .inspector-head { display: flex; align-items: center; gap: var(--spacing-md); padding-bottom: var(--spacing-md); margin-bottom: var(--spacing-md); border-bottom: 1px solid var(--color-border); }
+    .effect-box { margin: var(--spacing-md) 0; padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radius-sm); background: rgba(5, 7, 11, 0.6); border: 1px solid var(--color-border); }
+    .effect-row { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 0.74rem; color: var(--color-text-secondary); }
     .effect-row strong { color: var(--color-primary-light); }
     .cost-val { color: var(--color-accent-light) !important; }
     .pip { width: 12px; height: 6px; border-radius: 3px; background: rgba(148, 163, 184, 0.25); }
@@ -241,7 +156,8 @@ interface ResearchTab {
 export class Research {
   private readonly menuState = inject(MenuStateService);
 
-  readonly srpCoins = this.menuState.srpCoins;
+  readonly rpCoins = this.menuState.rpCoins;
+  readonly biomass = this.menuState.biomass;
   readonly activeTrack = signal<ResearchTrack>('upgrades');
   readonly selectedNodeId = signal<string>('chitin-plating');
 
@@ -285,4 +201,3 @@ export class Research {
     return Array.from({ length: maxRank }, (_, index) => index + 1);
   }
 }
-

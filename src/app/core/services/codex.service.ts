@@ -1,9 +1,11 @@
-import { Injectable, computed, signal } from '@angular/core';
-import { CodexCategory, CodexEntry } from '../models/game-data.model';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { CodexCategory, CodexEntry, PersistedCodexV1 } from '../models/game-data.model';
+import { PersistenceService } from './persistence.service';
 
 @Injectable({ providedIn: 'root' })
 export class CodexService {
-  private readonly storageKey = 'srp_codex_unlocked';
+  private readonly persistence = inject(PersistenceService);
+  private readonly legacyStorageKey = 'srp_codex_unlocked';
   private readonly defaultUnlockedIds = ['phase-1-fallout', 'op-survivor', 'zone-sector7'];
 
   private readonly baseCatalog: CodexEntry[] = [
@@ -11,43 +13,80 @@ export class CodexService {
     {
       id: 'raw-biomass',
       code: 'ITM-01',
-      title: 'Raw Biomass Spore',
+      title: 'Rare Biomass Crystal',
       category: 'items',
       status: 'undiscovered',
       icon: '🧪',
-      classification: 'Bio-Resource // Catalyst',
-      summary: 'Luminescent parasitic spore cluster harvested from dormant spires.',
+      classification: 'Apex Catalyst // Rare Resource',
+      summary: 'High-value crystalline biomass core harvested from rare dormant spires.',
       description:
-        'Extracted directly from Sector 7 Biomass Spire nodes. Contains high-density cellular energy used to sustain containment rigs and study parasitic adaptation.',
-      unlockHint: 'Harvest a Biomass Spire node in Sector 7 (press E or tap Harvest near a node) to grant this record.',
+        'A rare, diamond-grade biological catalyst formed at high-density Sector 7 spires. Harvesting a Spire grants +1 Biomass, +100+ level-scaled EXP, and a cache of RP Coins for Research Lab synthesis.',
+      unlockHint: 'Locate a rare Biomass Spire in Sector 7 and press E (or tap Harvest) to grant this record.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
-        { label: 'Yield per Spire', value: '+1 Biomass Unit' },
-        { label: 'Extraction Range', value: '54 px Proximity' },
-        { label: 'Origin Sector', value: 'Sector 7 Perimeter' }
+        { label: 'Biomass Yield', value: '+1 Rare Biomass' },
+        { label: 'EXP Surge', value: '+100 Base EXP (Scales w/ Level & Time)' },
+        { label: 'Currency Bonus', value: '+10 to +25 RP Coins' }
       ]
     },
     {
-      id: 'srp-coin',
+      id: 'rp-coin',
       code: 'ITM-02',
-      title: 'SRP Bio-Credit',
+      title: 'RP Coin (Research Parasitic Coin)',
       category: 'items',
-      status: 'development',
+      status: 'undiscovered',
       icon: '🪙',
-      classification: 'Meta-Currency // Encrypted Token',
-      summary: 'Standardized containment currency used in the Research Lab.',
+      classification: 'Meta-Currency // Field Token',
+      summary: 'Standardized Research Parasitic Coin used in the Research Lab.',
       description:
-        'Awarded for neutralizing high-threat assimilated hosts and securing Bio-Containment Caches. Used to synthesize Bio-Research upgrades, rig cosmetics, and operator unlocks.',
-      unlockHint: 'Planned for Phase 2C & Phase 3A (Currency Drops & Persistence).',
-      phaseTag: 'PHASE 2C / 3A',
+        'Scattered across Sector 7 (80% field presence) and awarded when harvesting Biomass Spires. Automatically magnetized to the operator on close proximity and persisted to IndexedDB.',
+      unlockHint: 'Walk near a golden RP Coin in Sector 7 to magnetize and collect it.',
+      phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
-        { label: 'Persistence', value: 'Local Encrypted Save' },
+        { label: 'Field Spawn Rate', value: '80% Sector Presence' },
+        { label: 'Acquisition', value: 'Proximity Auto-Magnet' },
         { label: 'Primary Use', value: 'Bio-Research & Rig Cosmetics' }
       ]
     },
     {
-      id: 'chitin-shard',
+      id: 'exp-orb-blue',
       code: 'ITM-03',
+      title: 'Common Blue EXP Spore',
+      category: 'items',
+      status: 'undiscovered',
+      icon: '🔹',
+      classification: 'In-Run Progression // 70% Common',
+      summary: 'Azure bio-energy orb that fuels in-run operator level progression.',
+      description:
+        'Accounts for 70% of field EXP spores. Automatically magnetized toward the operator within close proximity. Grants 1–15 base EXP at Level 1 and scales upward as the operator levels up.',
+      unlockHint: 'Walk near a Blue EXP Spore in Sector 7 to absorb it.',
+      phaseTag: 'PHASE 1 // THE FALLOUT',
+      stats: [
+        { label: 'Distribution', value: '70% Common Spore' },
+        { label: 'Base Yield (Lv.1)', value: '1 – 15 EXP (+Level Scaling)' }
+      ]
+    },
+    {
+      id: 'exp-orb-orange',
+      code: 'ITM-04',
+      title: 'Rare Orange EXP Core',
+      category: 'items',
+      status: 'undiscovered',
+      icon: '🔶',
+      classification: 'In-Run Progression // 30% Rare',
+      summary: 'High-density amber bio-energy core that accelerates operator leveling.',
+      description:
+        'Accounts for 30% of field EXP spores. Emits a bright orange luminescence and grants 15–25 base EXP at Level 1, scaling upward with operator level to match ramping EXP requirements.',
+      unlockHint: 'Walk near an Orange EXP Core in Sector 7 to absorb it.',
+      phaseTag: 'PHASE 1 // THE FALLOUT',
+      stats: [
+        { label: 'Distribution', value: '30% Rare Spore' },
+        { label: 'Base Yield (Lv.1)', value: '15 – 25 EXP (+Level Scaling)' }
+      ]
+    },
+    {
+      id: 'chitin-shard',
+      code: 'ITM-05',
       title: 'Hardened Chitin Shard',
       category: 'items',
       status: 'development',
@@ -65,7 +104,7 @@ export class CodexService {
     },
     {
       id: 'containment-chest',
-      code: 'ITM-04',
+      code: 'ITM-06',
       title: 'Bio-Containment Cache',
       category: 'items',
       status: 'development',
@@ -73,7 +112,7 @@ export class CodexService {
       classification: 'Supply Drop // Elite Loot',
       summary: 'High-security supply cache dropped by apex parasitic threats.',
       description:
-        'Contains emergency combat stimulants, experimental weapon modules, and SRP Bio-Credits governed by rarity probability tables.',
+        'Contains emergency combat stimulants, experimental weapon modules, and RP Coins governed by rarity probability tables.',
       unlockHint: 'Planned for Phase 2C: The Assimilation (Boss Encounters & Loot Chests).',
       phaseTag: 'PHASE 2C // THE ASSIMILATION',
       stats: [
@@ -118,7 +157,7 @@ export class CodexService {
       stats: [
         { label: 'Threat Level', value: 'Tier I — Sustained Wave' },
         { label: 'Vitality', value: 'Moderate' },
-        { label: 'Drop', value: 'XP Orbs & Biomass' }
+        { label: 'Drop', value: 'EXP Orbs & RP Coins' }
       ]
     },
     {
@@ -243,13 +282,13 @@ export class CodexService {
       classification: 'Outbreak Season // Active Phase',
       summary: 'Initial containment collapse at Sector 7 and frontline biomass extraction.',
       description:
-        'The inaugural outbreak phase of Project Parasite. Containment operatives deploy into the Sector 7 perimeter to harvest dormant Biomass Spire nodes, calibrate cross-device rigs, and establish the Field Codex and Research Lab baseline.',
+        'The inaugural outbreak phase of Project Parasite. Containment operatives deploy into the Sector 7 perimeter to absorb EXP spores, collect RP Coins, harvest rare Biomass Spires, and establish the Field Codex and Research Lab baseline.',
       unlockHint: 'Granted upon initial protocol activation.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
         { label: 'Season Status', value: 'Active Now (Phase 1)' },
         { label: 'Active Sector', value: 'Sector 7 Perimeter' },
-        { label: 'Primary Objective', value: 'Biomass Spire Extraction' }
+        { label: 'Primary Objective', value: 'EXP Progression & Rare Biomass' }
       ]
     },
     {
@@ -262,7 +301,7 @@ export class CodexService {
       classification: 'Outbreak Season // Upcoming Phase',
       summary: 'Parasitic swarm awakening, wave combat, and survival power evolution.',
       description:
-        'Dormant spores mutate into pursuing Rupters, Assimilated Humans,Volatile Spore Carriers, and Adapted Longarms bosses. Introduces auto-targeting weapons, XP orbs, and randomized level-up survival skills.',
+        'Dormant spores mutate into pursuing Rupters, Assimilated Humans, Volatile Spore Carriers, and Adapted Longarms bosses. Activates combat damage for level-up survival skills.',
       unlockHint: 'Planned for Phase 2: The Assimilation.',
       phaseTag: 'PHASE 2 // THE ASSIMILATION',
       stats: [
@@ -280,7 +319,7 @@ export class CodexService {
       classification: 'Outbreak Season // Upcoming Phase',
       summary: 'Research Lab synthesis activation, Rig Cosmetics, and The Hive Core.',
       description:
-        'Unlocks persistent SRP Bio-Credits, permanent Bio-Research rig upgrades, custom containment suit cosmetics, Operator Ranger requisition, and deep-core deployment into The Hive.',
+        'Unlocks Research Lab synthesis spending RP Coins and rare Biomass on permanent Bio-Research rig upgrades, custom containment suit cosmetics, Operator Ranger requisition, and deep-core deployment into The Hive.',
       unlockHint: 'Planned for Phase 3: The Synthesis.',
       phaseTag: 'PHASE 3 // THE SYNTHESIS',
       stats: [
@@ -315,15 +354,15 @@ export class CodexService {
       status: 'discovered',
       icon: '☣️',
       classification: 'Infestation Zone // Threat Level I',
-      summary: 'Initial outbreak site containing active Biomass Spire nodes.',
+      summary: 'Initial outbreak site containing EXP spores, RP Coins, and rare Biomass Spires.',
       description:
-        'An overrun research perimeter where parasitic spores first breached containment during Phase 1: The Fallout. Features dormant Biomass Spires that must be harvested by field operators.',
+        'An overrun research perimeter where parasitic spores first breached containment during Phase 1: The Fallout. Features unbounded 512px chunks with magnetic EXP spores, RP Coins, and rare Biomass Spires.',
       unlockHint: 'Granted upon initial protocol activation.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
         { label: 'Threat Level', value: 'Level I — Low Breach' },
         { label: 'World Topology', value: 'Unbounded 512px Sector Chunks' },
-        { label: 'Node Density', value: '1–3 Biomass Spires / Chunk' }
+        { label: 'Field Distribution', value: '70% Blue EXP / 30% Orange EXP / 80% RP Coins' }
       ]
     },
     {
@@ -337,12 +376,12 @@ export class CodexService {
       summary: 'Long-range specialist equipped with kinetic optics and rapid thrusters.',
       description:
         'Trades heavy armor plating for superior movement velocity and long-distance piercing firepower.',
-      unlockHint: 'Planned for Phase 3A: The Synthesis (Character Unlocking via SRP Bio-Credits).',
+      unlockHint: 'Planned for Phase 3A: The Synthesis (Character Unlocking via RP Coins & Biomass).',
       phaseTag: 'PHASE 3A // THE SYNTHESIS',
       stats: [
         { label: 'Vitality Rating', value: '55 / 100' },
         { label: 'Mobility Rating', value: '95 / 100' },
-        { label: 'Unlock Cost', value: '250 SRP Bio-Credits' }
+        { label: 'Unlock Cost', value: '250 RP Coins & 5 Biomass' }
       ]
     },
     {
@@ -365,7 +404,7 @@ export class CodexService {
     }
   ];
 
-  private readonly unlockedIds = signal<Set<string>>(this.loadUnlockedIds());
+  private readonly unlockedIds = signal<Set<string>>(this.loadInitialUnlockedIdsSync());
 
   readonly entries = computed<CodexEntry[]>(() => {
     const unlocked = this.unlockedIds();
@@ -392,11 +431,25 @@ export class CodexService {
     () => this.entries().filter((e) => e.status === 'development').length
   );
 
-  private loadUnlockedIds(): Set<string> {
+  constructor() {
+    void this.hydrateFromIndexedDb();
+  }
+
+  private loadInitialUnlockedIdsSync(): Set<string> {
     const initial = new Set<string>(this.defaultUnlockedIds);
+
+    const mirror = this.persistence.readMirrorSync<PersistedCodexV1>('codex_records');
+    if (mirror && Array.isArray(mirror.unlockedIds)) {
+      for (const item of mirror.unlockedIds) {
+        if (typeof item === 'string') {
+          initial.add(item);
+        }
+      }
+    }
+
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
-        const raw = window.localStorage.getItem(this.storageKey);
+        const raw = window.localStorage.getItem(this.legacyStorageKey);
         if (raw) {
           const parsed: unknown = JSON.parse(raw);
           if (Array.isArray(parsed)) {
@@ -408,50 +461,67 @@ export class CodexService {
           }
         }
       } catch {
-        // Ignore corrupted or unavailable storage
+        // Ignore storage read errors
       }
     }
+
     return initial;
   }
 
-  private persistUnlockedIds(ids: Set<string>): void {
+  private async hydrateFromIndexedDb(): Promise<void> {
+    const stored = await this.persistence.loadCodex();
+    if (stored && Array.isArray(stored.unlockedIds)) {
+      const merged = new Set<string>([...this.unlockedIds(), ...stored.unlockedIds]);
+      this.unlockedIds.set(merged);
+    } else {
+      await this.persistence.saveCodex(Array.from(this.unlockedIds()));
+    }
+  }
+
+  private saveUnlockedIds(ids: Set<string>): void {
+    const arr = Array.from(ids);
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
-        window.localStorage.setItem(this.storageKey, JSON.stringify(Array.from(ids)));
+        window.localStorage.setItem(this.legacyStorageKey, JSON.stringify(arr));
       } catch {
-        // Ignore storage write errors
+        // Ignore storage quota errors
       }
     }
+    void this.persistence.saveCodex(arr);
+  }
+
+  getEntriesByCategory(category: 'all' | CodexCategory): CodexEntry[] {
+    const all = this.entries();
+    if (category === 'all') {
+      return all;
+    }
+    return all.filter((e) => e.category === category);
   }
 
   isUnlocked(id: string): boolean {
     return this.unlockedIds().has(id);
   }
 
+  /**
+   * Grants/unlocks a discoverable Codex entry when the player encounters or collects it in-game.
+   * Returns the newly unlocked CodexEntry if this was the first time it was granted, or null if already unlocked.
+   */
   unlockEntry(id: string): CodexEntry | null {
     const target = this.baseCatalog.find((e) => e.id === id);
     if (!target || target.status === 'development') {
       return null;
     }
 
-    if (this.unlockedIds().has(id)) {
+    const current = this.unlockedIds();
+    if (current.has(id)) {
       return null;
     }
 
-    const updated = new Set(this.unlockedIds());
+    const updated = new Set<string>(current);
     updated.add(id);
     this.unlockedIds.set(updated);
-    this.persistUnlockedIds(updated);
+    this.saveUnlockedIds(updated);
 
     return this.entries().find((e) => e.id === id) ?? null;
   }
-
-  getEntriesByCategory(category: CodexCategory | 'all'): CodexEntry[] {
-    const all = this.entries();
-    if (category === 'all') {
-      return all;
-    }
-    return all.filter((entry) => entry.category === category);
-  }
 }
-
