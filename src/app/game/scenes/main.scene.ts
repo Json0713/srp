@@ -2,10 +2,15 @@ import { Scene, GameObjects, Types, Input, Math as PhaserMath, Structs } from 'p
 import { calculatePlayerMovement, MovementInput } from '../systems/movement.system';
 import {
   findNearestInteractableResource,
-  tryCollectResource,
   ResourceState
 } from '../systems/interaction.system';
 import { calculateJoystickVector } from '../systems/input.system';
+import {
+  CHUNK_SIZE,
+  ChunkData,
+  ChunkManager,
+  generateRunSeed
+} from '../systems/chunk.system';
 import { GameHudSnapshot, InputMode } from '../../core/models/game-data.model';
 
 interface WasdKeys {
@@ -27,14 +32,17 @@ export class MainScene extends Scene {
   private readonly playerSpeed = 300; // Pixels per second
   private readonly playerSize = 32;
   private readonly interactDistance = 54;
+  private readonly cameraLerp = 0.14; // Smooth Magic Survival style camera follow damping
 
   private environmentGraphics!: GameObjects.Graphics;
   private resourceGraphics!: GameObjects.Graphics;
   private proximityGraphics!: GameObjects.Graphics;
+  private compassGraphics!: GameObjects.Graphics;
   private interactFeedbackText!: GameObjects.Text;
   private promptText!: GameObjects.Text;
 
-  private resources: ResourceState[] = [];
+  private chunkManager!: ChunkManager;
+  private currentSectorLabel = 'SEC +0:+0';
   private nearestResourceId: string | null = null;
   private facingVector = { x: 0, y: 1 };
 
@@ -59,11 +67,8 @@ export class MainScene extends Scene {
     }
   };
 
-  private readonly onResize = (gameSize: Structs.Size): void => {
-    const width = Math.max(320, gameSize.width);
-    const height = Math.max(240, gameSize.height);
-    this.clampEntitiesToViewport(width, height);
-    this.drawEnvironment(width, height);
+  private readonly onResize = (_gameSize: Structs.Size): void => {
+    this.drawActiveChunks(this.chunkManager.getActiveChunks());
     this.drawResources();
     this.drawProximityIndicator();
     if (this.inputMode === 'mobile') {
@@ -76,60 +81,77 @@ export class MainScene extends Scene {
   }
 
   create(): void {
-    const width = Math.max(320, this.scale.width);
-    const height = Math.max(240, this.scale.height);
-
     this.cameras.main.setBackgroundColor('#090d14');
 
-    // 1. Procedural 2.5D Dark-Biopunk Environment
-    this.environmentGraphics = this.add.graphics();
-    this.drawEnvironment(width, height);
+    // 1. Initialize True-RNG Per-Run Chunk Manager (normal 2-chunk radius = 5x5 grid around player)
+    this.chunkManager = new ChunkManager(generateRunSeed(), CHUNK_SIZE, 2);
 
-    // 2. Biomass Spire Resource Nodes (scaled to fit both desktop and mobile landscape viewports)
-    this.resources = this.createInitialResources(width, height);
-    this.resourceGraphics = this.add.graphics();
-    this.proximityGraphics = this.add.graphics();
-    this.drawResources();
+    // 2. World-Space Graphics Layers (Depth-ordered for 2.5D presentation)
+    this.environmentGraphics = this.add.graphics().setDepth(1);
+    this.resourceGraphics = this.add.graphics().setDepth(3);
+    this.proximityGraphics = this.add.graphics().setDepth(4);
+    this.compassGraphics = this.add.graphics().setDepth(5);
 
-    // 3. Player Entity with 2.5D Drop Shadow & Directional Visor
-    const startX = Math.round(width * 0.5);
-    const startY = Math.round(height * 0.5);
+    // 3. Player Entity Spawned at Origin Chunk (0,0) Center with Smooth Camera Follow
+    const startX = Math.round(CHUNK_SIZE * 0.5);
+    const startY = Math.round(CHUNK_SIZE * 0.5);
 
-    this.playerShadow = this.add.ellipse(startX, startY + 14, 30, 12, 0x000000, 0.55);
-    this.player = this.add.rectangle(startX, startY, this.playerSize, this.playerSize, 0x22c55e);
+    this.playerShadow = this.add
+      .ellipse(startX, startY + 14, 30, 12, 0x000000, 0.55)
+      .setDepth(6);
+    this.player = this.add
+      .rectangle(startX, startY, this.playerSize, this.playerSize, 0x22c55e)
+      .setDepth(7);
     this.player.setStrokeStyle(2, 0x86efac);
-    this.playerVisor = this.add.rectangle(startX, startY + 8, 16, 6, 0x052e16);
+    this.playerVisor = this.add
+      .rectangle(startX, startY + 8, 16, 6, 0x052e16)
+      .setDepth(8);
 
-    // 4. World-space Prompts & Floating Harvest Feedback
-    this.promptText = this.add.text(0, 0, '[E] HARVEST', {
-      fontFamily: 'monospace',
-      fontSize: '12px',
-      color: '#4ade80',
-      backgroundColor: 'rgba(8, 12, 18, 0.85)',
-      padding: { x: 6, y: 3 }
-    });
-    this.promptText.setOrigin(0.5, 1);
-    this.promptText.setVisible(false);
+    // Center camera on player and smoothly follow across unbounded chunks (Magic Survival style)
+    this.cameras.main.centerOn(startX, startY);
+    this.cameras.main.startFollow(this.player, false, this.cameraLerp, this.cameraLerp);
 
-    this.interactFeedbackText = this.add.text(0, 0, '+1 BIOMASS', {
-      fontFamily: 'monospace',
-      fontSize: '14px',
-      color: '#fbbf24',
-      fontStyle: 'bold',
-      backgroundColor: 'rgba(8, 12, 18, 0.85)',
-      padding: { x: 6, y: 3 }
-    });
-    this.interactFeedbackText.setOrigin(0.5, 1);
-    this.interactFeedbackText.setVisible(false);
+    // 4. Stream Initial Active Chunks Around Spawn
+    const initialWindow = this.chunkManager.updateActiveWindow({ x: startX, y: startY }, true);
+    this.currentSectorLabel = initialWindow.currentChunk.sectorLabel;
+    this.drawActiveChunks(initialWindow.activeChunks);
+    this.drawResources();
+    this.drawSporeCompass();
 
-    // 5. Keyboard Input Setup
+    // 5. World-space Prompts & Floating Harvest Feedback
+    this.promptText = this.add
+      .text(0, 0, '[E] HARVEST', {
+        fontFamily: 'monospace',
+        fontSize: '12px',
+        color: '#4ade80',
+        backgroundColor: 'rgba(8, 12, 18, 0.85)',
+        padding: { x: 6, y: 3 }
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(10)
+      .setVisible(false);
+
+    this.interactFeedbackText = this.add
+      .text(0, 0, '+1 BIOMASS', {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#fbbf24',
+        fontStyle: 'bold',
+        backgroundColor: 'rgba(8, 12, 18, 0.85)',
+        padding: { x: 6, y: 3 }
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(11)
+      .setVisible(false);
+
+    // 6. Keyboard Input Setup
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.wasdKeys = this.input.keyboard.addKeys('W,A,S,D') as WasdKeys;
       this.interactKey = this.input.keyboard.addKey('E');
     }
 
-    // 6. Registry Synchronization & Mobile UI
+    // 7. Registry Synchronization & Mobile UI
     const storedMode = this.registry.get('inputMode');
     this.inputMode = storedMode === 'mobile' ? 'mobile' : 'pc';
     this.registry.events.on('changedata-inputMode', this.onRegistryChange);
@@ -137,7 +159,7 @@ export class MainScene extends Scene {
     this.createMobileUI();
     this.updateInputUI();
 
-    // 7. Viewport Resize & Cleanup Listeners
+    // 8. Viewport Resize & Cleanup Listeners
     this.scale.on('resize', this.onResize);
     this.events.once('shutdown', () => this.cleanupListeners());
     this.events.once('destroy', () => this.cleanupListeners());
@@ -150,36 +172,14 @@ export class MainScene extends Scene {
     this.scale.off('resize', this.onResize);
   }
 
-  private createInitialResources(width: number, height: number): ResourceState[] {
-    const padX = Math.max(64, Math.min(140, Math.round(width * 0.18)));
-    const padY = Math.max(64, Math.min(110, Math.round(height * 0.22)));
-
-    return [
-      { id: 'bush1', position: { x: padX, y: padY }, collected: false },
-      { id: 'bush2', position: { x: width - padX, y: padY }, collected: false },
-      { id: 'bush3', position: { x: padX, y: height - padY }, collected: false },
-      { id: 'bush4', position: { x: width - padX, y: height - padY }, collected: false }
-    ];
-  }
-
-  private clampEntitiesToViewport(width: number, height: number): void {
-    const margin = 48;
-    this.resources = this.resources.map((res) => ({
-      ...res,
-      position: {
-        x: PhaserMath.Clamp(res.position.x, margin, Math.max(margin, width - margin)),
-        y: PhaserMath.Clamp(res.position.y, margin, Math.max(margin, height - margin))
-      }
-    }));
-
-    if (this.player) {
-      const clampedX = PhaserMath.Clamp(this.player.x, 16, Math.max(16, width - 16));
-      const clampedY = PhaserMath.Clamp(this.player.y, 16, Math.max(16, height - 16));
-      this.updatePlayerPosition(clampedX, clampedY);
-    }
-  }
-
-  private getJoystickLayout(): { baseX: number; baseY: number; maxRadius: number; btnX: number; btnY: number; btnRadius: number } {
+  private getJoystickLayout(): {
+    baseX: number;
+    baseY: number;
+    maxRadius: number;
+    btnX: number;
+    btnY: number;
+    btnRadius: number;
+  } {
     const isCompactLandscape = this.scale.height <= 500;
     const margin = isCompactLandscape ? 78 : 104;
     const maxRadius = isCompactLandscape ? 48 : 58;
@@ -219,7 +219,12 @@ export class MainScene extends Scene {
       if (this.inputMode !== 'mobile') return;
 
       const layout = this.getJoystickLayout();
-      const distToButton = PhaserMath.Distance.Between(pointer.x, pointer.y, layout.btnX, layout.btnY);
+      const distToButton = PhaserMath.Distance.Between(
+        pointer.x,
+        pointer.y,
+        layout.btnX,
+        layout.btnY
+      );
 
       if (distToButton <= layout.btnRadius + 16) {
         this.interactRequested = true;
@@ -289,56 +294,83 @@ export class MainScene extends Scene {
     }
   }
 
-  private drawEnvironment(width: number, height: number): void {
+  private drawActiveChunks(chunks: ChunkData[]): void {
     this.environmentGraphics.clear();
-    this.environmentGraphics.fillStyle(0x0b1119, 1);
-    this.environmentGraphics.fillRect(0, 0, width, height);
 
-    const tileSize = 32;
-    for (let y = 0; y < height; y += tileSize) {
-      for (let x = 0; x < width; x += tileSize) {
-        const hash = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
-        const rand = hash - Math.floor(hash);
+    for (const chunk of chunks) {
+      const { worldX, worldY } = chunk;
 
-        if (rand < 0.12) {
-          // Corrupted biomass patch
+      // Chunk base surface
+      this.environmentGraphics.fillStyle(0x0b1119, 1);
+      this.environmentGraphics.fillRect(worldX, worldY, CHUNK_SIZE, CHUNK_SIZE);
+
+      // Pre-computed 2.5D tile features
+      for (const feat of chunk.features) {
+        if (feat.type === 'corrupted-patch') {
           this.environmentGraphics.fillStyle(0x131d28, 1);
-          this.environmentGraphics.fillRect(x, y, tileSize, tileSize);
-        } else if (rand < 0.24) {
-          // Mossy containment slate
+          this.environmentGraphics.fillRect(feat.x, feat.y, feat.width, feat.height);
+        } else if (feat.type === 'moss-slate') {
           this.environmentGraphics.fillStyle(0x0f1918, 1);
-          this.environmentGraphics.fillRect(x, y, tileSize, tileSize);
-        } else if (rand > 0.96) {
-          // Bioluminescent spore fleck
-          this.environmentGraphics.fillStyle(0x1f4d33, 0.8);
-          const ox = Math.floor((rand * 100) % 4) * 4 + 8;
-          const oy = Math.floor((rand * 1000) % 4) * 4 + 8;
-          this.environmentGraphics.fillRect(x + ox, y + oy, 6, 6);
-        } else if (rand > 0.93 && rand <= 0.96) {
-          // Crimson parasite vein
-          this.environmentGraphics.fillStyle(0x451820, 0.75);
-          this.environmentGraphics.fillRect(x + 10, y + 10, 8, 4);
+          this.environmentGraphics.fillRect(feat.x, feat.y, feat.width, feat.height);
+        } else if (feat.type === 'spore-fleck') {
+          this.environmentGraphics.fillStyle(0x1f4d33, 0.85);
+          this.environmentGraphics.fillRect(feat.x, feat.y, feat.width, feat.height);
+        } else if (feat.type === 'crimson-vein') {
+          this.environmentGraphics.fillStyle(0x451820, 0.78);
+          this.environmentGraphics.fillRect(feat.x, feat.y, feat.width, feat.height);
         }
       }
-    }
 
-    // Subtle tactical grid overlay & world border
-    this.environmentGraphics.lineStyle(1, 0x1e293b, 0.35);
-    for (let x = 0; x <= width; x += 64) {
-      this.environmentGraphics.lineBetween(x, 0, x, height);
-    }
-    for (let y = 0; y <= height; y += 64) {
-      this.environmentGraphics.lineBetween(0, y, width, y);
-    }
+      // Subtle tactical grid inside chunk
+      this.environmentGraphics.lineStyle(1, 0x1e293b, 0.32);
+      for (let gx = 0; gx <= CHUNK_SIZE; gx += 64) {
+        this.environmentGraphics.lineBetween(worldX + gx, worldY, worldX + gx, worldY + CHUNK_SIZE);
+      }
+      for (let gy = 0; gy <= CHUNK_SIZE; gy += 64) {
+        this.environmentGraphics.lineBetween(worldX, worldY + gy, worldX + CHUNK_SIZE, worldY + gy);
+      }
 
-    this.environmentGraphics.lineStyle(2, 0x22c55e, 0.28);
-    this.environmentGraphics.strokeRect(2, 2, width - 4, height - 4);
+      // Subtle sector chunk boundary frame
+      this.environmentGraphics.lineStyle(1, 0x22c55e, 0.14);
+      this.environmentGraphics.strokeRect(worldX, worldY, CHUNK_SIZE, CHUNK_SIZE);
+
+      // 2.5D Decorative Containment Rubble / Monoliths for parallax-like scrolling depth
+      for (const prop of chunk.props) {
+        // Ground shadow
+        this.environmentGraphics.fillStyle(0x000000, 0.45);
+        this.environmentGraphics.fillEllipse(
+          prop.x,
+          prop.y + prop.height * 0.55,
+          prop.width + 8,
+          10
+        );
+
+        // 2.5D Extruded base & top cap
+        const bodyColor = prop.variant === 'monolith' ? 0x1e293b : 0x172536;
+        const capColor = prop.variant === 'monolith' ? 0x334155 : 0x26384d;
+        this.environmentGraphics.fillStyle(bodyColor, 1);
+        this.environmentGraphics.fillRect(
+          prop.x - prop.width * 0.5,
+          prop.y - prop.height * 0.5,
+          prop.width,
+          prop.height
+        );
+        this.environmentGraphics.fillStyle(capColor, 1);
+        this.environmentGraphics.fillRect(
+          prop.x - prop.width * 0.5,
+          prop.y - prop.height * 0.5 - 5,
+          prop.width,
+          6
+        );
+      }
+    }
   }
 
   private drawResources(): void {
     this.resourceGraphics.clear();
+    const activeResources: ResourceState[] = this.chunkManager.getActiveResources();
 
-    for (const res of this.resources) {
+    for (const res of activeResources) {
       const { x, y } = res.position;
 
       // 2.5D Ground Shadow
@@ -346,7 +378,7 @@ export class MainScene extends Scene {
       this.resourceGraphics.fillEllipse(x, y + 12, 34, 14);
 
       if (res.collected) {
-        // Depleted husk
+        // Depleted husk (preserved across chunk unload/reload)
         this.resourceGraphics.fillStyle(0x1e293b, 1);
         this.resourceGraphics.fillCircle(x, y, 14);
         this.resourceGraphics.lineStyle(1.5, 0x475569, 0.7);
@@ -368,6 +400,43 @@ export class MainScene extends Scene {
     }
   }
 
+  /**
+   * Draws a subtle directional bio-radar arc around the operator pointing toward the nearest
+   * unharvested Biomass Spire in the active chunk window so exploration feels guided.
+   */
+  private drawSporeCompass(): void {
+    this.compassGraphics.clear();
+    if (!this.player) return;
+
+    const activeResources = this.chunkManager.getActiveResources();
+    const nearest = findNearestInteractableResource(
+      { x: this.player.x, y: this.player.y },
+      activeResources,
+      CHUNK_SIZE * 2.5
+    );
+
+    if (!nearest) return;
+
+    const dx = nearest.position.x - this.player.x;
+    const dy = nearest.position.y - this.player.y;
+    const dist = Math.hypot(dx, dy);
+
+    // Hide compass when already within harvest range
+    if (dist <= this.interactDistance) return;
+
+    const angle = Math.atan2(dy, dx);
+    const radius = 32;
+    const tipX = this.player.x + Math.cos(angle) * (radius + 6);
+    const tipY = this.player.y + Math.sin(angle) * (radius + 6);
+    const leftX = this.player.x + Math.cos(angle - 0.22) * radius;
+    const leftY = this.player.y + Math.sin(angle - 0.22) * radius;
+    const rightX = this.player.x + Math.cos(angle + 0.22) * radius;
+    const rightY = this.player.y + Math.sin(angle + 0.22) * radius;
+
+    this.compassGraphics.fillStyle(0x4ade80, 0.75);
+    this.compassGraphics.fillTriangle(tipX, tipY, leftX, leftY, rightX, rightY);
+  }
+
   private drawProximityIndicator(): void {
     this.proximityGraphics.clear();
 
@@ -376,7 +445,8 @@ export class MainScene extends Scene {
       return;
     }
 
-    const target = this.resources.find((r) => r.id === this.nearestResourceId);
+    const activeResources = this.chunkManager.getActiveResources();
+    const target = activeResources.find((r) => r.id === this.nearestResourceId);
     if (!target || target.collected) {
       this.promptText?.setVisible(false);
       return;
@@ -408,11 +478,11 @@ export class MainScene extends Scene {
   }
 
   private emitHudSnapshot(): void {
-    const collectedCount = this.resources.filter((r) => r.collected).length;
     const snapshot: GameHudSnapshot = {
-      resourcesCollected: collectedCount,
-      totalResources: this.resources.length,
-      nearbyInteractable: this.nearestResourceId !== null
+      resourcesCollected: this.chunkManager.getTotalCollectedCount(),
+      totalResources: this.chunkManager.getDiscoveredResourcesCount(),
+      nearbyInteractable: this.nearestResourceId !== null,
+      sectorLabel: this.currentSectorLabel
     };
     this.game.events.emit('hud-update', snapshot);
   }
@@ -465,21 +535,12 @@ export class MainScene extends Scene {
       }
     }
 
-    if (wantsInteract) {
-      const result = tryCollectResource(
-        { x: this.player.x, y: this.player.y },
-        this.resources,
-        this.interactDistance
-      );
-
-      if (result.collectedId) {
-        this.resources = result.updatedResources;
+    if (wantsInteract && this.nearestResourceId) {
+      const collected = this.chunkManager.collectResource(this.nearestResourceId);
+      if (collected) {
         this.drawResources();
-
-        const collectedResource = this.resources.find((r) => r.id === result.collectedId);
-        if (collectedResource) {
-          this.showInteractFeedback(collectedResource.position.x, collectedResource.position.y);
-        }
+        this.drawSporeCompass();
+        this.showInteractFeedback(collected.position.x, collected.position.y);
         this.emitHudSnapshot();
       }
     }
@@ -487,28 +548,43 @@ export class MainScene extends Scene {
     const prevX = this.player.x;
     const prevY = this.player.y;
 
+    // Unbounded world movement (camera follows centered player across chunks)
     const newPos = calculatePlayerMovement(
       { x: prevX, y: prevY },
       moveInput,
       this.playerSpeed,
       delta,
-      { width: this.player.width, height: this.player.height },
-      { width: this.scale.width, height: this.scale.height }
+      { width: this.player.width, height: this.player.height }
     );
 
     const dx = newPos.x - prevX;
     const dy = newPos.y - prevY;
-    if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
+    const moved = Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01;
+
+    if (moved) {
       const len = Math.sqrt(dx * dx + dy * dy);
       this.facingVector = { x: dx / len, y: dy / len };
     }
 
     this.updatePlayerPosition(newPos.x, newPos.y);
 
-    // Check proximity changes without dispatching unnecessary Angular updates
+    // Stream chunks when crossing chunk boundaries; preserve unloaded chunks in ChunkManager memory
+    const chunkUpdate = this.chunkManager.updateActiveWindow(newPos);
+    if (chunkUpdate.changed) {
+      this.currentSectorLabel = chunkUpdate.currentChunk.sectorLabel;
+      this.drawActiveChunks(chunkUpdate.activeChunks);
+      this.drawResources();
+      this.emitHudSnapshot();
+    }
+
+    if (moved) {
+      this.drawSporeCompass();
+    }
+
+    // Check proximity changes against active chunk resources
     const nearest = findNearestInteractableResource(
       newPos,
-      this.resources,
+      this.chunkManager.getActiveResources(),
       this.interactDistance
     );
     const nextNearestId = nearest?.id ?? null;

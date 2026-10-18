@@ -24,14 +24,14 @@
 2. **Phase 2: The Assimilation (`PHS-02` — Upcoming):** Parasitic swarm escalation (`Rupter`, `Assimilated Human`, `Volatile Spore Carrier`, `Adapted Longarms` boss), auto-targeting combat, XP orbs, and *Magic Survival*-style level-up skills.
 3. **Phase 3: The Synthesis (`PHS-03` — Upcoming):** Persistent `SRP Bio-Credits`, live Research Lab synthesis (`Bio-Research` meta-upgrades & `Rig Cosmetics`), `Operator: Ranger` unlock, and **The Hive** sector expansion.
 
-## Completed in Phase 1: The Fallout (Milestones 1A & 1B)
+## Completed in Phase 1: The Fallout (Milestones 1A, 1B & 1C)
 
 ### 1. Clean Domain-Driven Project Structure
 - Reorganized `src/app/` into explicit domain boundaries:
   - `src/app/core/` (`models/game-data.model.ts`, `services/codex.service.ts`, `services/menu-state.service.ts`, `services/settings.service.ts`)
   - `src/app/shared/ui/` (`button.ts`, `page-header.ts`, `selection-card.ts`)
   - `src/app/screens/` (`home/`, `operators/`, `zones/`, `codex/`, `research/`, `settings/`)
-  - `src/app/game/` (`game.ts`, `game.html`, `game.css`, `scenes/main.scene.ts`, `systems/`)
+  - `src/app/game/` (`game.ts`, `game.html`, `game.css`, `scenes/main.scene.ts`, `systems/chunk.system.ts`, `systems/input.system.ts`, `systems/interaction.system.ts`, `systems/movement.system.ts`)
 - Enforced the Focused Ephemeral Spec Policy: unit/integration tests are written specifically for newly implemented or modified features, verified via `npm test -- --watch=false`, and deleted immediately afterward so `src/app/` remains free of test file clutter.
 
 ### 2. Field Codex / Game Encyclopedia System (`CODEX.md` & `/codex`)
@@ -42,10 +42,16 @@
 ### 3. Research Lab (`/research`) & Phase 1: The Fallout Command Deck
 - Replaced the legacy "Black Market" placeholder with the **Research Lab** (`src/app/screens/research/research.ts`), featuring two synthesis tracks (**Bio-Research** meta-upgrades and **Rig Cosmetics** suit/trail overrides) and an interactive Blueprint Inspector.
 - Aligned the Home Command Deck (`src/app/screens/home/home.html`) and all game services around **Phase 1: The Fallout**.
+
+### 4. Smooth Camera-Follow & True-RNG Chunked World Generation (`Milestone 1C`)
+- Implemented `ChunkManager` (`src/app/game/systems/chunk.system.ts`) and upgraded `MainScene` (`src/app/game/scenes/main.scene.ts`):
+  - **Centered Smooth Camera (`cameras.main.startFollow`):** The operator remains centered while the camera smoothly tracks movement (`lerp = 0.14`) across unbounded world coordinates.
+  - **True-RNG Per-Run Seed + Minecraft-Style Chunk State Preservation:** Every deployment generates a fresh 32-bit cryptographic seed (`generateRunSeed()`) so terrain and Biomass Spire positions are genuinely random every run. Chunks outside the active render window are unloaded from rendering, while their generated layout and harvested/unharvested Spire states remain preserved in memory (`discoveredChunks`) when the player returns.
+  - **Spore Compass & Sector Telemetry:** Added a directional bio-radar indicator around the operator pointing toward the nearest uncollected Biomass Spire, and live sector chunk coordinates (`SEC +0:+0`) in the HUD.
 - Production build (`npm run build`) succeeds with 0 errors and 0 warnings.
 
 ## Next Target
-- **Milestone 1C (Phase 1: The Fallout) — Camera-Follow & Chunked World Generation**, enabling large-scale Sector 7 exploration with deterministic chunk streaming.
+- **Milestone 1D (Phase 1: The Fallout) — Sprite & Animation Pipeline**, replacing procedural operator/node shapes with directional sprite animations.
 
 ## Update Policy
 When updating this document:

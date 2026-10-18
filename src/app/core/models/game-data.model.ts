@@ -86,5 +86,7 @@ export interface GameHudSnapshot {
   resourcesCollected: number;
   totalResources: number;
   nearbyInteractable: boolean;
+  sectorLabel?: string;
 }
+
 

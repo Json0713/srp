@@ -35,13 +35,11 @@ Project Parasite organizes both player-facing seasons and development milestones
 - **Objective:** Unified input adapter for keyboard (`WASD`/Arrows + `E`) and mobile touch (360° analog virtual joystick + multi-touch Harvest button) inside the 2.5D Sector 7 arena.
 - **Scope:** `InputSystem`, `MovementSystem`, `InteractionSystem`, `MainScene`, live Biomass Spire harvesting, and automatic `raw-biomass` Field Codex grant.
 
-### Milestone 1C — Camera-Follow & Chunked World Generation (Next Target)
+### Milestone 1C — Camera-Follow & Chunked World Generation (Completed)
 - **Objective:** Allow infinite or large-scale Sector 7 exploration without losing performance.
-- **Scope:** Implement `camera.startFollow(player)`. Generate terrain in deterministic chunks based on world coordinates. Clean up distant chunks.
-- **Dependencies:** Milestone 1B.
-- **Verification:** Player remains centered. Terrain loads seamlessly and unloads when far away to preserve memory.
+- **Scope:** Implemented `camera.startFollow(player)` with smooth damping, per-run true-RNG seed generation (`generateRunSeed`), 512px chunk streaming (`ChunkManager`), Minecraft-style chunk state preservation in memory, randomized Biomass Spire placement, and a directional Spore Compass indicator.
 
-### Milestone 1D — Sprite & Animation Pipeline
+### Milestone 1D — Sprite & Animation Pipeline (Next Target)
 - **Objective:** Replace procedural operator/node graphics with an extensible sprite sheet architecture.
 - **Scope:** Load a basic sprite sheet and implement directional idle/run animations for the operator.
 - **Dependencies:** Milestone 1C.

@@ -23,7 +23,7 @@ export function calculatePlayerMovement(
   speed: number,
   deltaMs: number,
   playerSize: { width: number; height: number },
-  worldBounds: Bounds
+  worldBounds?: Bounds
 ): Position {
   let moveX = 0;
   let moveY = 0;
@@ -53,13 +53,16 @@ export function calculatePlayerMovement(
   let newX = currentPosition.x + moveX * step;
   let newY = currentPosition.y + moveY * step;
 
-  const halfWidth = playerSize.width / 2;
-  const halfHeight = playerSize.height / 2;
+  if (worldBounds) {
+    const halfWidth = playerSize.width / 2;
+    const halfHeight = playerSize.height / 2;
 
-  if (newX < halfWidth) newX = halfWidth;
-  if (newX > worldBounds.width - halfWidth) newX = worldBounds.width - halfWidth;
-  if (newY < halfHeight) newY = halfHeight;
-  if (newY > worldBounds.height - halfHeight) newY = worldBounds.height - halfHeight;
+    if (newX < halfWidth) newX = halfWidth;
+    if (newX > worldBounds.width - halfWidth) newX = worldBounds.width - halfWidth;
+    if (newY < halfHeight) newY = halfHeight;
+    if (newY > worldBounds.height - halfHeight) newY = worldBounds.height - halfHeight;
+  }
 
   return { x: newX, y: newY };
 }
+

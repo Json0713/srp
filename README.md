@@ -48,7 +48,8 @@ src/
         ├── game.ts             # Phaser lifecycle host, HUD telemetry, Codex grants & Pause overlay
         ├── scenes/
         │   └── main.scene.ts   # Active 2.5D survival arena & multi-touch virtual joystick
-        └── systems/            # Deterministic gameplay rules
+        └── systems/            # Deterministic gameplay rules & chunked world streaming
+            ├── chunk.system.ts
             ├── input.system.ts
             ├── interaction.system.ts
             └── movement.system.ts

@@ -47,8 +47,9 @@ export class Game implements OnInit, OnDestroy {
   readonly zone = this.menuState.selectedZone;
 
   readonly resourcesCollected = signal(0);
-  readonly totalResources = signal(4);
+  readonly totalResources = signal(0);
   readonly nearbyInteractable = signal(false);
+  readonly sectorLabel = signal('SEC +0:+0');
   readonly unlockedCodexTitle = signal<string | null>(null);
 
   constructor() {
@@ -84,6 +85,9 @@ export class Game implements OnInit, OnDestroy {
     this.resourcesCollected.set(snapshot.resourcesCollected);
     this.totalResources.set(snapshot.totalResources);
     this.nearbyInteractable.set(snapshot.nearbyInteractable);
+    if (snapshot.sectorLabel) {
+      this.sectorLabel.set(snapshot.sectorLabel);
+    }
 
     if (snapshot.resourcesCollected > 0) {
       const newlyUnlocked = this.codexService.unlockEntry('raw-biomass');

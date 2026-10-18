@@ -322,7 +322,8 @@ export class CodexService {
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
         { label: 'Threat Level', value: 'Level I — Low Breach' },
-        { label: 'Active Nodes', value: '4 Biomass Spires' }
+        { label: 'World Topology', value: 'Unbounded 512px Sector Chunks' },
+        { label: 'Node Density', value: '1–3 Biomass Spires / Chunk' }
       ]
     },
     {
