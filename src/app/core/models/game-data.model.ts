@@ -54,12 +54,21 @@ export interface ZoneItem extends SelectionItem {
   environmentType: string;
 }
 
-export interface ShopModulePreview {
+export type ResearchTrack = 'upgrades' | 'cosmetics';
+
+export interface ResearchNode {
   id: string;
+  code: string;
   title: string;
+  track: ResearchTrack;
   category: string;
+  icon: string;
   description: string;
+  effectSummary: string;
+  currentRank: number;
+  maxRank: number;
   cost: number;
+  phaseTag: string;
 }
 
 export interface GameHudSnapshot {

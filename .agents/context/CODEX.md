@@ -28,7 +28,7 @@ Every Codex record has one of three visibility states (`CodexStatus`):
 | ID | Code | Title | Default Status | Grant / Unlock Condition | Phase | Summary & Telemetry |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `raw-biomass` | `ITM-01` | **Raw Biomass Spore** | `undiscovered` | Granted automatically when the player harvests a Biomass Spire node (`E`) in `MainScene`. | Phase 1 / 2B (Active) | Luminescent parasitic spore cluster harvested from dormant spires. Primary survival catalyst. |
-| `srp-coin` | `ITM-02` | **SRP Bio-Credit** | `development` | Dropped by elite assimilated hosts and loot chests. | Phase 3C / 4A (Planned) | Standardized containment currency used in the Black Market to unlock operators and rig upgrades. |
+| `srp-coin` | `ITM-02` | **SRP Bio-Credit** | `development` | Dropped by elite assimilated hosts and loot chests. | Phase 3C / 4A (Planned) | Standardized containment currency used in the Research Lab to synthesize Bio-Research upgrades and Rig Cosmetics. |
 | `chitin-shard` | `ITM-03` | **Hardened Chitin Shard** | `development` | Harvested from eliminated Rupter and Assimilated husks. | Phase 3A (Planned) | Dense exoskeletal plating used for field armor reinforcement and crafting. |
 | `containment-chest` | `ITM-04` | **Bio-Containment Cache** | `development` | Dropped by boss parasites upon elimination. | Phase 3C (Planned) | High-security supply cache containing randomized session buffs and SRP Bio-Credits. |
 
@@ -68,4 +68,21 @@ Every Codex record has one of three visibility states (`CodexStatus`):
 | `zone-sector7` | `ARC-02` | **Sector 7 Perimeter** | `discovered` | Granted by default on initial boot. | Phase 2A (Active) | Initial quarantine breach site containing active Biomass Spire nodes. |
 | `op-ranger` | `ARC-03` | **Operator: Ranger** | `development` | Unlockable via SRP Bio-Credits in Phase 4A. | Phase 4A (Planned) | High-mobility marksman specialist equipped with a piercing Rail Rifle. |
 | `zone-hive` | `ARC-04` | **The Hive Core** | `development` | Unlockable after clearing Sector 7. | Phase 3 / 4 (Planned) | Subterranean flesh-network and high-density outbreak epicenter. |
+
+---
+
+## 7. Research Lab Registry (`/research` — Bio-Research & Rig Cosmetics)
+
+Managed by `MenuStateService.researchNodes` (`src/app/core/services/menu-state.service.ts`) and rendered in `src/app/screens/research/research.ts`.
+
+| ID | Code | Track | Title | Max Rank | Cost (SRP) | Phase | Effect Summary |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `chitin-plating` | `RES-01` | `upgrades` | **Chitin Exo-Plating** | 5 | 100 | `DEV PHASE 4B` | `+6% Damage Reduction per Rank` |
+| `spore-extractor` | `RES-02` | `upgrades` | **Magnetic Spore Extractor** | 5 | 120 | `DEV PHASE 4B` | `+15% Harvest & Orb Radius per Rank` |
+| `combat-stims` | `RES-03` | `upgrades` | **Adrenaline Stims Mk.II** | 5 | 150 | `DEV PHASE 4B` | `+4% Base Move Speed per Rank` |
+| `neural-overclock` | `RES-04` | `upgrades` | **Neural Targeting Link** | 5 | 180 | `DEV PHASE 4B` | `-5% Skill Cooldown per Rank` |
+| `suit-hazmat-gold` | `COS-01` | `cosmetics` | **Aegis Hazmat Mk.IV** | 1 | 300 | `DEV PHASE 4C` | `Visual Override: Golden Visor & Trim` |
+| `suit-crimson-carapace` | `COS-02` | `cosmetics` | **Assimilated Carapace Rig** | 1 | 450 | `DEV PHASE 4C` | `Visual Override: Parasitic Crimson Aura` |
+| `trail-spore-wake` | `COS-03` | `cosmetics` | **Bioluminescent Spore Wake** | 1 | 250 | `DEV PHASE 4C` | `Visual Override: Emerald Footstep Particles` |
+
 

@@ -32,7 +32,7 @@ src/
     │   ├── operators/          # Containment Roster & Operator Dossiers
     │   ├── zones/              # Infestation Sector Selection & Drop Manifest
     │   ├── codex/              # Interactive Field Codex & Game Encyclopedia
-    │   ├── shop/               # Encrypted Black Market Terminal
+    │   ├── research/           # Research Lab (Bio-Research Upgrades & Rig Cosmetics)
     │   └── settings/           # Hardware Input & Control Configuration
     └── game/                   # Real-time Phaser 4 simulation & Angular HUD overlay
         ├── game.ts             # Phaser lifecycle host, HUD telemetry, Codex grants & Pause overlay

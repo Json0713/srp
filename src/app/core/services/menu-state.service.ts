@@ -1,7 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { OperatorItem, SelectionItem, ShopModulePreview, ZoneItem } from '../models/game-data.model';
+import { OperatorItem, ResearchNode, ResearchTrack, SelectionItem, ZoneItem } from '../models/game-data.model';
 
-export type { SelectionItem, OperatorItem, ZoneItem } from '../models/game-data.model';
+export type { SelectionItem, OperatorItem, ZoneItem, ResearchNode, ResearchTrack } from '../models/game-data.model';
 
 @Injectable({ providedIn: 'root' })
 export class MenuStateService {
@@ -71,27 +71,114 @@ export class MenuStateService {
     }
   ];
 
-  readonly shopPreviews: ShopModulePreview[] = [
+  readonly researchNodes: ResearchNode[] = [
+    // Track 1: Bio-Research (Magic Survival inspired meta-upgrades)
     {
-      id: 'exo-plating',
+      id: 'chitin-plating',
+      code: 'RES-01',
       title: 'Chitin Exo-Plating',
-      category: 'SURVIVAL RIG',
-      description: 'Reinforces operator armor against parasitic contact damage.',
-      cost: 100
+      track: 'upgrades',
+      category: 'DEFENSE SYNTHESIS',
+      icon: '🛡️',
+      description:
+        'Synthesizes refined parasitic chitin into the operator rig, reducing contact damage from Rupter and Assimilated swarms.',
+      effectSummary: '+6% Damage Reduction per Rank',
+      currentRank: 0,
+      maxRank: 5,
+      cost: 100,
+      phaseTag: 'DEV PHASE 4B'
     },
     {
-      id: 'spore-harvester',
+      id: 'spore-extractor',
+      code: 'RES-02',
       title: 'Magnetic Spore Extractor',
-      category: 'UTILITY',
-      description: 'Expands interaction and orb collection radius by 25%.',
-      cost: 150
+      track: 'upgrades',
+      category: 'HARVEST TELEMETRY',
+      icon: '🧲',
+      description:
+        'Calibrates electromagnetic field coils to pull nearby Biomass Spores and XP orbs from a wider radius.',
+      effectSummary: '+15% Harvest & Orb Radius per Rank',
+      currentRank: 0,
+      maxRank: 5,
+      cost: 120,
+      phaseTag: 'DEV PHASE 4B'
     },
     {
-      id: 'adrenaline-injector',
-      title: 'Combat Stims Mk.II',
-      category: 'MOBILITY',
-      description: 'Increases base movement speed during swarm surges.',
-      cost: 200
+      id: 'combat-stims',
+      code: 'RES-03',
+      title: 'Adrenaline Stims Mk.II',
+      track: 'upgrades',
+      category: 'MOBILITY AUGMENT',
+      icon: '💉',
+      description:
+        'Injects micro-doses of purified bio-catalyst into leg servos, boosting base movement speed during outbreak surges.',
+      effectSummary: '+4% Base Move Speed per Rank',
+      currentRank: 0,
+      maxRank: 5,
+      cost: 150,
+      phaseTag: 'DEV PHASE 4B'
+    },
+    {
+      id: 'neural-overclock',
+      code: 'RES-04',
+      title: 'Neural Targeting Link',
+      track: 'upgrades',
+      category: 'WEAPON RESEARCH',
+      icon: '⚡',
+      description:
+        'Accelerates weapon fire-control processors to reduce cooldown intervals across all equipped survival powers.',
+      effectSummary: '-5% Skill Cooldown per Rank',
+      currentRank: 0,
+      maxRank: 5,
+      cost: 180,
+      phaseTag: 'DEV PHASE 4B'
+    },
+
+    // Track 2: Rig Cosmetics (Containment Suits & Visual Shaders)
+    {
+      id: 'suit-hazmat-gold',
+      code: 'COS-01',
+      title: 'Aegis Hazmat Mk.IV',
+      track: 'cosmetics',
+      category: 'OPERATOR RIG SKIN',
+      icon: '✨',
+      description:
+        'High-visibility gold-foil radiation and bio-containment suit issued to senior Sector 7 research directors.',
+      effectSummary: 'Visual Override: Golden Visor & Trim',
+      currentRank: 0,
+      maxRank: 1,
+      cost: 300,
+      phaseTag: 'DEV PHASE 4C'
+    },
+    {
+      id: 'suit-crimson-carapace',
+      code: 'COS-02',
+      title: 'Assimilated Carapace Rig',
+      track: 'cosmetics',
+      category: 'OPERATOR RIG SKIN',
+      icon: '🩸',
+      description:
+        'Experimental armor forged from Adapted Longarms tissue. Pulses with bioluminescent crimson veins in dark sectors.',
+      effectSummary: 'Visual Override: Parasitic Crimson Aura',
+      currentRank: 0,
+      maxRank: 1,
+      cost: 450,
+      phaseTag: 'DEV PHASE 4C'
+    },
+    {
+      id: 'trail-spore-wake',
+      code: 'COS-03',
+      title: 'Bioluminescent Spore Wake',
+      track: 'cosmetics',
+      category: 'MOVEMENT TRAIL',
+      icon: '🧪',
+      description:
+        'Emits a harmless trail of glowing emerald containment particles behind the operator while moving.',
+      effectSummary: 'Visual Override: Emerald Footstep Particles',
+      currentRank: 0,
+      maxRank: 1,
+      cost: 250,
+      phaseTag: 'DEV PHASE 4C'
     }
   ];
 
@@ -121,6 +208,10 @@ export class MenuStateService {
     }
   }
 
+  getResearchByTrack(track: ResearchTrack): ResearchNode[] {
+    return this.researchNodes.filter((node) => node.track === track);
+  }
+
   getSelectedOperator(): OperatorItem {
     return this.selectedOperator();
   }
@@ -129,4 +220,3 @@ export class MenuStateService {
     return this.selectedZone();
   }
 }
-

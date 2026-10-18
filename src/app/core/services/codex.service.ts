@@ -35,14 +35,14 @@ export class CodexService {
       status: 'development',
       icon: '🪙',
       classification: 'Meta-Currency // Encrypted Token',
-      summary: 'Standardized containment currency used in the Black Market.',
+      summary: 'Standardized containment currency used in the Research Lab.',
       description:
-        'Awarded for neutralizing high-threat assimilated hosts and securing Bio-Containment Caches. Used to requisition new operators and permanent rig upgrades.',
+        'Awarded for neutralizing high-threat assimilated hosts and securing Bio-Containment Caches. Used to synthesize Bio-Research upgrades, rig cosmetics, and operator unlocks.',
       unlockHint: 'Planned for Milestone 3C & 4A (Currency Drops & Persistence).',
       phaseTag: 'DEV PHASE 3C / 4A',
       stats: [
         { label: 'Persistence', value: 'Local Encrypted Save' },
-        { label: 'Primary Use', value: 'Operator & Rig Unlocks' }
+        { label: 'Primary Use', value: 'Bio-Research & Rig Cosmetics' }
       ]
     },
     {

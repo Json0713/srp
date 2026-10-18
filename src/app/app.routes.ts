@@ -14,9 +14,10 @@ export const routes: Routes = [
     loadComponent: () => import('./screens/zones/zones').then((m) => m.Zones)
   },
   {
-    path: 'shop',
-    loadComponent: () => import('./screens/shop/shop').then((m) => m.Shop)
+    path: 'research',
+    loadComponent: () => import('./screens/research/research').then((m) => m.Research)
   },
+  { path: 'shop', redirectTo: 'research', pathMatch: 'full' },
   {
     path: 'codex',
     loadComponent: () => import('./screens/codex/codex').then((m) => m.Codex)

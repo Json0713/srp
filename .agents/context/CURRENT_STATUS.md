@@ -23,9 +23,9 @@
 - Reorganized `src/app/` into explicit domain boundaries:
   - `src/app/core/` (`models/game-data.model.ts`, `services/codex.service.ts`, `services/menu-state.service.ts`, `services/settings.service.ts`)
   - `src/app/shared/ui/` (`button.ts`, `page-header.ts`, `selection-card.ts`)
-  - `src/app/screens/` (`home/`, `operators/`, `zones/`, `codex/`, `shop/`, `settings/`)
+  - `src/app/screens/` (`home/`, `operators/`, `zones/`, `codex/`, `research/`, `settings/`)
   - `src/app/game/` (`game.ts`, `game.html`, `game.css`, `scenes/main.scene.ts`, `systems/`)
-- Enforced the clean repository `.spec.ts` lifecycle policy: 14 test suites (52 tests) were executed and verified passing via `npm test -- --watch=false`, and the temporary `.spec.ts` files were then removed so `src/app/` remains free of test file clutter.
+- Enforced the Focused Ephemeral Spec Policy: unit/integration tests are written specifically for newly implemented or modified features, verified via `npm test -- --watch=false`, and deleted immediately afterward so `src/app/` remains free of test file clutter.
 
 ### 2. Field Codex / Game Encyclopedia System (`CODEX.md` & `/codex`)
 - Created the canonical developer and agent encyclopedia handbook at `.agents/context/CODEX.md`.
@@ -35,7 +35,8 @@
   - `development`: Clearly badged (`DEV PHASE 3A`, `DEV PHASE 3B`, etc.) placeholders for upcoming *Scape and Run* parasites (`Rupter`, `Assimilated Human`, `Volatile Spore Carrier`, `Adapted Longarms`), *Magic Survival* powers (`Pulse Carbine Overclock`, `Bio-Repulsor Field`, `Sentinel Micro-Drones`, `Thermal Incineration Wave`), and meta-items.
 - Connected `MainScene` -> `Game` -> `CodexService` so harvesting a Biomass Spire node (`E`) in-game automatically grants and unlocks `raw-biomass` (*Raw Biomass Spore*) in the Codex and displays a live `📘 CODEX GRANTED: Raw Biomass Spore` HUD notification.
 
-### 3. Tactical Biopunk UI/UX & Cross-Device Landscape/Portrait Responsiveness
+### 3. Research Lab (`/research`) & Tactical Biopunk UI/UX
+- Replaced the legacy "Black Market" placeholder with the **Research Lab** (`src/app/screens/research/research.ts`), featuring two dedicated synthesis tracks (**Bio-Research** meta-upgrades and **Rig Cosmetics** suit/trail overrides) and an interactive Blueprint Inspector.
 - Upgraded all screens to the **Project Parasite — Outbreak Protocol** dark-biopunk theme (`src/styles.css`), responsive across **Desktop Landscape**, **Mobile Landscape**, and **Mobile Portrait**.
 - Production build (`npm run build`) succeeds with 0 errors and 0 warnings.
 
