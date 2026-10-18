@@ -9,9 +9,10 @@ description: Apply when adding or modifying behavior, writing tests, fixing defe
 ## Inspect the Available Tooling
 
 - Inspect `package.json` and the existing test configuration before running or adding checks.
-- Use the project's configured test runner. The initial project uses Vitest, but verify the current setup.
+- Use the project's configured test runner (Vitest).
 - Do not assume scripts such as `check`, `lint`, or `e2e` exist.
 - Do not install a testing framework when the existing tools can satisfy the requirement.
+- **Clean Spec Lifecycle:** Create `.spec.ts` files to run and verify unit/integration tests via `npm test -- --watch=false`. Once all tests pass, delete the `.spec.ts` files so the repository stays clean and uncluttered.
 
 ## Unit Testing
 

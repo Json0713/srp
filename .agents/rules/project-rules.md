@@ -10,13 +10,15 @@ description: Core project rules for SRP: RETURNS covering scope control, safe ch
 
 Project Parasite (`srp`) is a browser-based, offline, single-player, top-down 2.5D pixel-art survival roguelite game inspired by *Scape and Run: Parasites* and *Magic Survival*.
 
-The project uses Angular, TypeScript, and Phaser. See `.agents/context/GAME_DESIGN.md`, `.agents/context/TECHNICAL_DESIGN.md`, and `.agents/context/ROADMAP.md` for project-specific decisions.
+The project uses Angular, TypeScript, and Phaser. See `.agents/context/GAME_DESIGN.md`, `.agents/context/TECHNICAL_DESIGN.md`, `.agents/context/ROADMAP.md`, and `.agents/context/CODEX.md` for project-specific decisions.
 
 ## Mandatory Working Principles
 
 - Inspect the actual repository and relevant files before making changes.
 - Follow the root `AGENTS.md` and applicable project rules.
 - Implement only the requested task and necessary supporting work.
+- Keep `.agents/context/CODEX.md` and `CodexService` synchronized whenever items, parasites, powers, operators, or zones are added or updated.
+- Write and run `.spec.ts` tests to verify behavior, then delete the `.spec.ts` files once tests pass to keep the project tree clean.
 - Preserve existing behavior unless a change is explicitly required.
 - Do not overwrite user work or perform destructive operations without approval.
 - Do not invent requirements or treat planned features as approved implementation scope.

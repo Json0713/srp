@@ -1,0 +1,364 @@
+import { Component, computed, inject, signal } from '@angular/core';
+import { PageHeader } from '../../shared/ui/page-header';
+import { CodexService } from '../../core/services/codex.service';
+import { CodexCategory, CodexEntry } from '../../core/models/game-data.model';
+
+type FilterTab = 'all' | CodexCategory;
+
+@Component({
+  selector: 'app-codex',
+  imports: [PageHeader],
+  template: `
+    <div class="screen-shell">
+      <app-page-header title="Field Codex" subtitle="Containment Encyclopedia">
+        <span class="codex-progress-pill" aria-label="Discovered Records">
+          📘 {{ codex.discoveredCount() }}/{{ codex.discoverableTotal() }} GRANTED
+        </span>
+      </app-page-header>
+
+      <main class="screen-scroll-body">
+        <div class="screen-container codex-shell">
+          <!-- Category Filter Bar -->
+          <nav class="codex-tabs" aria-label="Codex Categories">
+            @for (tab of tabs; track tab.id) {
+              <button
+                type="button"
+                class="codex-tab-btn"
+                [class.active]="activeTab() === tab.id"
+                (click)="selectTab(tab.id)">
+                <span aria-hidden="true">{{ tab.icon }}</span>
+                <span>{{ tab.label }}</span>
+              </button>
+            }
+          </nav>
+
+          <div class="codex-layout">
+            <!-- Left Column: Encyclopedia Entries -->
+            <section class="codex-list" aria-label="Codex Entries">
+              @for (entry of filteredEntries(); track entry.id) {
+                <button
+                  type="button"
+                  class="codex-item-btn"
+                  [class.selected]="selectedEntry()?.id === entry.id"
+                  [class.undiscovered]="entry.status === 'undiscovered'"
+                  [class.development]="entry.status === 'development'"
+                  (click)="selectEntry(entry.id)">
+                  <div class="item-icon" aria-hidden="true">
+                    {{ entry.status === 'undiscovered' ? '🔒' : entry.icon }}
+                  </div>
+                  <div class="item-info">
+                    <div class="item-top">
+                      <span class="item-code">{{ entry.code }}</span>
+                      @if (entry.status === 'discovered') {
+                        <span class="status-tag tag-granted">GRANTED</span>
+                      } @else if (entry.status === 'undiscovered') {
+                        <span class="status-tag tag-locked">UNDISCOVERED</span>
+                      } @else {
+                        <span class="status-tag tag-dev">{{ entry.phaseTag }}</span>
+                      }
+                    </div>
+                    <h3 class="item-title">
+                      {{ entry.status === 'undiscovered' ? 'Encrypted Record' : entry.title }}
+                    </h3>
+                    <p class="item-sub">
+                      {{ entry.status === 'undiscovered' ? 'Requires in-game discovery to decrypt.' : entry.summary }}
+                    </p>
+                  </div>
+                </button>
+              }
+            </section>
+
+            <!-- Right Column: Detailed Dossier Reader -->
+            @if (selectedEntry(); as detail) {
+              <aside class="codex-reader" aria-label="Selected Record Details">
+                <div class="reader-header">
+                  <div class="reader-icon" aria-hidden="true">
+                    {{ detail.status === 'undiscovered' ? '🔒' : detail.icon }}
+                  </div>
+                  <div>
+                    <span class="reader-code">{{ detail.code }} // {{ detail.phaseTag }}</span>
+                    <h2 class="reader-title">
+                      {{ detail.status === 'undiscovered' ? 'Encrypted Field Record' : detail.title }}
+                    </h2>
+                    <span class="reader-class">
+                      {{ detail.status === 'undiscovered' ? 'CLASSIFICATION REDACTED' : detail.classification }}
+                    </span>
+                  </div>
+                </div>
+
+                @if (detail.status === 'undiscovered') {
+                  <div class="locked-notice">
+                    <strong>RECORD NOT YET GRANTED</strong>
+                    <p>{{ detail.unlockHint }}</p>
+                  </div>
+                } @else {
+                  @if (detail.status === 'development') {
+                    <div class="dev-notice">
+                      <strong>UNDER DEVELOPMENT PLACEHOLDER ({{ detail.phaseTag }})</strong>
+                      <p>{{ detail.unlockHint }}</p>
+                    </div>
+                  }
+
+                  <p class="reader-desc">{{ detail.description }}</p>
+
+                  <div class="reader-stats">
+                    @for (stat of detail.stats; track stat.label) {
+                      <div class="stat-line">
+                        <span>{{ stat.label }}</span>
+                        <strong>{{ stat.value }}</strong>
+                      </div>
+                    }
+                  </div>
+                }
+              </aside>
+            }
+          </div>
+        </div>
+      </main>
+    </div>
+  `,
+  styles: [`
+    .codex-progress-pill {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--color-primary-light);
+      background: var(--color-primary-surface);
+      border: 1px solid rgba(74, 222, 128, 0.35);
+      padding: 0.25rem 0.6rem;
+      border-radius: var(--radius-xs);
+    }
+
+    .codex-shell,
+    .codex-list,
+    .reader-stats {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+
+    .codex-tabs,
+    .item-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .codex-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-panel);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .codex-tab-btn.active,
+    .tag-granted {
+      color: var(--color-primary-light);
+      border-color: var(--color-primary-light);
+      background: var(--color-primary-surface);
+    }
+
+    .codex-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-lg);
+      align-items: start;
+    }
+
+    .codex-item-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      width: 100%;
+      text-align: left;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      background: var(--color-bg-panel);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+      cursor: pointer;
+    }
+
+    .codex-item-btn:hover {
+      background: var(--color-bg-panel-hover);
+    }
+
+    .codex-item-btn.selected {
+      border-color: var(--color-primary-light);
+      background: rgba(34, 197, 94, 0.12);
+    }
+
+    .codex-item-btn.undiscovered {
+      opacity: 0.72;
+    }
+
+    .item-icon,
+    .reader-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      flex-shrink: 0;
+      font-size: 1.45rem;
+      border-radius: var(--radius-sm);
+      background: rgba(5, 7, 11, 0.65);
+      border: 1px solid var(--color-border);
+    }
+
+    .item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-code,
+    .reader-code,
+    .status-tag {
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      color: var(--color-text-secondary);
+    }
+
+    .status-tag {
+      padding: 0.1rem 0.4rem;
+      border-radius: var(--radius-xs);
+      font-weight: 700;
+    }
+
+    .tag-locked,
+    .locked-notice {
+      color: var(--color-danger-light);
+      background: var(--color-danger-surface);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+
+    .tag-dev,
+    .dev-notice {
+      color: var(--color-accent-light);
+      background: var(--color-accent-surface);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .item-title,
+    .reader-title {
+      margin: 0.1rem 0;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+    }
+
+    .reader-title {
+      font-size: 1.35rem;
+    }
+
+    .item-sub,
+    .reader-desc {
+      margin: 0.15rem 0 0;
+      font-size: 0.84rem;
+      color: var(--color-text-secondary);
+    }
+
+    .codex-reader {
+      background: var(--color-bg-panel);
+      border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-lg);
+    }
+
+    .reader-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      padding-bottom: var(--spacing-md);
+      margin-bottom: var(--spacing-md);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .reader-class {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--color-info);
+    }
+
+    .locked-notice,
+    .dev-notice {
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--spacing-md);
+      font-size: 0.84rem;
+    }
+
+    .locked-notice p,
+    .dev-notice p {
+      margin: 0.25rem 0 0;
+      color: var(--color-text-primary);
+    }
+
+    .reader-stats {
+      margin-top: var(--spacing-md);
+      padding-top: var(--spacing-sm);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .stat-line {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--color-text-secondary);
+    }
+
+    .stat-line strong {
+      color: var(--color-text-primary);
+    }
+
+    @media (min-width: 768px), ((orientation: landscape) and (min-width: 640px)) {
+      .codex-layout {
+        grid-template-columns: 1.15fr 1fr;
+      }
+    }
+  `]
+})
+export class Codex {
+  readonly codex = inject(CodexService);
+
+  readonly tabs: { id: FilterTab; label: string; icon: string }[] = [
+    { id: 'all', label: 'All Records', icon: '📘' },
+    { id: 'items', label: 'Items & Biomass', icon: '🧪' },
+    { id: 'parasites', label: 'Parasites', icon: '🕷️' },
+    { id: 'powers', label: 'Powers', icon: '⚡' },
+    { id: 'archive', label: 'Archive', icon: '🛡️' }
+  ];
+
+  readonly activeTab = signal<FilterTab>('all');
+  readonly selectedId = signal<string>('raw-biomass');
+
+  readonly filteredEntries = computed<CodexEntry[]>(() =>
+    this.codex.getEntriesByCategory(this.activeTab())
+  );
+
+  readonly selectedEntry = computed<CodexEntry | undefined>(() => {
+    const list = this.filteredEntries();
+    return list.find((e) => e.id === this.selectedId()) ?? list[0];
+  });
+
+  selectTab(tab: FilterTab): void {
+    this.activeTab.set(tab);
+    const list = this.codex.getEntriesByCategory(tab);
+    if (list.length > 0 && !list.some((e) => e.id === this.selectedId())) {
+      this.selectedId.set(list[0].id);
+    }
+  }
+
+  selectEntry(id: string): void {
+    this.selectedId.set(id);
+  }
+}

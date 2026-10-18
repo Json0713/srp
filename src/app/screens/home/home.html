@@ -24,6 +24,7 @@
         <span class="currency-value">{{ srpCoins() }}</span>
       </div>
 
+      <app-button variant="icon" routerLink="/codex" ariaLabel="Field Codex">📘</app-button>
       <app-button variant="icon" routerLink="/settings" ariaLabel="Settings">⚙️</app-button>
     </div>
   </header>
@@ -39,7 +40,7 @@
       <h1 class="game-title">PROJECT PARASITE</h1>
       <p class="subtitle">Outbreak Protocol — Survival Simulation</p>
       <p class="lore-tagline">
-        Contain the spreading parasitic biomass. Harvest spire nodes, adapt your operator rig, and survive the infection wave.
+        Contain the spreading parasitic biomass. Harvest spire nodes, decrypt the Field Codex, and survive the infection wave.
       </p>
     </section>
 
@@ -83,7 +84,7 @@
     </section>
   </main>
 
-  <!-- Adaptive Tactical Navigation Dock (Left Rail on Desktop/Landscape, Bottom Bar on Portrait Mobile) -->
+  <!-- Adaptive Tactical Navigation Dock -->
   <nav class="floating-nav" aria-label="Primary Navigation">
     <a
       routerLink="/"
@@ -101,6 +102,13 @@
       <span class="tab-label">Operators</span>
     </a>
     <a
+      routerLink="/codex"
+      routerLinkActive="active"
+      class="nav-tab codex-tab">
+      <span class="tab-icon" aria-hidden="true">📘</span>
+      <span class="tab-label">Codex</span>
+    </a>
+    <a
       routerLink="/shop"
       routerLinkActive="active"
       class="nav-tab right-tab">
@@ -109,4 +117,3 @@
     </a>
   </nav>
 </div>
-

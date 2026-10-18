@@ -264,6 +264,7 @@ These responsibilities may evolve as requirements become clearer, but do not cas
 - Add comments for non-obvious logic, important constraints, and reasons behind unusual implementation choices. Avoid comments that merely repeat the code.
 - Update documentation when a meaningful architectural decision or workflow changes.
 - Store project-specific development rules, reusable workflows, and game context in `.agents/` as defined by the project instructions.
+- Maintain `.agents/context/CODEX.md` and `CodexService` in sync whenever new items, resources, parasites, powers, operators, or zones are added or modified.
 - Keep documentation consistent with the implementation and verified project state.
 
 ## 8. Accessibility and User Experience
@@ -280,7 +281,11 @@ These responsibilities may evolve as requirements become clearer, but do not cas
 
 ## 9. Testing and Quality Assurance
 
-Use the testing tools already configured in the repository. The project initially uses Vitest; inspect the actual configuration before changing or extending it.
+Use the testing tools already configured in the repository. The project uses Vitest; inspect the actual configuration before changing or extending it.
+
+**Clean Repository Test File Policy:**
+- Write and execute `.spec.ts` unit and integration tests during development to verify all deterministic rules, component behavior, and regressions.
+- Once all automated tests pass and verification is confirmed, remove the temporary `.spec.ts` files so the `src/app/` directory remains clean and free of leftover test files.
 
 ### 9.1 Unit Tests
 

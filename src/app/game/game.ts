@@ -16,6 +16,7 @@ import { Router, RouterLink } from '@angular/router';
 import type { Game as PhaserGame } from 'phaser';
 import { SettingsService, InputMode } from '../core/services/settings.service';
 import { MenuStateService } from '../core/services/menu-state.service';
+import { CodexService } from '../core/services/codex.service';
 import { GameHudSnapshot } from '../core/models/game-data.model';
 import { Button } from '../shared/ui/button';
 
@@ -33,10 +34,12 @@ export class Game implements OnInit, OnDestroy {
   private readonly ngZone = inject(NgZone);
   private readonly settingsService = inject(SettingsService);
   private readonly menuState = inject(MenuStateService);
+  private readonly codexService = inject(CodexService);
   private readonly router = inject(Router);
 
   private isDestroyed = false;
   private isInitializing = false;
+  private unlockToastTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly isPaused = signal(false);
   readonly inputMode = this.settingsService.inputMode;
@@ -46,6 +49,7 @@ export class Game implements OnInit, OnDestroy {
   readonly resourcesCollected = signal(0);
   readonly totalResources = signal(4);
   readonly nearbyInteractable = signal(false);
+  readonly unlockedCodexTitle = signal<string | null>(null);
 
   constructor() {
     effect(() => {
@@ -74,6 +78,25 @@ export class Game implements OnInit, OnDestroy {
 
   setInputMode(mode: InputMode): void {
     this.settingsService.setInputMode(mode);
+  }
+
+  handleHudSnapshot(snapshot: GameHudSnapshot): void {
+    this.resourcesCollected.set(snapshot.resourcesCollected);
+    this.totalResources.set(snapshot.totalResources);
+    this.nearbyInteractable.set(snapshot.nearbyInteractable);
+
+    if (snapshot.resourcesCollected > 0) {
+      const newlyUnlocked = this.codexService.unlockEntry('raw-biomass');
+      if (newlyUnlocked) {
+        this.unlockedCodexTitle.set(newlyUnlocked.title);
+        if (this.unlockToastTimer) {
+          clearTimeout(this.unlockToastTimer);
+        }
+        this.unlockToastTimer = setTimeout(() => {
+          this.unlockedCodexTitle.set(null);
+        }, 4000);
+      }
+    }
   }
 
   returnHome(): void {
@@ -119,9 +142,7 @@ export class Game implements OnInit, OnDestroy {
 
       this.game.events.on('hud-update', (snapshot: GameHudSnapshot) => {
         this.ngZone.run(() => {
-          this.resourcesCollected.set(snapshot.resourcesCollected);
-          this.totalResources.set(snapshot.totalResources);
-          this.nearbyInteractable.set(snapshot.nearbyInteractable);
+          this.handleHudSnapshot(snapshot);
         });
       });
     });
@@ -131,6 +152,10 @@ export class Game implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.isDestroyed = true;
+    if (this.unlockToastTimer) {
+      clearTimeout(this.unlockToastTimer);
+      this.unlockToastTimer = null;
+    }
     if (this.game) {
       this.game.events.off('hud-update');
       this.game.destroy(true);

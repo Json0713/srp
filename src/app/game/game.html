@@ -15,6 +15,13 @@
         <span class="resource-label">BIOMASS:</span>
         <strong class="resource-count">{{ resourcesCollected() }} / {{ totalResources() }}</strong>
       </div>
+
+      @if (unlockedCodexTitle(); as codexTitle) {
+        <div class="hud-card codex-unlock-toast" role="status">
+          <span aria-hidden="true">📘</span>
+          <span>CODEX GRANTED: <strong>{{ codexTitle }}</strong></span>
+        </div>
+      }
     </div>
 
     <div class="hud-right">
@@ -89,6 +96,9 @@
           <app-button variant="primary" [fullWidth]="true" class="full-width" (onClick)="togglePause()">
             Resume
           </app-button>
+          <app-button variant="secondary" [fullWidth]="true" class="full-width" routerLink="/codex">
+            📘 Field Codex
+          </app-button>
           <app-button variant="secondary" [fullWidth]="true" class="full-width" routerLink="/settings">
             Settings
           </app-button>
@@ -100,4 +110,3 @@
     </div>
   }
 </div>
-

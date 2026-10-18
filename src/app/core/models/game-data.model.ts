@@ -1,5 +1,29 @@
 export type InputMode = 'pc' | 'mobile';
 
+export type CodexCategory = 'items' | 'parasites' | 'powers' | 'archive';
+
+export type CodexStatus = 'discovered' | 'undiscovered' | 'development';
+
+export interface CodexStat {
+  label: string;
+  value: string;
+}
+
+export interface CodexEntry {
+  id: string;
+  code: string;
+  title: string;
+  category: CodexCategory;
+  status: CodexStatus;
+  icon: string;
+  classification: string;
+  summary: string;
+  description: string;
+  unlockHint: string;
+  phaseTag: string;
+  stats: CodexStat[];
+}
+
 export interface OperatorAttribute {
   label: string;
   value: number;
@@ -43,4 +67,3 @@ export interface GameHudSnapshot {
   totalResources: number;
   nearbyInteractable: boolean;
 }
-

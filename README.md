@@ -19,6 +19,7 @@ src/
     │   ├── models/
     │   │   └── game-data.model.ts
     │   └── services/
+    │       ├── codex.service.ts
     │       ├── menu-state.service.ts
     │       └── settings.service.ts
     ├── shared/                 # Reusable tactical UI components (Signal inputs/outputs)
@@ -30,13 +31,14 @@ src/
     │   ├── home/               # Outbreak Command Hub (Deploy)
     │   ├── operators/          # Containment Roster & Operator Dossiers
     │   ├── zones/              # Infestation Sector Selection & Drop Manifest
+    │   ├── codex/              # Interactive Field Codex & Game Encyclopedia
     │   ├── shop/               # Encrypted Black Market Terminal
     │   └── settings/           # Hardware Input & Control Configuration
     └── game/                   # Real-time Phaser 4 simulation & Angular HUD overlay
-        ├── game.ts             # Phaser lifecycle host, HUD telemetry & Pause overlay
+        ├── game.ts             # Phaser lifecycle host, HUD telemetry, Codex grants & Pause overlay
         ├── scenes/
         │   └── main.scene.ts   # Active 2.5D survival arena & multi-touch virtual joystick
-        └── systems/            # Deterministic, unit-tested gameplay rules
+        └── systems/            # Deterministic gameplay rules
             ├── input.system.ts
             ├── interaction.system.ts
             └── movement.system.ts
@@ -52,11 +54,6 @@ npm start
 ```
 Navigates to `http://localhost:4200/` with live reload enabled.
 
-### Run Unit & Integration Tests (Vitest)
-```bash
-npm test -- --watch=false
-```
-
 ### Production Build
 ```bash
 npm run build
@@ -68,6 +65,7 @@ Compiles and optimizes bundles to `dist/SRP`.
 ## Documentation & Governance
 
 - [`AGENTS.md`](./AGENTS.md) — Core engineering principles, Angular 22 / TypeScript / Phaser 4 standards, and mandatory workflows.
+- [`.agents/context/CODEX.md`](./.agents/context/CODEX.md) — Canonical Game Encyclopedia & Codex Registry (Items, Parasites, Powers, Operators, Sectors).
 - [`.agents/context/GAME_DESIGN.md`](./.agents/context/GAME_DESIGN.md) — Game design pillars, visual direction, and scope boundaries.
 - [`.agents/context/TECHNICAL_DESIGN.md`](./.agents/context/TECHNICAL_DESIGN.md) — Technical baseline and subsystem boundaries.
 - [`.agents/context/ROADMAP.md`](./.agents/context/ROADMAP.md) — Phased milestone plan.

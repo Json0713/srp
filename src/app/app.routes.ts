@@ -18,6 +18,10 @@ export const routes: Routes = [
     loadComponent: () => import('./screens/shop/shop').then((m) => m.Shop)
   },
   {
+    path: 'codex',
+    loadComponent: () => import('./screens/codex/codex').then((m) => m.Codex)
+  },
+  {
     path: 'settings',
     loadComponent: () => import('./screens/settings/settings').then((m) => m.Settings)
   },
