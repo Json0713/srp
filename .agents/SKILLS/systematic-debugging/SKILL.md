@@ -50,26 +50,21 @@ Do not present an unverified hypothesis as a confirmed root cause.
 - Check whether the proposed fix changes user-visible behavior or architecture.
 - Ask for approval if the fix materially expands scope or introduces a risky change.
 
-### 5. Add Regression Coverage
+### 5. Verify with Focused Ephemeral Regression Coverage
 
 Where practical:
 
-- Add a test that reproduces the original failure.
-- Cover relevant boundary conditions and invalid inputs.
-- Prefer testing deterministic rules independently from rendering.
-- Add integration coverage when the failure involves communication between systems.
+1. Create a focused temporary `.spec.ts` test that reproduces the original failure and covers relevant boundary conditions **only** for the affected module.
+2. Prefer testing deterministic rules independently from rendering, and add integration coverage when the failure involves communication between systems.
+3. Do not recreate `.spec.ts` files for unrelated modules or extract code into a utility solely to satisfy an arbitrary testing rule.
 
-Do not extract code into a utility solely to satisfy an arbitrary testing rule.
+### 6. Execute Checks & Clean Up Spec Files
 
-### 6. Verify
-
-Run the relevant tests and configured checks.
-
-For Angular or Phaser integration defects, run a production build when applicable.
-
-For visual or interactive failures, perform the required browser or gameplay check when possible.
-
-Check for related regressions, including stale state, duplicate listeners, incorrect cleanup, and lifecycle ordering.
+1. Run `npm test -- --watch=false` once to verify the focused regression test passes.
+2. **Immediately delete the temporary `.spec.ts` file(s) once the test run passes** so zero `.spec.ts` files remain in `src/`.
+3. Run `npm run build` to verify compilation and bundle budgets.
+4. For visual or interactive failures, perform the required browser or gameplay check when possible.
+5. Check for related regressions, including stale state, duplicate listeners, incorrect cleanup, and lifecycle ordering.
 
 ### 7. Report
 
@@ -78,8 +73,8 @@ Provide:
 - Reproduction conditions.
 - Confirmed root cause or remaining uncertainty.
 - Files and behavior changed.
-- Regression tests added.
-- Commands and checks actually run.
+- Focused regression test executed and confirmed deleted after passing.
+- Commands and checks actually run (`npm test -- --watch=false`, `npm run build`).
 - Results and remaining risks.
 
 ## Stop Conditions

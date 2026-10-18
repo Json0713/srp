@@ -77,10 +77,10 @@ For small, unambiguous changes, keep the plan concise and proceed without unnece
 
 After implementation:
 
-1. Run relevant unit tests.
-2. Run integration tests when component boundaries or system interactions are affected.
-3. Run the appropriate production build.
-4. Run linting, type checks, or other configured checks when available and relevant.
+1. Write a focused `.spec.ts` test covering **only** the newly implemented, enhanced, or fixed behavior (do not recreate `.spec.ts` files for unrelated existing modules).
+2. Run `npm test -- --watch=false` to verify the new/modified tests pass.
+3. **Delete the temporary `.spec.ts` file(s) immediately after the test run passes** so `src/` remains completely free of test file clutter.
+4. Run the production build (`npm run build`).
 5. Perform browser or gameplay checks for behavior that automated tests cannot adequately verify.
 6. Investigate failures introduced by the change and resolve them before declaring completion.
 
@@ -281,15 +281,16 @@ These responsibilities may evolve as requirements become clearer, but do not cas
 
 ## 9. Testing and Quality Assurance
 
-Use the testing tools already configured in the repository. The project uses Vitest; inspect the actual configuration before changing or extending it.
+Use the testing tools already configured in the repository (`Vitest` via `npm test -- --watch=false`).
 
-**Clean Repository Test File Policy:**
-- Write and execute `.spec.ts` unit and integration tests during development to verify all deterministic rules, component behavior, and regressions.
-- Once all automated tests pass and verification is confirmed, remove the temporary `.spec.ts` files so the `src/app/` directory remains clean and free of leftover test files.
+**Focused Ephemeral Spec Policy (Mandatory):**
+1. **Scope to Current Work Only:** Write `.spec.ts` unit/integration tests **only** for the feature, enhancement, or bug fix currently being implemented. Do not recreate `.spec.ts` files for untouched modules.
+2. **Verify Once:** Execute `npm test -- --watch=false` to confirm all assertions for the new/modified behavior pass.
+3. **Delete Immediately After Passing:** Once the test run passes, **delete the `.spec.ts` file(s) immediately** before finishing the task. Never leave `.spec.ts` files hanging around in `src/`.
 
 ### 9.1 Unit Tests
 
-Test isolated rules and calculations, including where applicable:
+Test isolated rules and calculations for the current feature, including where applicable:
 
 - Player movement calculations.
 - Inventory capacity and item quantities.
@@ -302,11 +303,11 @@ Include relevant boundary cases and invalid inputs.
 
 ### 9.2 Integration Tests
 
-Test interactions between systems where practical, including:
+Test interactions between systems affected by the current change where practical, including:
 
 - Angular-to-Phaser communication.
 - Gameplay commands and resulting state changes.
-- Inventory and crafting interactions.
+- Inventory, Codex, and crafting interactions.
 - Persistence and restoration of game state.
 - Cleanup of event listeners and resources.
 
@@ -314,12 +315,11 @@ Test interactions between systems where practical, including:
 
 Automated unit tests are not sufficient for every game behavior. Perform manual or suitable automated browser checks for:
 
-- Canvas rendering and resizing.
-- Keyboard controls and browser focus.
+- Canvas rendering and resizing (both portrait and landscape modes).
+- Keyboard controls, virtual joystick touch controls, and browser focus.
 - Player movement and world boundaries.
 - Collision and interaction behavior.
-- HUD updates and UI responsiveness.
-- Inventory, crafting, and survival feedback.
+- HUD updates, Codex grants, and UI responsiveness.
 - Save/load behavior and browser refresh recovery when implemented.
 
 ### 9.4 Regression Testing
@@ -329,10 +329,10 @@ When fixing a defect:
 1. Reproduce the issue when possible.
 2. Trace the failing behavior through the relevant code.
 3. Identify and state the confirmed root cause before editing.
-4. Add a regression test for the failure when practical.
+4. Create a focused temporary `.spec.ts` regression test for the failure when practical.
 5. Implement the smallest safe correction.
-6. Run the relevant tests and broader checks affected by the change.
-7. Confirm that related existing behavior remains intact.
+6. Run `npm test -- --watch=false` to confirm the fix, then **delete the temporary `.spec.ts` file**.
+7. Confirm that `npm run build` succeeds and related existing behavior remains intact.
 
 If the root cause is uncertain, continue investigating rather than cycling through speculative patches.
 
@@ -344,9 +344,9 @@ Follow this procedure to prevent repeated failed fixes and unnecessary rewrites.
 2. **Establish the root cause.** State the confirmed cause in one clear sentence before editing. If the cause is not yet confirmed, describe the evidence and continue investigating.
 3. **Assess the impact.** Identify the smallest appropriate fix, affected areas, and possible regressions. Ask for approval if the change materially alters behavior, scope, or architecture beyond the approved task.
 4. **Make a minimal correction.** Do not perform unrelated refactoring or introduce additional features.
-5. **Add regression coverage.** Reproduce the original failure in a test when practical and cover relevant edge cases.
+5. **Verify with a focused ephemeral test.** Create a `.spec.ts` reproducing the failure when practical, run `npm test -- --watch=false` to verify it passes, and **delete the `.spec.ts` file immediately after**.
 6. **Check state and lifecycle risks.** Pay attention to event ordering, stale state, resource cleanup, duplicate listeners, and signal values that are cleared or changed before being read again.
-7. **Verify the result.** Run relevant tests, configured quality checks, and a production build where appropriate. Fix failures introduced by the change.
+7. **Verify the build.** Run `npm run build` and fix any failures or budget warnings introduced by the change.
 8. **Report accurately.** Explain the root cause, modifications, verification results, and remaining risks.
 
 Never declare a defect resolved solely because the code has changed.
@@ -388,8 +388,9 @@ Before reporting completion, confirm that:
 - The requested behavior is implemented.
 - Existing behavior has been preserved where required.
 - Types and error handling are appropriate.
-- Relevant automated tests pass.
-- The production build succeeds when applicable.
+- Focused automated `.spec.ts` tests for the changed behavior were executed, passed, and **deleted afterward** so no `.spec.ts` files remain in `src/`.
+- The production build (`npm run build`) succeeds with zero errors.
+- `.agents/context/CODEX.md` and `CodexService` are updated if any items, resources, parasites, powers, operators, or zones were added or modified.
 - Browser or gameplay behavior has been checked when required.
 - No known regression introduced by the change remains unresolved.
 - Documentation and current-status records are updated when warranted.

@@ -22,17 +22,14 @@ Determine:
 
 Do not test unrelated systems exhaustively when a focused test is sufficient.
 
-## 2. Automated Checks
+## 2. Automated Checks (Focused Ephemeral Spec Policy)
 
-Inspect the project's actual scripts and test configuration.
-
-Run relevant unit tests for deterministic gameplay rules.
-
-Run integration tests for important boundaries, including Angular–Phaser communication and state synchronization.
-
-Run the production build when the change can affect compilation or runtime integration.
-
-Report failures accurately and distinguish existing failures from regressions introduced by the change.
+1. Inspect the project's actual scripts (`package.json`) and test configuration.
+2. Write focused `.spec.ts` unit/integration tests **only** for the currently implemented or modified feature/milestone (do not recreate `.spec.ts` files for untouched modules).
+3. Run `npm test -- --watch=false` once to verify the new/updated deterministic gameplay rules and Angular–Phaser boundaries pass.
+4. **Immediately delete the temporary `.spec.ts` file(s) once the test run passes** so `src/` remains completely clean and uncluttered.
+5. Run the production build (`npm run build`) when the change can affect compilation, styles, or runtime integration.
+6. Report failures accurately and distinguish existing failures from regressions introduced by the change.
 
 ## 3. Browser Initialization
 

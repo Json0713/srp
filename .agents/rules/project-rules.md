@@ -18,7 +18,7 @@ The project uses Angular, TypeScript, and Phaser. See `.agents/context/GAME_DESI
 - Follow the root `AGENTS.md` and applicable project rules.
 - Implement only the requested task and necessary supporting work.
 - Keep `.agents/context/CODEX.md` and `CodexService` synchronized whenever items, parasites, powers, operators, or zones are added or updated.
-- Write and run `.spec.ts` tests to verify behavior, then delete the `.spec.ts` files once tests pass to keep the project tree clean.
+- **Focused Ephemeral Spec Policy:** Write `.spec.ts` tests **only** for the newly implemented, enhanced, or fixed behavior in the current task, run `npm test -- --watch=false` once to verify it passes, and **delete the `.spec.ts` file(s) immediately afterward** so zero test files remain in `src/`.
 - Preserve existing behavior unless a change is explicitly required.
 - Do not overwrite user work or perform destructive operations without approval.
 - Do not invent requirements or treat planned features as approved implementation scope.
