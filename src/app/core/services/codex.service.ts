@@ -55,14 +55,14 @@ export class CodexService {
       category: 'items',
       status: 'undiscovered',
       icon: '🔹',
-      classification: 'In-Run Progression // 85% Common',
+      classification: 'In-Run Progression // 95% Common',
       summary: 'Azure bio-energy orb that fuels in-run operator level progression.',
       description:
-        'Accounts for 85% of field EXP spores. Automatically magnetized toward the operator within close proximity. Grants 3–5 base EXP at Level 1 and scales upward (+1/lvl) as the operator levels up.',
+        'Accounts for 95% of field EXP spores. Automatically magnetized toward the operator within close proximity. Grants 3–5 base EXP at Level 1 and scales upward (+1/lvl) as the operator levels up.',
       unlockHint: 'Walk near a Blue EXP Spore in Sector 7 to absorb it.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
-        { label: 'Distribution', value: '85% Common Spore' },
+        { label: 'Distribution', value: '95% Common Spore' },
         { label: 'Base Yield (Lv.1)', value: '3 – 5 EXP (+Level Scaling)' }
       ]
     },
@@ -73,14 +73,14 @@ export class CodexService {
       category: 'items',
       status: 'undiscovered',
       icon: '🟣',
-      classification: 'In-Run Progression // 15% Rare',
+      classification: 'In-Run Progression // 5% Rare',
       summary: 'High-density glowing violet bio-energy core that accelerates operator leveling.',
       description:
-        'Accounts for 15% of field EXP spores. Emits a radiant glowing violet luminescence clearly distinct from golden RP coins. Grants 8–12 base EXP at Level 1, scaling upward (+2/lvl) with operator level.',
+        'Accounts for 5% of field EXP spores. Emits a radiant glowing violet luminescence clearly distinct from golden RP coins. Grants 8–12 base EXP at Level 1, scaling upward (+2/lvl) with operator level.',
       unlockHint: 'Walk near a glowing Violet EXP Core in Sector 7 to absorb it.',
       phaseTag: 'PHASE 1 // THE FALLOUT',
       stats: [
-        { label: 'Distribution', value: '15% Rare Spore' },
+        { label: 'Distribution', value: '5% Rare Spore' },
         { label: 'Base Yield (Lv.1)', value: '8 – 12 EXP (+Level Scaling)' }
       ]
     },

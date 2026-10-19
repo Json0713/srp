@@ -463,8 +463,8 @@ export function spawnParasite(
 
 /**
  * Determines item drops when an enemy is eliminated.
- * Standard parasites have a 60% drop rate for EXP and RP Coins.
- * Rare colored variants have a 50% drop rate for Orange EXP Cores and RP Coins, and 15% for Biomass.
+ * Standard parasites have a 60% drop rate for EXP (95% Common Blue, 5% Rare Violet) and 60% for RP Coins.
+ * Rare colored variants have a 50% drop rate for EXP (5% Rare Violet Core, remainder Common Blue), 50% for RP Coins, and 3% for Biomass.
  */
 export function rollParasiteDrops(
   enemy: ParasiteEnemy,
@@ -477,11 +477,14 @@ export function rollParasiteDrops(
     enemy.variant === 'crimson-red';
 
   if (isRareColored) {
-    // Rare colored parasite: 50% chance for Violet EXP Core, 50% chance for RP Coins, 15% chance for Biomass
+    // Rare colored parasite: 50% chance for EXP (5% Rare Violet, remainder Common Blue), 50% chance for RP Coins, 3% chance for Biomass
     if (rng() < 0.5) {
+      const isViolet = rng() < 0.05;
       drops.push({
-        kind: 'exp-violet',
-        baseValue: enemy.variant === 'crimson-red' ? 12 : 10
+        kind: isViolet ? 'exp-violet' : 'exp-blue',
+        baseValue: isViolet
+          ? (enemy.variant === 'crimson-red' ? 12 : 10)
+          : (enemy.variant === 'crimson-red' ? 6 : 5)
       });
     }
     if (rng() < 0.5) {
@@ -490,7 +493,7 @@ export function rollParasiteDrops(
         baseValue: 3 + Math.floor(rng() * 3) // 3..5 RP Coins
       });
     }
-    if (rng() < 0.15) {
+    if (rng() < 0.03) {
       drops.push({
         kind: 'biomass',
         baseValue: 1
@@ -498,9 +501,9 @@ export function rollParasiteDrops(
     }
   } else {
     // Standard baseline parasite (Buglin larva / Obsidian Crawler):
-    // 60% chance to drop EXP (3..5 base EXP), 60% chance to drop RP Coins (3..5 RP Coins)
+    // 60% chance to drop EXP (95% Blue, 5% Violet), 60% chance to drop RP Coins (3..5 RP Coins)
     if (rng() < 0.6) {
-      const isViolet = rng() < 0.15;
+      const isViolet = rng() < 0.05;
       drops.push({
         kind: isViolet ? 'exp-violet' : 'exp-blue',
         baseValue: isViolet ? 10 : 3 + Math.floor(rng() * 3) // 3..5 base EXP

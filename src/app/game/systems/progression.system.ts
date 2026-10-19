@@ -33,7 +33,7 @@ export function calculateExpRequired(level: number): number {
 }
 
 /**
- * Calculates the EXP granted by a Common Blue (85%) or Rare Glowing Violet (15%) orb,
+ * Calculates the EXP granted by a Common Blue (95%) or Rare Glowing Violet (5%) orb,
  * scaling upward as the player levels up so orb values stay balanced with the EXP curve.
  * - Common Blue (Lv.1): 3 - 5 EXP (+1 per level above 1)
  * - Rare Glowing Violet (Lv.1): 8 - 12 EXP (+2 per level above 1)

@@ -6,7 +6,7 @@ export const TILE_SIZE = 32;
 export const DEFAULT_RENDER_RADIUS = 1;
 export const RARE_BIOMASS_SPAWN_CHANCE = 0.25; // 25% rare chance per outer chunk
 export const RP_COIN_CHUNK_PRESENCE_CHANCE = 0.6; // 60% of chunks spawn RP Coins
-export const COMMON_BLUE_EXP_RATIO = 0.85; // 85% Common Blue EXP Orbs, 15% Rare Violet EXP Cores
+export const COMMON_BLUE_EXP_RATIO = 0.95; // 95% Common Blue EXP Orbs, 5% Rare Violet EXP Cores
 
 export type TileFeatureType = 'corrupted-patch' | 'moss-slate' | 'spore-fleck' | 'crimson-vein';
 
@@ -198,7 +198,7 @@ export function generateChunkData(
       }
     }
 
-    // 4. Spawn Field EXP Orbs (70% Common Blue, 30% Rare Orange)
+    // 4. Spawn Field EXP Orbs (95% Common Blue, 5% Rare Violet)
     const expOrbCount = 5 + Math.floor(rng() * 4); // 5 to 8 EXP orbs per chunk
     const orbMargin = 40;
     for (let i = 0; i < expOrbCount; i++) {
