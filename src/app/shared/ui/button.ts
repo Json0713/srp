@@ -116,21 +116,44 @@ export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'icon';
       box-shadow: 0 0 16px rgba(239, 68, 68, 0.3);
     }
 
-    /* Icon Button */
+    /* Tactical Icon Button */
     .icon {
-      background-color: rgba(14, 20, 31, 0.75);
-      color: var(--color-text-primary);
+      background: rgba(14, 20, 31, 0.85);
+      backdrop-filter: blur(10px);
+      color: var(--color-text-secondary);
       border: 1px solid var(--color-border);
-      width: 42px;
-      height: 42px;
+      width: 36px;
+      height: 36px;
       padding: 0;
-      font-size: 1.15rem;
+      font-size: 1rem;
       border-radius: var(--radius-sm);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transition:
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
     }
 
     .icon:not(:disabled):hover {
-      background-color: var(--color-bg-panel-hover);
+      background-color: rgba(23, 33, 51, 0.95);
       border-color: var(--color-primary-light);
+      color: #ffffff;
+      box-shadow: 0 0 12px var(--color-primary-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .icon:not(:disabled):active {
+      transform: translateY(0) scale(0.95);
+      background-color: var(--color-primary-surface);
+    }
+
+    .icon svg {
+      width: 17px;
+      height: 17px;
+      display: block;
+      transition: transform var(--transition-fast);
     }
 
     @media (max-height: 540px) and (orientation: landscape) {
@@ -146,9 +169,14 @@ export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'icon';
       }
 
       .icon {
-        width: 36px;
-        height: 36px;
-        font-size: 1rem;
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+      }
+
+      .icon svg {
+        width: 15px;
+        height: 15px;
       }
     }
   `]

@@ -1,114 +1,169 @@
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Button } from './button';
 
 @Component({
   selector: 'app-page-header',
-  imports: [RouterLink, Button],
+  imports: [RouterLink],
   template: `
     <header class="page-header">
-      <div class="header-left">
-        <app-button
-          variant="icon"
+      <!-- Left: Tactical Back Action & Screen Telemetry Meta (Matches Home top-bar scale) -->
+      <div class="header-brand">
+        <a
           [routerLink]="backLink()"
-          ariaLabel="Back to Command Hub"
-          class="back-btn">
-          <span aria-hidden="true">←</span>
-        </app-button>
-        <span class="back-hint">HUB</span>
+          class="back-action-btn"
+          aria-label="Back to Command Hub"
+          title="Back to Command Hub">
+          <svg class="hud-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </a>
+
+        <div class="header-meta">
+          <h1 class="header-title">{{ title() }}</h1>
+          @if (subtitle()) {
+            <div class="header-telemetry">
+              <span class="status-pulse" aria-hidden="true"></span>
+              <span class="header-subtitle">{{ subtitle() }}</span>
+            </div>
+          }
+        </div>
       </div>
 
-      <div class="header-center">
-        @if (subtitle()) {
-          <span class="page-kicker">{{ subtitle() }}</span>
-        }
-        <h1 class="page-title">{{ title() }}</h1>
-      </div>
-
-      <div class="header-right">
+      <!-- Right: Sub-screen Action Badges, Telemetry or Currency Pills -->
+      <div class="header-actions">
         <ng-content />
       </div>
     </header>
   `,
   styles: [`
-    .page-header {
+    :host {
+      display: block;
+      width: 100%;
+      flex-shrink: 0;
       position: sticky;
       top: 0;
       z-index: 20;
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: var(--spacing-md);
-      padding: calc(var(--spacing-sm) + var(--safe-top)) max(var(--spacing-lg), var(--safe-right)) var(--spacing-sm) max(var(--spacing-lg), var(--safe-left));
-      background: rgba(8, 12, 18, 0.9);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--color-border);
     }
 
-    .header-left {
+    .page-header {
       display: flex;
       align-items: center;
-      gap: var(--spacing-sm);
+      justify-content: space-between;
+      gap: 0.6rem;
+      background: rgba(6, 9, 14, 0.94);
+      backdrop-filter: blur(14px);
+      padding: calc(0.45rem + var(--safe-top)) max(1rem, var(--safe-right)) 0.45rem max(1rem, var(--safe-left));
+      border-bottom: 1px solid rgba(99, 125, 162, 0.22);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      box-sizing: border-box;
     }
 
-    .back-hint {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.14em;
+    .header-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-width: 0;
+    }
+
+    .back-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      background: rgba(14, 20, 31, 0.85);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
       color: var(--color-text-secondary);
-      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all var(--transition-fast);
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .header-center {
+    .back-action-btn:hover {
+      background: var(--color-bg-panel-hover);
+      border-color: var(--color-primary-light);
+      color: var(--color-primary-light);
+      transform: translateX(-2px);
+    }
+
+    .back-action-btn:active {
+      transform: scale(0.95);
+      background: var(--color-primary-surface);
+    }
+
+    .hud-svg {
+      width: 15px;
+      height: 15px;
+      display: block;
+    }
+
+    .header-meta {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      text-align: center;
+      gap: 0.05rem;
+      min-width: 0;
     }
 
-    .page-kicker {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.18em;
-      color: var(--color-primary-light);
-      text-transform: uppercase;
-    }
-
-    .page-title {
+    .header-title {
       margin: 0;
       font-family: var(--font-display);
-      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
-      font-weight: 700;
+      font-weight: 800;
+      font-size: 0.76rem;
+      line-height: 1.1;
+      letter-spacing: 0.12em;
       color: var(--color-text-primary);
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .header-right {
-      display: flex;
-      justify-content: flex-end;
+    .header-telemetry {
+      display: inline-flex;
       align-items: center;
-      gap: var(--spacing-sm);
+      gap: 0.35rem;
+      line-height: 1;
     }
 
-    @media (max-width: 520px) {
-      .back-hint {
+    .header-subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 540px) and (orientation: portrait) {
+      .header-subtitle {
         display: none;
       }
     }
 
-    @media (max-height: 540px) and (orientation: landscape) {
+    @media (max-height: 520px) and (orientation: landscape) {
       .page-header {
-        padding-top: max(0.35rem, var(--safe-top));
-        padding-bottom: 0.35rem;
+        padding: calc(0.35rem + var(--safe-top)) max(0.85rem, var(--safe-right)) 0.35rem max(0.85rem, var(--safe-left));
       }
-
-      .page-kicker {
-        display: none;
+      .back-action-btn {
+        width: 28px;
+        height: 28px;
       }
-
-      .page-title {
-        font-size: 1.05rem;
+      .header-title {
+        font-size: 0.72rem;
       }
     }
   `]
@@ -118,4 +173,3 @@ export class PageHeader {
   readonly subtitle = input<string>('');
   readonly backLink = input<string>('/');
 }
-

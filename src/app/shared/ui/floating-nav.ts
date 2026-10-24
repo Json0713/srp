@@ -53,8 +53,8 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       justify-content: center;
       gap: clamp(0.35rem, 1.2vw, 0.75rem);
       padding: clamp(0.35rem, 1vw, 0.5rem) 1rem calc(clamp(0.4rem, 1vw, 0.55rem) + var(--safe-bottom));
-      background: rgba(8, 12, 18, 0.94);
-      backdrop-filter: blur(12px);
+      background: rgba(8, 12, 18, 0.96);
+      backdrop-filter: blur(14px);
       border-top: 1px solid var(--color-border);
       width: 100%;
       box-sizing: border-box;
@@ -76,13 +76,26 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       font-weight: 700;
       font-size: clamp(0.7rem, 1.2vw, 0.78rem);
       text-transform: uppercase;
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
       white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      outline: none;
     }
 
     .nav-tab:hover {
       background: var(--color-bg-panel-hover);
       color: var(--color-text-primary);
+    }
+
+    .nav-tab:focus-visible {
+      outline: 2px solid var(--color-primary-light);
+      outline-offset: 2px;
+    }
+
+    .nav-tab:active {
+      transform: scale(0.97);
+      background: rgba(34, 197, 94, 0.16);
     }
 
     .nav-tab.active {

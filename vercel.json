@@ -1,6 +1,5 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
+  "version": 3,
   "framework": "angular",
   "installCommand": "unset npm_config_cache_dir NPM_CONFIG_CACHE_DIR && npm install",
   "buildCommand": "unset npm_config_cache_dir NPM_CONFIG_CACHE_DIR && npm run build",
@@ -49,4 +48,3 @@
     }
   ]
 }
-
