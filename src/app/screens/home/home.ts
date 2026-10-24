@@ -36,8 +36,19 @@ export class Home {
   }
 
   startNewRun(): void {
-    this.menuState.prepareNewRun();
-    void this.router.navigate(['/game']);
+    this.deployToSector();
+  }
+
+  deployToSector(): void {
+    void this.router.navigate(['/zones']);
+  }
+
+  openOperatorRoster(): void {
+    void this.router.navigate(['/operators']);
+  }
+
+  toggleInputMode(): void {
+    this.settingsService.toggleInputMode();
   }
 
   dismissExtraction(): void {

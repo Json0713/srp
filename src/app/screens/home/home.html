@@ -5,59 +5,97 @@
     <div class="spore-glow spore-glow-crimson"></div>
   </div>
 
-  <!-- Top Telemetry & Command Vault Bar -->
+  <!-- Tactical Command Deck Top Bar -->
   <header class="top-bar">
-    <div class="top-status">
-      <span class="status-dot" [class.offline]="pwa.isOffline()" aria-hidden="true"></span>
-      <span class="status-label">
-        {{ pwa.isOffline() ? 'OFFLINE MODE // LOCAL VAULT' : (pwa.isStandalone() ? 'INSTALLED PWA // READY' : 'CONTAINMENT NET // PWA READY') }}
-      </span>
+    <!-- Left: Terminal Identity & System Telemetry -->
+    <div class="top-brand">
+      <div class="brand-crest" aria-hidden="true">
+        <span class="crest-sigil">SRP</span>
+      </div>
+      <div class="brand-meta">
+        <span class="brand-title">TACTICAL COMMAND</span>
+        <div class="telemetry-status">
+          <span class="status-pulse" [class.offline]="pwa.isOffline()" aria-hidden="true"></span>
+          <span class="status-text">
+            {{ pwa.isOffline() ? 'OFFLINE // LOCAL VAULT' : (pwa.isStandalone() ? 'CONTAINMENT // PWA ACTIVE' : 'SECTOR 7 // ONLINE') }}
+          </span>
+        </div>
+      </div>
     </div>
 
-    <div class="top-actions">
+    <!-- Center Alerts (Tactical PWA Notification Chips) -->
+    <div class="top-center-alerts">
       @if (pwa.updateAvailable()) {
-        <button type="button" class="pwa-pill-btn update-pill" (click)="applyPwaUpdate()">
-          🔄 UPDATE
+        <button type="button" class="tactical-chip update-chip" (click)="applyPwaUpdate()" aria-label="System update available">
+          <span class="chip-pulse" aria-hidden="true"></span>
+          <span class="chip-text">UPDATE READY</span>
         </button>
       }
-
       @if (pwa.canInstall()) {
-        <button type="button" class="pwa-pill-btn install-pill" (click)="installPwa()">
-          📲 INSTALL
+        <button type="button" class="tactical-chip install-chip" (click)="installPwa()" aria-label="Install client offline">
+          <span class="chip-icon" aria-hidden="true">⬇</span>
+          <span class="chip-text">INSTALL CLIENT</span>
         </button>
       }
+    </div>
 
-      <div class="mode-badge" [attr.aria-label]="'Active control mode: ' + inputMode()">
-        <span class="mode-prefix">CTRL:</span>
-        <strong>{{ inputMode() === 'pc' ? 'PC' : 'TOUCH' }}</strong>
+    <!-- Right: Command Vault Module & Console Actions -->
+    <div class="top-actions">
+      <!-- Unified Command Vault Module -->
+      <div class="vault-cluster" aria-label="Command Vault Reserves">
+        <div class="vault-capsule bio-capsule" title="Rare Biomass Spores in Command Vault">
+          <span class="capsule-icon" aria-hidden="true">🧪</span>
+          <div class="capsule-data">
+            <span class="capsule-label">BIO</span>
+            <span class="capsule-value">{{ biomass() }}</span>
+          </div>
+        </div>
+
+        <div class="vault-separator" aria-hidden="true"></div>
+
+        <div class="vault-capsule rp-capsule" title="Research Parasitic Coins in Command Vault">
+          <span class="capsule-icon" aria-hidden="true">🪙</span>
+          <div class="capsule-data">
+            <span class="capsule-label">RP</span>
+            <span class="capsule-value">{{ rpCoins() }}</span>
+          </div>
+        </div>
+
+        <app-info-popover
+          align="right"
+          title="Command Vault Reserves"
+          tag="META-ECONOMY"
+          text="Banked Biomass and RP Coins stored in your secure Command Vault. Spend them in the Research Lab for permanent combat bio-upgrades and rig customizations."
+          [hint]="'Vault Reserves: 🧪 ' + biomass() + ' Biomass | 🪙 ' + rpCoins() + ' RP'" />
       </div>
 
-      <div class="currency-display" aria-label="Vault Rare Biomass">
-        <span class="currency-icon" aria-hidden="true">🧪</span>
-        <span class="currency-label">BIOMASS</span>
-        <span class="currency-value">{{ biomass() }}</span>
-      </div>
+      <!-- Quick-Toggle Input Mode Button -->
+      <button
+        type="button"
+        class="tactical-ctrl-btn"
+        (click)="toggleInputMode()"
+        [attr.aria-label]="'Active control mode: ' + (inputMode() === 'pc' ? 'Keyboard' : 'Touch') + '. Click to toggle.'">
+        <span class="ctrl-icon" aria-hidden="true">{{ inputMode() === 'pc' ? '⌨' : '🕹' }}</span>
+        <span class="ctrl-label">{{ inputMode() === 'pc' ? 'PC' : 'TOUCH' }}</span>
+      </button>
 
-      <div class="currency-display" aria-label="Vault Research Parasitic Coins">
-        <span class="currency-icon" aria-hidden="true">🪙</span>
-        <span class="currency-label">RP</span>
-        <span class="currency-value">{{ rpCoins() }}</span>
-      </div>
-
-      <app-info-popover
-        title="Command Vault & Offline PWA"
-        tag="VAULT // PWA"
-        text="Project Parasite is a 100% offline-capable Progressive Web App. All assets, chunks, and your Command Vault are cached locally on your device."
-        [hint]="'Current Vault: 🧪 ' + biomass() + ' Biomass | 🪙 ' + rpCoins() + ' RP'" />
-
-      <app-button variant="icon" routerLink="/codex" ariaLabel="Field Codex">📘</app-button>
-      <app-button variant="icon" routerLink="/settings" ariaLabel="Settings">⚙️</app-button>
+      <!-- Settings Action (Crisp Tactical SVG) -->
+      <a
+        routerLink="/settings"
+        class="tactical-action-btn"
+        aria-label="Settings"
+        title="Settings">
+        <svg class="hud-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </a>
     </div>
   </header>
 
   <!-- Central Command Deck (Responsive Portrait + Dual Landscape Layout) -->
   <main class="main-content">
-    <!-- Hero Identity Block (Minimal & Clean with ! Info Trigger) -->
+    <!-- Hero Identity Block -->
     <section class="title-section">
       <div class="outbreak-badge">
         <span class="badge-pulse" aria-hidden="true"></span>
@@ -77,62 +115,92 @@
 
       @if (lastExtraction(); as report) {
         <div class="extraction-banner" role="status">
-          <span>✅ <strong>MISSION EXTRACTED (LVL {{ report.level }}):</strong> Banked +{{ report.biomass }} 🧪 Biomass & +{{ report.rpCoins }} 🪙 RP</span>
-          <button type="button" class="banner-close" (click)="dismissExtraction()" aria-label="Dismiss">✕</button>
+          <span class="banner-pulse" aria-hidden="true"></span>
+          <span class="banner-text">
+            <strong>MISSION EXTRACTED (LVL {{ report.level }}):</strong> Banked +{{ report.biomass }} 🧪 Biomass & +{{ report.rpCoins }} 🪙 RP
+          </span>
+          <button type="button" class="banner-close" (click)="dismissExtraction()" aria-label="Dismiss extraction summary">✕</button>
         </div>
       }
     </section>
 
-    <!-- Tactical Loadout & Deployment Pod -->
-    <section class="action-container" aria-label="Deployment Loadout">
-      <div class="current-loadout">
-        <div class="loadout-header">
-          <span class="loadout-kicker">DEPLOYMENT MANIFEST</span>
-          <span class="loadout-ready">{{ hasActiveSession() ? 'SAVED RUN READY' : 'READY' }}</span>
+    <!-- Tactical Operator 2D Showcase & Deployment Pod -->
+    <section class="action-container" aria-label="Deployment Terminal">
+      <!-- 2D Character Showcase Stage (Geometry Dash Style Infinite Runner & Pivot) -->
+      <div
+        class="operator-showcase-stage"
+        (click)="openOperatorRoster()"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="'Active Operator: ' + operator().title + '. Click to customize rig.'">
+        <div class="showcase-header">
+          <div class="kicker-group">
+            <span class="kicker-bullet" aria-hidden="true"></span>
+            <span class="loadout-kicker">EQUIPPED COMBAT RIG</span>
+          </div>
+          <span class="change-rig-hint">CUSTOMIZE RIG ›</span>
         </div>
 
-        <div class="loadout-grid">
-          <a routerLink="/operators" class="loadout-slot" aria-label="Change Operator">
-            <div class="slot-icon" aria-hidden="true">{{ operator().icon }}</div>
-            <div class="slot-info">
-              <span class="slot-label">Operator</span>
-              <p class="slot-title"><strong>{{ operator().title }}</strong></p>
-              <span class="slot-sub">{{ operator().role }}</span>
-            </div>
-            <span class="slot-arrow" aria-hidden="true">›</span>
-          </a>
+        <!-- 2D Runner Viewport (Geometry Dash Style Runner on Fixed Pivot) -->
+        <div class="runner-viewport" aria-hidden="true">
+          <!-- Scrolling Containment Grid Floor -->
+          <div class="runner-track">
+            <div class="track-grid"></div>
+          </div>
 
-          <a routerLink="/zones" class="loadout-slot" aria-label="Change Deployment Zone">
-            <div class="slot-icon" aria-hidden="true">{{ zone().icon }}</div>
-            <div class="slot-info">
-              <span class="slot-label">Sector</span>
-              <p class="slot-title"><strong>{{ zone().title }}</strong></p>
-              <span class="slot-sub">{{ zone().code }}</span>
+          <!-- Fixed Pivot Operative (Exact In-Game Run Model) -->
+          <div class="operative-runner" [class.ranger-rig]="operator().id === 'ranger'">
+            <div class="operative-shadow"></div>
+
+            <div class="operative-chassis">
+              <!-- Exact In-Game 16x6 Dark Bio-Visor -->
+              <div class="operative-visor"></div>
+
+              <!-- Clean Integrated Weapon & Muzzle Flare -->
+              <div class="operative-weapon">
+                <div class="weapon-flare"></div>
+              </div>
             </div>
-            <span class="slot-arrow" aria-hidden="true">›</span>
-          </a>
+          </div>
+
+          <!-- In-Game 650ms Cadence Plasma Pulse Projectile -->
+          <div class="plasma-bolt"></div>
+        </div>
+
+        <!-- Operator Telemetry Spec Card -->
+        <div class="operator-meta-bar">
+          <div class="op-meta-left">
+            <span class="op-code">{{ operator().code }}</span>
+            <strong class="op-name">{{ operator().title }}</strong>
+            <span class="op-role">{{ operator().role }}</span>
+          </div>
+          <div class="op-meta-right">
+            <span class="op-trait-pill">{{ operator().passiveTrait }}</span>
+            <span class="op-weapon-pill">⚡ {{ operator().weapon }}</span>
+          </div>
         </div>
       </div>
 
+      <!-- Tactical Deployment CTA Wrap -->
       <div class="deploy-cta-wrap">
         @if (activeSession(); as saved) {
           <div class="saved-run-card">
             <div class="saved-run-meta">
-              <span class="saved-tag">AUTOSAVED RUN // LVL {{ saved.level }}</span>
-              <strong>🧪 +{{ saved.runBiomass }} BIO • 🪙 +{{ saved.runRpCoins }} RP</strong>
+              <span class="saved-tag">ACTIVE MISSION RECOVERY // LVL {{ saved.level }}</span>
+              <span class="saved-loot">🧪 +{{ saved.runBiomass }} • 🪙 +{{ saved.runRpCoins }}</span>
             </div>
             <div class="saved-run-actions">
               <app-button variant="primary" [fullWidth]="true" class="full-width" (onClick)="continueLastRun()">
-                <span>▶ CONTINUE RUN</span>
+                <span>▶ RESUME RUN</span>
               </app-button>
-              <app-button variant="secondary" [fullWidth]="true" class="full-width" (onClick)="startNewRun()">
-                <span>↻ NEW RUN (RESET TO 0)</span>
+              <app-button variant="secondary" [fullWidth]="true" class="full-width" (onClick)="deployToSector()">
+                <span>↻ NEW DEPLOYMENT</span>
               </app-button>
             </div>
           </div>
         } @else {
-          <app-button variant="primary" [fullWidth]="true" class="full-width" (onClick)="startNewRun()">
-            <span>START NEW RUN</span>
+          <app-button variant="primary" [fullWidth]="true" class="full-width" (onClick)="deployToSector()">
+            <span>DEPLOY TO SECTOR</span>
             <span aria-hidden="true">→</span>
           </app-button>
         }
